@@ -204,3 +204,4 @@ function DistributionBar({ label, percentage, color }: { label: string; percenta
     </div>
   )
 }
+
