@@ -1,0 +1,75 @@
+# ──────────────────────────────────────
+# Dependencias Node
+# ──────────────────────────────────────
+node_modules/
+.pnpm-store/
+.pnpm-debug.log
+
+# ──────────────────────────────────────
+# Build outputs
+# ──────────────────────────────────────
+dist/
+.next/
+out/
+build/
+
+# ──────────────────────────────────────
+# Entorno
+# ──────────────────────────────────────
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# ──────────────────────────────────────
+# Backend Laravel
+# ──────────────────────────────────────
+api/vendor/
+api/storage/logs/*.log
+api/storage/framework/cache/data/
+api/storage/framework/sessions/
+api/storage/framework/testing/
+api/storage/framework/views/
+api/.env
+api/.env.testing
+api/public/storage
+api/public/hot
+
+# ──────────────────────────────────────
+# Migración (no subir datos sensibles)
+# ──────────────────────────────────────
+migration/wordpress/source/*.xml
+migration/wordpress/raw/*.json
+migration/wordpress/transformed/*.json
+migration/wordpress/imports/downloaded/
+migration/wordpress/logs/*.log
+
+# ──────────────────────────────────────
+# Editores y OS
+# ──────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+
+# ──────────────────────────────────────
+# TypeScript
+# ──────────────────────────────────────
+*.tsbuildinfo
+
+# ──────────────────────────────────────
+# Logs
+# ──────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ──────────────────────────────────────
+# Tests
+# ──────────────────────────────────────
+coverage/
+.nyc_output/
+

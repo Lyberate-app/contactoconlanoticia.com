@@ -1,0 +1,4 @@
+# Migration source directory
+# Place WordPress WXR export files here (*.xml)
+# These files are NOT tracked by git (see .gitignore)
+

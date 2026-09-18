@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Reset y base ──────────────────────────────────────── */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply font-sans text-gray-900 bg-white;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Headings usan fuente serif para artículos */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif leading-tight;
+  }
+
+  /* Links */
+  a {
+    @apply transition-colors duration-150;
+  }
+
+  /* Imágenes responsivas por defecto */
+  img {
+    @apply max-w-full h-auto;
+  }
+}
+
+/* ── Componentes reutilizables ──────────────────────────── */
+@layer components {
+  /* Contenedor principal */
+  .container-editorial {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  /* Contenedor de artículo (más estrecho para legibilidad) */
+  .container-article {
+    @apply max-w-3xl mx-auto px-4 sm:px-6;
+  }
+
+  /* Breaking news badge */
+  .badge-breaking {
+    @apply inline-flex items-center gap-1 bg-red-600 text-white text-xs font-bold 
+           uppercase tracking-wider px-2 py-0.5 rounded-sm;
+  }
+
+  /* Category badge */
+  .badge-category {
+    @apply inline-flex items-center bg-brand-600 text-white text-xs font-semibold 
+           uppercase tracking-wide px-2.5 py-1 rounded-sm hover:bg-brand-700;
+  }
+
+  /* Card de noticia */
+  .news-card {
+    @apply group flex flex-col bg-white border border-gray-100 rounded-lg overflow-hidden
+           hover:shadow-md transition-shadow duration-200;
+  }
+
+  /* Botón primario */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 
+           bg-brand-600 hover:bg-brand-700 text-white font-medium rounded-md
+           transition-colors duration-150 focus:outline-none focus:ring-2 
+           focus:ring-brand-500 focus:ring-offset-2;
+  }
+
+  /* Botón secundario */
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 
+           border border-gray-300 hover:border-gray-400 text-gray-700 font-medium rounded-md
+           transition-colors duration-150 focus:outline-none focus:ring-2 
+           focus:ring-gray-500 focus:ring-offset-2;
+  }
+}
+
+/* ── Contenido del artículo (prose) ─────────────────────── */
+@layer utilities {
+  .prose-editorial {
+    @apply text-gray-800 leading-relaxed;
+    font-size: 1.0625rem; /* 17px */
+  }
+
+  .prose-editorial p {
+    @apply mb-5;
+  }
+
+  .prose-editorial h2 {
+    @apply text-2xl font-bold text-gray-900 mt-10 mb-4 pb-2 border-b border-gray-200;
+  }
+
+  .prose-editorial h3 {
+    @apply text-xl font-bold text-gray-900 mt-8 mb-3;
+  }
+
+  .prose-editorial blockquote {
+    @apply border-l-4 border-brand-500 pl-5 italic text-gray-600 my-6;
+  }
+
+  .prose-editorial a {
+    @apply text-brand-600 underline underline-offset-2 hover:text-brand-700;
+  }
+
+  .prose-editorial ul, .prose-editorial ol {
+    @apply mb-5 pl-6;
+  }
+
+  .prose-editorial li {
+    @apply mb-1.5;
+  }
+
+  .prose-editorial img {
+    @apply rounded-md my-6 w-full;
+  }
+
+  .prose-editorial figure {
+    @apply my-8;
+  }
+
+  .prose-editorial figcaption {
+    @apply text-sm text-gray-500 text-center mt-2;
+  }
+
+  /* Resaltado de código */
+  .prose-editorial code {
+    @apply bg-gray-100 px-1.5 py-0.5 rounded text-sm font-mono text-gray-800;
+  }
+
+  .prose-editorial pre {
+    @apply bg-gray-900 text-gray-100 p-4 rounded-lg overflow-x-auto my-6 text-sm;
+  }
+
+  .prose-editorial pre code {
+    @apply bg-transparent p-0 text-inherit;
+  }
+}
+

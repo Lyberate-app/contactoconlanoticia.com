@@ -1,0 +1,26 @@
+{
+  "name": "portal-editorial",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Plataforma editorial profesional — Contacto con la Noticia",
+  "scripts": {
+    "dev": "pnpm --parallel run dev",
+    "dev:web": "pnpm --filter web dev",
+    "dev:admin": "pnpm --filter admin dev",
+    "build": "pnpm --parallel run build",
+    "build:web": "pnpm --filter web build",
+    "build:admin": "pnpm --filter admin build",
+    "type-check": "pnpm --parallel run type-check",
+    "lint": "pnpm --parallel run lint",
+    "clean": "pnpm --parallel run clean"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.12.0"
+}
+
