@@ -1,0 +1,57 @@
+# Lyberate .gitignore
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.crt
+
+# Node.js / Frontend dependencies & build
+node_modules/
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/.cache/
+*.tsbuildinfo
+
+# PHP / Backend dependencies
+vendor/
+backend/vendor/
+composer.phar
+
+# Uploads & Media (local user content)
+uploads/
+backend/public/uploads/
+tools/migration/downloads/
+tools/migration/temp/
+
+# Logs & Debug
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Database local dumps & SQLite temp
+*.sql
+*.sqlite
+*.db
+database/dumps/
+
+# Operating System & IDE artifacts
+.DS_Store
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*~
+

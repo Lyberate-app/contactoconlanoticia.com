@@ -1,132 +1,116 @@
 # LYBERATE
 
-## Master Engineering Specification
+## MASTER PROJECT DOCUMENTATION
 
-**Proyecto inicial:** Contacto con la Noticia  
-**Plataforma:** Lyberate  
-**Objetivo:** reconstrucción desde cero de un portal de noticias profesional, rápido, seguro, mantenible y preparado para reutilizarse en futuros medios.
-
----
-
-# 1. MISIÓN
-
-Lyberate es una plataforma editorial reutilizable.
-
-Contacto con la Noticia será la primera implementación real.
-
-No construir un sitio aislado con funcionalidades específicas imposibles de reutilizar.
-
-Construir un núcleo que pueda posteriormente alimentar:
-
-* Contacto con la Noticia
-* otros periódicos
-* portales regionales
-* medios digitales
-* futuros clientes
-
-Separar claramente:
-
-* plataforma;
-* sitio;
-* contenido;
-* usuarios;
-* configuración;
-* identidad visual;
-* infraestructura;
-* integraciones.
+**Proyecto:** Lyberate  
+**Primer sitio:** Contacto con la Noticia  
+**Dominio objetivo:** contactoconlanoticia.com  
+**Tipo:** Plataforma editorial / CMS / Portal de noticias multi-tenant  
+**Estado:** En desarrollo  
+**Documento:** Master Architecture & Project Bible  
 
 ---
 
-# 2. REGLA MÁS IMPORTANTE
+# 1. PROPÓSITO DEL PROYECTO
 
-NO construir todo el proyecto en una sola operación.
+Lyberate es una plataforma reutilizable para crear, administrar y desplegar portales de noticias y sitios editoriales para diferentes clientes.
 
-Trabajar exclusivamente mediante las fases definidas en `PHASES.md`.
+El primer sitio que utilizará la plataforma será:
 
-Cuando se entregue un prompt de fase:
+**Contacto con la Noticia**
+
+Lyberate no debe construirse como una aplicación exclusiva para un único periódico.
+
+La arquitectura debe permitir que posteriormente puedan existir múltiples clientes:
+
+```text
+LYBERATE
+│
+├── Tenant A
+│   └── Site A
+│
+├── Tenant B
+│   ├── Site B
+│   └── Site C
+│
+└── Tenant C
+    └── Site D
+```
+
+Cada tenant/site debe mantenerse aislado mediante reglas de backend.
+
+El proyecto debe ser:
+
+* profesional;
+* seguro;
+* mantenible;
+* reutilizable;
+* escalable de forma razonable;
+* rápido;
+* accesible;
+* preparado para SEO;
+* preparado técnicamente para Google News;
+* compatible con infraestructura convencional;
+* sencillo de desplegar;
+* documentado;
+* libre de dependencias innecesarias.
+
+---
+
+# 2. REGLA FUNDAMENTAL
+
+Este documento constituye la fuente principal de verdad arquitectónica del proyecto.
+
+Los agentes de IA que trabajen sobre este repositorio deben:
 
 1. leer `MASTER.md`;
-2. leer únicamente la documentación necesaria;
-3. inspeccionar únicamente los archivos relevantes;
-4. implementar exclusivamente la fase solicitada;
-5. ejecutar las pruebas correspondientes;
-6. detenerse.
+2. identificar la fase actual;
+3. inspeccionar el código existente;
+4. implementar únicamente el alcance de esa fase;
+5. verificar lo realizado;
+6. actualizar la documentación;
+7. detenerse.
 
-NO adelantar fases.
+La IA **implementa la arquitectura definida**.
 
-NO implementar funcionalidades futuras.
-
-NO refactorizar partes no relacionadas.
-
----
-
-# 3. CONSERVACIÓN DE TOKENS Y CONTEXTO
-
-El contexto y el razonamiento son recursos limitados.
-
-La eficiencia es una prioridad.
-
-Evitar:
-
-* análisis innecesariamente extensos;
-* repetir decisiones ya documentadas;
-* volver a explicar toda la arquitectura;
-* explorar múltiples alternativas sin necesidad;
-* generar código que todavía no se necesita;
-* instalar dependencias innecesarias;
-* crear abstracciones prematuras;
-* refactorizar por gusto;
-* implementar funcionalidades "por si acaso".
-
-Antes de modificar:
-
-1. determinar qué necesita cambiar;
-2. localizar archivos afectados;
-3. seleccionar la solución mínima correcta;
-4. identificar las pruebas necesarias.
-
-Después implementar.
-
-Para tareas pequeñas, pensar y responder de forma proporcional a la tarea.
+La IA no debe rediseñar la arquitectura por iniciativa propia.
 
 ---
 
-# 4. BUILD LESS, BUILD RIGHT
+# 3. REGLAS CONTRA LA REINTERPRETACIÓN
 
-La cantidad de código no determina la calidad.
+No cambiar por iniciativa propia:
 
-Priorizar:
+* React por otro framework;
+* Vite por otro bundler;
+* TypeScript por JavaScript;
+* Tailwind por otro sistema CSS;
+* PHP por Node.js;
+* MySQL por MongoDB;
+* REST por GraphQL;
+* Apache/Nginx por un runtime Node obligatorio;
+* arquitectura multi-tenant por una aplicación single-tenant;
+* UUID por IDs numéricos como identificadores principales;
+* cookies seguras por tokens sensibles en `localStorage`.
 
-* claridad;
-* seguridad;
-* mantenibilidad;
-* rendimiento;
-* UX;
-* estabilidad;
-* ausencia de regresiones.
+Si existe un problema real que requiera modificar una decisión:
 
-Preferir una solución pequeña y correcta sobre una arquitectura excesivamente abstracta.
+1. identificar el problema;
+2. explicar la causa;
+3. documentar la decisión afectada;
+4. proponer una alternativa;
+5. indicar impacto;
+6. esperar aprobación.
 
----
-
-# 5. NO CAMBIAR LA ARQUITECTURA SIN MOTIVO
-
-La arquitectura definida aquí es la base del proyecto.
-
-Si aparece un problema que parece requerir modificarla:
-
-1. comprobar primero si puede resolverse dentro de la arquitectura actual;
-2. si no es posible, explicar brevemente el problema;
-3. proponer el cambio;
-4. no ejecutarlo silenciosamente.
+No realizar el cambio automáticamente.
 
 ---
 
-# 6. STACK
+# 4. STACK OFICIAL
 
 ## Frontend
 
-* React 19
+* React 19+
 * TypeScript
 * Vite
 * Tailwind CSS
@@ -136,32 +120,217 @@ Si aparece un problema que parece requerir modificarla:
 ## Backend
 
 * PHP 8.x
+* PHP nativo/modular
 * REST API
 * PDO
 * MySQL
 
-## Infraestructura
+## Herramientas de desarrollo
 
-Compatible con:
-
-* XAMPP;
-* Docker;
-* Node.js.
-
-El proyecto debe documentar exactamente qué servicio utiliza cada entorno.
-
-No mezclar XAMPP y Docker sin una razón clara.
+* Node.js
+* npm o pnpm
+* Git
+* Composer
+* XAMPP y/o Docker según necesidad
 
 ---
 
-# 7. ESTRUCTURA
+# 5. DECISIÓN CRÍTICA: NODE.JS
+
+## Node.js es DEVELOPMENT/BUILD-TIME ONLY
+
+Node.js forma parte del entorno de desarrollo del frontend.
+
+Se utilizará para:
+
+* instalar dependencias;
+* ejecutar Vite;
+* ejecutar el servidor de desarrollo;
+* ejecutar TypeScript;
+* ejecutar herramientas frontend;
+* ejecutar tests/lint del frontend;
+* construir el frontend de producción.
+
+Ejemplo:
+
+```text
+Node.js
+   ↓
+npm / pnpm
+   ↓
+Vite
+   ↓
+React + TypeScript
+   ↓
+frontend/dist/
+```
+
+## Node.js NO es runtime obligatorio de producción
+
+El servidor de producción **no debe requerir un proceso Node.js permanente**.
+
+No se debe requerir:
+
+* `npm run dev`;
+* `vite preview`;
+* PM2;
+* Node server;
+* reverse proxy hacia un servidor Node;
+* un proceso Node permanente;
+* Express;
+* Next.js server;
+* cualquier runtime Node para servir el frontend.
+
+React será compilado.
+
+El resultado será contenido estático:
+
+```text
+frontend/dist/
+├── index.html
+├── assets/
+└── ...
+```
+
+Ese contenido será servido directamente por Apache o Nginx.
+
+---
+
+# 6. ARQUITECTURA DE PRODUCCIÓN
+
+La arquitectura objetivo es:
+
+```text
+                         INTERNET
+                            │
+                           HTTPS
+                            │
+                    ┌───────▼────────┐
+                    │ Apache / Nginx │
+                    └───────┬────────┘
+                            │
+              ┌─────────────┴─────────────┐
+              │                           │
+              ▼                           ▼
+       React Static Build             PHP 8.x
+       frontend/dist/                 REST API
+                                          │
+                                      /api/v1/*
+                                          │
+                                          ▼
+                                         PDO
+                                          │
+                                          ▼
+                                        MySQL
+```
+
+El frontend y backend permanecen separados físicamente dentro del proyecto.
+
+En producción pueden convivir bajo el mismo dominio:
+
+```text
+https://contactoconlanoticia.com/
+https://contactoconlanoticia.com/api/v1/
+```
+
+---
+
+# 7. OBJETIVO DE DESPLIEGUE UNIVERSAL
+
+La plataforma debe poder desplegarse en infraestructura convencional.
+
+Requisitos esperados:
+
+```text
+Apache o Nginx
+PHP 8.x
+MySQL
+HTTPS
+```
+
+Node.js únicamente será necesario en el proceso de desarrollo/build, salvo que el build ya haya sido generado previamente.
+
+Por lo tanto, un VPS convencional puede ejecutar el sistema sin tener Node.js instalado permanentemente.
+
+"Universal" no significa compatible con absolutamente cualquier hosting.
+
+El proveedor debe soportar al menos:
+
+* PHP 8.x;
+* MySQL;
+* Apache/Nginx;
+* rewrite rules;
+* HTTPS.
+
+La plataforma no debe depender de un proveedor específico.
+
+---
+
+# 8. FRONTEND
+
+El frontend será una aplicación React con TypeScript.
+
+Responsabilidades:
+
+* interfaz pública;
+* CMS;
+* navegación;
+* formularios;
+* consumo de API;
+* manejo de estado de interfaz;
+* validaciones de experiencia de usuario;
+* rendering de contenido;
+* responsive design;
+* accesibilidad.
+
+El frontend nunca debe asumir que una validación visual equivale a autorización.
+
+Toda autorización real ocurre en backend.
+
+---
+
+# 9. BACKEND
+
+El backend será PHP 8.x modular.
+
+El backend será responsable de:
+
+* autenticación;
+* autorización;
+* multi-tenancy;
+* validación;
+* acceso a base de datos;
+* lógica de negocio;
+* artículos;
+* usuarios;
+* media;
+* publicidad;
+* configuración;
+* auditoría;
+* integraciones;
+* API.
+
+La API utilizará:
+
+```text
+/api/v1/
+```
+
+Las respuestas serán JSON.
+
+Los códigos HTTP deben utilizarse correctamente.
+
+---
+
+# 10. ESTRUCTURA BASE
+
+La estructura objetivo es:
 
 ```text
 LYBERATE/
 │
 ├── MASTER.md
-├── PHASES.md
-├── ARCHITECTURE.md
+├── README.md
 │
 ├── frontend/
 │   ├── src/
@@ -173,6 +342,7 @@ LYBERATE/
 │   │   ├── types/
 │   │   ├── utils/
 │   │   └── router/
+│   │
 │   ├── public/
 │   ├── package.json
 │   └── vite.config.ts
@@ -180,6 +350,7 @@ LYBERATE/
 ├── backend/
 │   ├── public/
 │   │   └── index.php
+│   │
 │   ├── app/
 │   │   ├── Controllers/
 │   │   ├── Models/
@@ -188,6 +359,7 @@ LYBERATE/
 │   │   ├── Database/
 │   │   ├── Validation/
 │   │   └── Helpers/
+│   │
 │   ├── config/
 │   ├── routes/
 │   └── .htaccess
@@ -200,169 +372,125 @@ LYBERATE/
 │   └── migration/
 │
 └── docs/
-    ├── API.md
-    ├── SECURITY.md
-    ├── DEPLOYMENT.md
-    ├── DESIGN.md
-    └── MIGRATION.md
 ```
 
----
-
-# 8. FRONTEND / BACKEND
-
-El frontend y backend deben estar separados físicamente.
-
-React NO debe conectarse directamente a MySQL.
-
-React se comunica exclusivamente con la API.
-
-El backend es responsable de:
-
-* autenticación;
-* autorización;
-* validación;
-* acceso a datos;
-* seguridad;
-* reglas de negocio.
-
----
-
-# 9. API
-
-Utilizar:
+No colocar el backend dentro de:
 
 ```text
-/api/v1/
+frontend/public/
 ```
 
-Todas las respuestas serán JSON.
+---
 
-Éxito:
+# 11. VARIABLES DE ENTORNO
 
-```json
-{
-  "success": true,
-  "data": {}
-}
+Nunca almacenar secretos en Git.
+
+Ejemplos:
+
+```text
+.env
+.env.local
+.env.production
 ```
 
-Error:
+Debe existir:
 
-```json
-{
-  "success": false,
-  "error": {
-    "code": "ERROR_CODE",
-    "message": "Human readable message"
-  }
-}
+```text
+.env.example
 ```
 
-Utilizar códigos HTTP correctos.
+sin secretos reales.
 
----
-
-# 10. BASE DE DATOS
-
-MySQL.
-
-Utilizar:
-
-* migrations;
-* foreign keys;
-* índices;
-* constraints;
-* timestamps;
-* prepared statements.
-
-No crear tablas sin necesidad real.
-
----
-
-# 11. UUID
-
-Preparar UUID para entidades importantes:
-
-* tenant_uuid;
-* site_uuid;
-* user_uuid;
-* article_uuid;
-* media_uuid;
-* campaign_uuid.
-
-Los UUID no sustituyen autorización.
-
----
-
-# 12. AUTENTICACIÓN
-
-Implementar:
-
-* password hashing;
-* session management;
-* TOTP 2FA;
-* recovery codes;
-* rate limiting;
-* brute-force protection;
-* session revocation.
-
-Passwords:
-
-Nunca:
-
-* plaintext;
-* MD5;
-* SHA1;
-* hashes débiles.
-
-Utilizar `password_hash()` y `password_verify()`.
-
----
-
-# 13. SESIONES
-
-No utilizar localStorage como almacén principal de autenticación.
-
-NO almacenar en localStorage:
+Nunca almacenar:
 
 * passwords;
-* tokens sensibles;
-* TOTP secrets;
-* recovery codes;
-* credenciales;
-* permisos;
-* secretos.
-
-Preferir cookies:
-
-* HttpOnly;
-* Secure;
-* SameSite apropiado.
-
-localStorage solamente para preferencias no sensibles.
+* API keys;
+* tokens;
+* secretos de sesión;
+* secretos HMAC;
+* credenciales MySQL;
+* credenciales EspoCRM;
+* credenciales SMTP;
+* certificados privados.
 
 ---
 
-# 14. PASSKEYS
+# 12. MULTI-TENANT
 
-Preparar WebAuthn/Passkeys.
+Modelo conceptual:
 
-La aplicación jamás debe:
+```text
+Tenant
+   ↓
+Site
+   ↓
+Users
+   ↓
+Content
+```
 
-* recibir biometría;
-* almacenar huellas;
-* transmitir biometría.
+## Tenant
 
-La biometría o PIN del dispositivo pertenece al autenticador del sistema operativo.
+Representa una organización o cliente.
 
-El backend verifica la prueba criptográfica WebAuthn.
+## Site
+
+Representa un sitio concreto perteneciente a un tenant.
+
+## User
+
+Representa una persona que utiliza el sistema.
+
+Entidades principales utilizarán UUID:
+
+```text
+tenant_uuid
+site_uuid
+user_uuid
+article_uuid
+media_uuid
+campaign_uuid
+```
+
+El UUID no constituye autorización.
 
 ---
 
-# 15. RBAC
+# 13. AISLAMIENTO MULTI-TENANT
 
-Roles:
+Todo acceso a datos debe verificar:
+
+```text
+usuario
++
+tenant
++
+site
++
+permiso
+```
+
+Nunca confiar únicamente en:
+
+```text
+tenant_uuid
+site_uuid
+role
+permission
+```
+
+enviados por el navegador.
+
+El backend debe determinar y verificar el contexto autorizado.
+
+Un usuario de un tenant no debe poder consultar ni modificar datos de otro tenant.
+
+---
+
+# 14. ROLES
+
+Roles iniciales:
 
 ```text
 SUPER_ADMIN
@@ -379,122 +507,203 @@ articles.create
 articles.edit
 articles.publish
 articles.delete
+
 media.upload
 media.delete
+
 users.create
 users.edit
+
 ads.manage
+
 settings.edit
+
 audit.view
 ```
 
-Toda autorización se valida en backend.
-
-Nunca confiar en roles enviados por frontend.
+El RBAC completo se implementará en la fase correspondiente.
 
 ---
 
-# 16. TENANT ISOLATION
+# 15. AUTENTICACIÓN
 
-La arquitectura debe soportar:
+Las sesiones utilizarán cookies seguras.
+
+Configuración esperada:
 
 ```text
-Tenant
-└── Site
-    ├── Users
-    ├── Articles
-    ├── Media
-    ├── Categories
-    └── Campaigns
+HttpOnly
+Secure en producción
+SameSite apropiado
 ```
 
-El backend debe comprobar la pertenencia.
+No almacenar credenciales ni tokens sensibles en `localStorage`.
 
-Nunca confiar únicamente en `tenant_id` o `site_id` proporcionados por el cliente.
+`localStorage` solamente podrá utilizarse para preferencias no sensibles.
+
+Las contraseñas utilizarán:
+
+```php
+password_hash()
+password_verify()
+```
+
+Preferir Argon2id cuando esté disponible.
+
+Nunca:
+
+```text
+MD5
+SHA1
+texto plano
+```
 
 ---
 
-# 17. SEGURIDAD API
+# 16. 2FA
 
-Implementar:
+El sistema contemplará:
 
-* validation;
-* prepared statements;
-* PDO;
+* TOTP;
+* códigos de recuperación;
+* protección de intentos;
+* recuperación segura;
+* revocación cuando corresponda.
+
+Se implementará en la fase de autenticación.
+
+No implementar durante fases anteriores.
+
+---
+
+# 17. PASSKEYS / WEBAUTHN
+
+La arquitectura contempla WebAuthn/Passkeys.
+
+Principios:
+
+* la aplicación nunca recibe datos biométricos;
+* el dispositivo maneja huella, Face ID, PIN u otro mecanismo;
+* el servidor verifica el challenge WebAuthn;
+* un usuario puede registrar múltiples passkeys;
+* cada passkey puede revocarse individualmente.
+
+La implementación corresponde a la fase de autenticación.
+
+---
+
+# 18. SEGURIDAD DE API
+
+Implementar progresivamente:
+
+* autenticación;
+* autorización;
+* validación;
+* PDO prepared statements;
 * CORS restrictivo;
-* CSRF donde corresponda;
+* CSRF cuando corresponda;
 * rate limiting;
-* authentication;
-* authorization;
-* consistent error handling.
+* brute-force protection;
+* manejo seguro de errores;
+* API versioning;
+* session revocation;
+* audit logging.
 
-Nunca exponer:
-
-* stack traces;
-* credentials;
-* tokens;
-* passwords;
-* secrets.
+No devolver errores internos al cliente.
 
 ---
 
-# 18. WEB SECURITY
+# 19. HEADERS
 
-Preparar:
+Producción debe contemplar:
 
-* HTTPS;
-* CSP;
-* HSTS;
-* X-Content-Type-Options;
-* Referrer-Policy;
-* Permissions-Policy;
-* Secure cookies;
-* SameSite;
-* XSS protection;
-* upload validation.
+```text
+HTTPS
+HSTS
+Content-Security-Policy
+X-Content-Type-Options
+Referrer-Policy
+Permissions-Policy
+```
 
-No utilizar `Access-Control-Allow-Origin: *` para endpoints autenticados.
+Los valores concretos deben adaptarse a los recursos reales utilizados por el sitio.
+
+No copiar políticas CSP arbitrarias sin comprobar que son compatibles.
 
 ---
 
-# 19. UPLOAD SECURITY
+# 20. UPLOADS
 
-Validar:
+Los archivos subidos deben validarse mediante:
 
 * MIME real;
 * extensión;
 * tamaño;
-* dimensiones;
-* contenido.
+* dimensiones cuando sea imagen;
+* nombre generado por servidor;
+* ubicación segura.
 
-Generar nombres en servidor.
+Nunca permitir uploads ejecutables.
 
-Nunca permitir ejecución de scripts en uploads.
-
----
-
-# 20. AUDIT
-
-Registrar:
-
-* login;
-* login failures;
-* 2FA;
-* user changes;
-* permission changes;
-* article publication;
-* deletion;
-* configuration changes;
-* security events;
-* session revocation.
-
-Nunca almacenar secretos dentro de logs.
+Nunca confiar solamente en la extensión enviada por el usuario.
 
 ---
 
-# 21. CMS EDITORIAL
+# 21. AUDITORÍA
 
-Estados:
+Registrar eventos relevantes:
+
+* login exitoso;
+* login fallido;
+* fallos de 2FA;
+* cambios de usuario;
+* creación/modificación de usuarios;
+* publicación;
+* eliminación;
+* eventos de seguridad;
+* revocación de sesiones;
+* cambios de configuración.
+
+No registrar:
+
+* passwords;
+* tokens;
+* secretos;
+* credenciales.
+
+---
+
+# 22. HEALTH CHECKS
+
+Endpoint mínimo:
+
+```text
+GET /api/v1/health
+```
+
+Debe devolver únicamente información necesaria.
+
+Los diagnósticos detallados deben requerir autenticación.
+
+---
+
+# 23. CMS EDITORIAL
+
+El CMS administrará:
+
+* artículos;
+* autores;
+* categorías;
+* tags;
+* media;
+* publicación;
+* programación;
+* usuarios;
+* permisos;
+* publicidad;
+* configuración.
+
+Estados editoriales:
 
 ```text
 DRAFT
@@ -505,290 +714,156 @@ ARCHIVED
 TRASH
 ```
 
-Debe permitir:
-
-* crear;
-* editar;
-* revisar;
-* programar;
-* publicar;
-* archivar;
-* eliminar;
-* restaurar;
-* versionar.
-
 ---
 
-# 22. EDITOR DE NOTICIAS
+# 24. ARTÍCULOS
 
-Campos:
-
-* title;
-* subtitle;
-* featured image;
-* author;
-* category;
-* tags;
-* content;
-* slug;
-* SEO title;
-* SEO description;
-* OG image;
-* publication date;
-* modification date;
-* status.
-
----
-
-# 23. MEDIA ENGINE
-
-Conservar originales cuando corresponda.
-
-Generar variantes:
+Campos conceptuales:
 
 ```text
-320
-640
-960
-1440
+article_uuid
+title
+subtitle
+excerpt
+content
+slug
+author
+category
+tags
+featured_image
+datePublished
+dateModified
+status
+seo metadata
+relations
+created_at
+updated_at
 ```
 
-Preferir:
-
-* AVIF;
-* WebP.
-
-Utilizar:
-
-* srcset;
-* sizes;
-* lazy loading;
-* decoding async;
-* width;
-* height.
-
-Objetivos:
-
-* menor transferencia;
-* menor CLS;
-* carga rápida;
-* buena experiencia en conexiones lentas.
-
----
-
-# 24. NEWS ENGINE
-
-Cada noticia publicada debe generar automáticamente:
-
-* URL única;
-* slug;
-* canonical;
-* metadata;
-* Open Graph;
-* JSON-LD;
-* sitemap entry;
-* News Sitemap entry.
-
-Structured data:
+Es obligatorio distinguir:
 
 ```text
-NewsArticle
+datePublished
+dateModified
 ```
 
-cuando corresponda.
-
-Debe representar fielmente el contenido visible.
+La fecha de modificación no debe sustituir la fecha original de publicación.
 
 ---
 
-# 25. GOOGLE NEWS READINESS
+# 25. PORTAL PÚBLICO
 
-Lyberate debe estar técnicamente preparado para sitios que quieran ser rastreados y considerados por Google News.
-
-Esto NO garantiza inclusión ni posicionamiento.
-
-Preparar:
+Categorías iniciales:
 
 ```text
-/sitemap.xml
-/sitemap-news.xml
-/robots.txt
+Regionales
+Sucesos
+Comunidades
+Municipales
+Turismo
+Internacionales
 ```
 
-Las noticias deben ser accesibles mediante enlaces rastreables.
+La página principal debe contemplar:
 
-El contenido principal no debe depender exclusivamente de JavaScript para existir.
-
-Las URLs deben ser únicas y estables.
-
-No modificar artificialmente fechas.
-
-No crear metadata engañosa.
-
----
-
-# 26. RSS
-
-Preparar arquitectura para RSS/Atom.
-
-Los feeds podrán contener:
-
-* title;
-* URL;
-* date;
-* author;
-* summary;
-* content cuando corresponda.
-
----
-
-# 27. SEO
-
-Cada página pública debe poder generar:
-
-* title;
-* meta description;
-* canonical;
-* Open Graph;
-* Twitter/X metadata;
-* JSON-LD.
-
----
-
-# 28. PUBLIC PORTAL
-
-Debe sentirse como un periódico digital real.
-
-No como:
-
-* SaaS;
-* dashboard;
-* app genérica;
-* landing de startup.
-
-Jerarquía:
-
-```text
-Header
-Navigation
-Última hora
-Main story
-Secondary stories
-Latest news
-Trending
-Advertising
-Footer
-```
-
----
-
-# 29. DISEÑO HECHO A MANO
-
-CRÍTICO.
-
-El producto final NO debe parecer generado automáticamente por IA.
-
-Evitar:
-
-* exceso de cards;
-* bordes redondeados en todo;
-* glassmorphism;
-* gradientes decorativos;
-* sombras excesivas;
-* botones gigantes;
-* colores innecesarios;
-* animaciones constantes;
-* iconos decorativos;
-* layouts SaaS;
-* dashboards genéricos;
-* títulos absurdamente grandes;
-* componentes repetitivos sin jerarquía.
-
-Priorizar:
-
-* lectura;
-* jerarquía editorial;
-* espacio;
-* ritmo;
-* contraste;
-* accesibilidad;
-* comodidad;
-* velocidad.
-
-El resultado debe sentirse diseñado específicamente para el medio.
-
----
-
-# 30. IDENTIDAD
-
-La plataforma debe permitir que cada sitio tenga su propia identidad.
-
-Contacto con la Noticia debe conservar su personalidad editorial.
-
-No imponer una estética tecnológica genérica.
-
-El objetivo es:
-
-> mismo medio, plataforma moderna.
-
----
-
-# 31. RESPONSIVE
-
-Desktop:
-
-* jerarquía editorial;
-* columnas cuando aporten valor;
-* navegación completa.
-
-Tablet:
-
-* redistribución.
-
-Mobile:
-
-* lectura cómoda;
-* navegación simple;
-* controles táctiles;
-* imágenes optimizadas.
-
-No reducir simplemente desktop.
-
----
-
-# 32. ANIMACIONES
-
-Utilizar animación únicamente cuando tenga función.
-
-Permitido:
-
-* feedback;
-* loading;
+* header;
 * navegación;
-* expansión;
-* pequeñas transiciones.
-
-Evitar:
-
-* parallax;
-* animaciones constantes;
-* efectos llamativos.
-
----
-
-# 33. ICONOS
-
-Utilizar lucide-react.
-
-Los iconos deben tener propósito.
-
-No usar emojis como iconos profesionales.
+* indicador discreto de última hora;
+* noticia principal;
+* noticias secundarias;
+* últimas noticias;
+* tendencias;
+* espacios publicitarios;
+* footer.
 
 ---
 
-# 34. PUBLICIDAD
+# 26. PÁGINA DE ARTÍCULO
 
-Preparar:
+Debe contemplar:
+
+* categoría;
+* título;
+* subtítulo;
+* fecha de publicación;
+* fecha de modificación;
+* autor;
+* imagen principal;
+* resumen;
+* contenido;
+* compartir;
+* noticias relacionadas.
+
+---
+
+# 27. AUTORES
+
+Las páginas de autor podrán contener:
+
+```text
+name
+slug
+bio
+photo
+published articles
+```
+
+Nunca inventar autores durante migraciones.
+
+---
+
+# 28. BÚSQUEDA
+
+Inicialmente será búsqueda SQL.
+
+Debe poder consultar:
+
+* título;
+* contenido;
+* autor;
+* categoría;
+* tags;
+* fecha.
+
+La arquitectura podrá evolucionar posteriormente hacia:
+
+```text
+Meilisearch
+Typesense
+OpenSearch
+```
+
+No instalar motores externos antes de necesitarlos.
+
+---
+
+# 29. ENVIAR UNA NOTICIA
+
+Formulario público:
+
+```text
+Nombre
+Teléfono
+Email
+Ubicación
+Título
+Descripción
+Fotos
+Video
+Mensaje
+```
+
+El contenido enviado:
+
+* se almacena;
+* queda pendiente de revisión;
+* nunca se publica automáticamente.
+
+---
+
+# 30. PUBLICIDAD
+
+Slots:
 
 ```text
 HEADER_BANNER
@@ -802,257 +877,306 @@ FOOTER
 
 Campaña:
 
-* company;
-* name;
-* type;
-* location;
-* start;
-* end;
-* URL;
-* image;
-* active.
+```text
+company/name
+type
+location
+start_date
+end_date
+URL
+image
+active
+```
 
-Preparar posteriormente métricas.
+Futuras métricas:
 
----
-
-# 35. SEARCH
-
-Buscar por:
-
-* title;
-* content;
-* author;
-* category;
-* tags;
-* date.
-
-No introducir motores externos hasta que sean necesarios.
+```text
+impressions
+clicks
+CTR
+```
 
 ---
 
-# 36. USER SUBMISSIONS
+# 31. MEDIA / IMÁGENES
 
-Preparar:
+El sistema debe conservar el archivo original.
 
-"Envíanos tu noticia".
+Generará variantes optimizadas:
 
-Datos posibles:
+```text
+320px
+640px
+960px
+1440px
+```
 
-* name;
-* phone/email;
-* location;
+Formatos preferidos:
+
+```text
+AVIF
+WebP
+```
+
+El frontend debe utilizar cuando corresponda:
+
+```text
+srcset
+sizes
+```
+
+Las imágenes deben tener:
+
+```text
+width
+height
+alt
+caption
+credit
+```
+
+Objetivos:
+
+* reducir peso;
+* mejorar carga;
+* mantener calidad editorial;
+* evitar CLS;
+* mejorar experiencia móvil.
+
+---
+
+# 32. RENDIMIENTO
+
+Implementar:
+
+* code splitting;
+* lazy routes;
+* lazy loading de imágenes;
+* caching;
+* compresión;
+* paginación;
+* índices SQL;
+* consultas eficientes;
+* evitar N+1;
+* respuestas API pequeñas;
+* optimización de assets.
+
+No implementar infraestructura distribuida prematuramente.
+
+---
+
+# 33. SEO
+
+Cada página relevante debe poder definir:
+
 * title;
-* description;
-* photos;
-* video;
-* message.
+* meta description;
+* canonical;
+* Open Graph;
+* Twitter/X metadata;
+* JSON-LD.
 
-Nunca publicar automáticamente.
+Los artículos deben utilizar datos estructurados apropiados, especialmente:
 
-Debe entrar como contenido pendiente.
+```text
+NewsArticle
+```
+
+Las URLs deben ser:
+
+* limpias;
+* estables;
+* legibles;
+* consistentes.
+
+---
+
+# 34. GOOGLE NEWS READINESS
+
+Lyberate debe quedar técnicamente preparado para facilitar el descubrimiento del contenido periodístico.
+
+Debe contemplar:
+
+* contenido público rastreable;
+* HTML accesible;
+* enlaces rastreables;
+* URLs estables;
+* canonical;
+* `NewsArticle`;
+* autor;
+* publisher;
+* fecha de publicación;
+* fecha de modificación;
+* sitemap;
+* News Sitemap;
+* robots.txt;
+* RSS/Atom;
+* metadata correcta;
+* rendimiento.
+
+Esto significa **preparación técnica**.
+
+No constituye garantía de:
+
+* inclusión en Google News;
+* indexación;
+* ranking;
+* tráfico;
+* visibilidad.
+
+---
+
+# 35. SITEMAPS
+
+Debe existir:
+
+```text
+sitemap.xml
+robots.txt
+```
+
+Y posteriormente:
+
+```text
+sitemap-news.xml
+```
+
+El News Sitemap debe contener únicamente contenido que corresponda según sus reglas.
+
+---
+
+# 36. RSS / ATOM
+
+El portal deberá poder ofrecer un feed de noticias para facilitar:
+
+* lectores RSS;
+* agregadores;
+* descubrimiento;
+* distribución del contenido.
 
 ---
 
 # 37. PWA
 
-Preparar:
+Se contempla:
 
 * manifest;
 * service worker;
+* installability;
 * app shell;
-* offline fallback;
-* static cache;
-* recently viewed content.
+* fallback offline;
+* cache de assets;
+* contenido recientemente visitado.
 
-No intentar hacer todo el periódico offline.
-
----
-
-# 38. PUSH NOTIFICATIONS
-
-Preparar Web Push.
-
-Las notificaciones deben:
-
-* requerir consentimiento;
-* ser discretas;
-* ser relevantes;
-* evitar spam.
-
-Optimizar imágenes.
+No se pretende convertir todo el portal en una aplicación completamente offline.
 
 ---
 
-# 39. PERFORMANCE
+# 38. WEB PUSH
 
-Priorizar:
+Se contempla:
 
-* code splitting;
-* lazy routes;
-* image optimization;
-* caching;
-* compression;
-* minification;
-* pagination;
-* database indexes;
-* evitar N+1;
-* respuestas API pequeñas.
+* consentimiento explícito;
+* preferencias;
+* suscripción;
+* desuscripción;
+* notificaciones relevantes.
 
-No realizar optimizaciones complejas sin medir.
+Nunca enviar spam.
 
 ---
 
-# 40. HEALTH
+# 39. FEATURE FLAGS
 
-Endpoint:
+Las funcionalidades opcionales podrán habilitarse por tenant/site.
+
+Ejemplos:
 
 ```text
-GET /api/v1/health
+push
+comments
+newsletter
+ads
+dark_mode
+pwa
 ```
 
-La respuesta pública debe ser mínima.
-
-La versión autenticada podrá posteriormente informar:
-
-* version;
-* API;
-* database;
-* cache;
-* internal health.
-
-Nunca secretos.
+No crear un sistema de feature flags innecesariamente complejo.
 
 ---
 
-# 41. ENVIRONMENT
+# 40. MIGRACIÓN DEL SITIO HISTÓRICO
 
-Usar `.env`.
+El sitio histórico de Contacto con la Noticia debe inspeccionarse antes de implementar el migrador.
 
-Repositorio:
+**No asumir que utiliza WordPress.**
+
+Primero:
 
 ```text
-.env.example
+Discovery
 ```
 
-Nunca subir secretos reales.
+Luego determinar:
 
----
+* tecnología;
+* estructura;
+* fuentes de contenido;
+* URLs;
+* media;
+* autores;
+* categorías;
+* metadata;
+* IDs.
 
-# 42. BACKUPS
+La migración debe contemplar:
 
-Preparar:
-
-* database backups;
-* media backups;
-* restore procedures.
-
-Un backup que nunca fue probado no debe considerarse completamente confiable.
-
----
-
-# 43. MIGRATION ENGINE
-
-La migración es un componente independiente.
-
-Debe vivir en:
-
-```text
-tools/migration/
-```
-
-No mezclarlo con el runtime normal del CMS.
-
-Debe poder migrar contenido histórico del sistema anterior de Contacto con la Noticia.
-
-Migrar cuando exista:
-
-### Articles
-
-* title;
-* subtitle;
-* content;
-* publication date;
-* modification date;
-* author;
-* category;
+* artículos;
+* autores;
+* categorías;
 * tags;
-* slug;
-* featured image;
-* inline images;
-* SEO metadata.
-
-### Authors
-
-* name;
-* slug;
-* biography;
-* photo.
-
-### Categories
-
-* name;
-* slug;
-* description.
-
-### Tags
-
-* name;
-* slug.
-
-### Media
-
-* original;
-* MIME;
-* dimensions;
-* alt;
-* caption;
-* credit;
-* relationships.
+* media;
+* SEO metadata;
+* slugs;
+* URLs.
 
 ---
 
-# 44. MIGRATION SAFETY
+# 41. IDENTIDAD DE REGISTROS
 
-El Migration Engine debe soportar:
+Debe conservarse:
 
 ```text
---dry-run
---execute
+source_id → article_uuid
 ```
 
-Dry-run:
-
-* no modifica datos;
-* genera reporte;
-* muestra errores;
-* muestra warnings;
-* detecta duplicados;
-* detecta conflictos.
-
-La migración real solo se ejecuta después de revisar el dry-run.
-
----
-
-# 45. MIGRATION IDEMPOTENCY
-
-Una migración repetida no debe duplicar contenido.
-
-Mantener mapping:
+Nunca identificar artículos únicamente mediante:
 
 ```text
-source_id
-    ↓
-article_uuid
+title
 ```
 
-No identificar artículos únicamente por título.
+Esto evita errores con:
+
+* títulos duplicados;
+* modificaciones;
+* artículos similares;
+* contenido histórico.
 
 ---
 
-# 46. URL MIGRATION
+# 42. SLUGS Y REDIRECCIONES
 
-Mantener:
+Conservar el slug histórico cuando sea posible.
+
+Detectar:
+
+* conflictos;
+* duplicados;
+* slugs inexistentes;
+* cambios de URL.
+
+Crear:
 
 ```text
 old_url
@@ -1060,65 +1184,146 @@ new_url
 status
 ```
 
-Cuando cambie una URL:
+Las URLs antiguas deben utilizar:
 
-* generar 301;
-* evitar cadenas;
-* conservar destino correcto.
+```text
+301
+```
+
+Evitar cadenas de redirects.
 
 ---
 
-# 47. MEDIA MIGRATION
+# 43. MIGRACIÓN DE MEDIA
 
 Proceso:
 
 ```text
-source image
+localizar
 ↓
-download
+extraer
 ↓
-validate
+validar
 ↓
-deduplicate
+deduplicar
 ↓
-store original
+conservar original
 ↓
-generate variants
+generar variantes
+↓
+actualizar referencias
+↓
+validar
 ```
 
-No dejar el nuevo portal dependiendo de las imágenes del sistema anterior cuando sea posible migrarlas.
+Debe detectarse media rota o ausente.
 
 ---
 
-# 48. CONTENT TRANSFORMATION
+# 44. SANITIZACIÓN DEL CONTENIDO
 
-El HTML antiguo debe sanitizarse y transformarse.
+El HTML histórico debe ser sanitizado.
 
 Preservar:
 
-* paragraphs;
-* headings;
-* links;
-* images;
-* lists;
-* emphasis;
-* editorial content.
+* párrafos;
+* encabezados;
+* enlaces válidos;
+* imágenes;
+* estructura editorial.
 
-Eliminar contenido ejecutable o inseguro.
+Eliminar o neutralizar:
 
-No destruir contenido editorial innecesariamente.
+* scripts;
+* código ejecutable;
+* atributos peligrosos;
+* contenido malicioso.
 
 ---
 
-# 49. MIGRATION REPORTS
+# 45. MOTOR DE MIGRACIÓN
 
-Crear:
+Estructura:
 
 ```text
-tools/migration/reports/
+tools/migration/
+├── README.md
+├── config/
+├── extract/
+├── transform/
+├── load/
+├── media/
+├── redirects/
+├── reports/
+└── scripts/
 ```
 
-Con:
+Debe existir una estrategia de:
+
+```text
+migration --dry-run
+migration --execute
+```
+
+## Dry Run
+
+No modifica la base de datos.
+
+Debe detectar:
+
+* warnings;
+* errors;
+* duplicados;
+* campos faltantes;
+* media faltante;
+* media rota;
+* conflictos de slug.
+
+---
+
+# 46. IDEMPOTENCIA
+
+Ejecutar una migración dos veces no debe duplicar contenido.
+
+El sistema debe poder reconocer registros previamente migrados.
+
+---
+
+# 47. MIGRACIÓN INCREMENTAL
+
+Proceso oficial:
+
+```text
+Discovery
+↓
+Backup
+↓
+Extract
+↓
+Transform
+↓
+Dry Run
+↓
+Test Migration
+↓
+Full Migration
+↓
+Delta Migration
+↓
+Final Validation
+↓
+Go Live
+```
+
+El sitio antiguo puede continuar publicando durante parte del proceso.
+
+La migración final debe incorporar los cambios realizados después de la migración inicial.
+
+---
+
+# 48. REPORTES
+
+Generar:
 
 ```text
 migration-summary.json
@@ -1131,182 +1336,957 @@ duplicate-content.csv
 
 ---
 
-# 50. INCREMENTAL MIGRATION
+# 49. VALIDACIÓN DE MIGRACIÓN
 
-La arquitectura debe permitir:
+Validar:
 
-```text
-Initial migration
-       ↓
-Development
-       ↓
-New content continues
-       ↓
-Delta migration
-       ↓
-Final verification
-       ↓
-Production
-```
-
-No depender exclusivamente de una única migración inicial.
+* cantidad de artículos;
+* fechas;
+* autores;
+* categorías;
+* tags;
+* imágenes;
+* slugs;
+* URLs;
+* redirects;
+* HTML;
+* metadata;
+* canonical;
+* sitemap;
+* News Sitemap.
 
 ---
 
-# 51. MIGRATION VALIDATION
+# 50. ESPoCRM — FASE 16
 
-Después de migrar verificar:
+EspoCRM queda explícitamente fuera de las primeras fases.
+
+La integración se realizará únicamente durante:
+
+```text
+PHASE 16 — CRM INTEGRATION
+```
+
+Lyberate es la fuente de verdad para:
+
+* tenants;
+* sites;
+* users;
+* autenticación;
+* artículos;
+* contenido;
+* media;
+* permisos;
+* configuración editorial.
+
+EspoCRM funciona como CRM para:
+
+* contactos;
+* formularios;
+* leads;
+* procesos comerciales;
+* información CRM.
+
+---
+
+# 51. LYBERATE ↔ ESPOCRM
+
+Los UUID internos y los IDs externos de EspoCRM son diferentes.
+
+Se utilizará conceptualmente:
+
+```text
+integration_mappings
+├── id
+├── tenant_uuid
+├── site_uuid
+├── entity_type
+├── local_uuid
+├── external_system
+├── external_id
+├── created_at
+└── updated_at
+```
+
+Ejemplo:
+
+```text
+Lyberate user_uuid
+       ↓
+integration_mappings
+       ↓
+EspoCRM record_id
+```
+
+---
+
+# 52. DIRECCIÓN DE INTEGRACIÓN
+
+Lyberate → EspoCRM:
+
+```text
+Formulario
+↓
+Validación
+↓
+Persistencia Lyberate
+↓
+Integration Service
+↓
+EspoCRM
+```
+
+EspoCRM → Lyberate:
+
+```text
+Webhook
+↓
+Verificación de firma
+↓
+Validación del evento
+↓
+Validación tenant/site
+↓
+Procesamiento
+```
+
+---
+
+# 53. HMAC
+
+Distinguir:
+
+### Lyberate → EspoCRM
+
+Autenticación de API cuando corresponda.
+
+### EspoCRM → Lyberate
+
+Verificación de firma de webhook mediante HMAC.
+
+No utilizar ambos conceptos como si fueran el mismo mecanismo.
+
+---
+
+# 54. WEBHOOK SECURITY
+
+Validar:
+
+* autenticidad;
+* firma;
+* payload;
+* evento;
+* entidad;
+* tenant;
+* site.
+
+Cuando corresponda:
+
+* replay protection;
+* idempotencia;
+* logging seguro.
+
+Nunca registrar secretos.
+
+---
+
+# 55. ESTADO DE INTEGRACIÓN
+
+Estados:
+
+```text
+CONNECTED
+DEGRADED
+DISCONNECTED
+ERROR
+```
+
+También:
+
+```text
+integration_version
+last_seen
+```
+
+El mecanismo exacto del heartbeat se definirá durante Fase 16.
+
+Las credenciales permanecerán fuera del repositorio.
+
+---
+
+# 56. DESARROLLO LOCAL
+
+El entorno puede utilizar:
+
+```text
+Windows
+XAMPP
+Docker
+Node.js
+PHP
+MySQL
+Git
+```
+
+XAMPP y Docker no deben mezclarse sin una razón clara.
+
+Debe documentarse qué servicio está ejecutando cada componente.
+
+Ejemplo:
+
+```text
+Frontend development
+→ Node/Vite
+
+Backend
+→ PHP/Apache
+
+Database
+→ MySQL
+```
+
+Docker puede utilizarse para aislar servicios cuando sea conveniente.
+
+---
+
+# 57. PRODUCCIÓN
+
+Objetivo:
+
+```text
+Apache/Nginx
+PHP 8.x
+MySQL
+HTTPS
+React static build
+```
+
+Node.js no debe ser necesario durante la operación normal.
+
+---
+
+# 58. BUILD
+
+Proceso:
+
+```text
+Node.js
+↓
+npm/pnpm
+↓
+Vite
+↓
+npm/pnpm run build
+↓
+frontend/dist/
+```
+
+Después:
+
+```text
+frontend/dist/
+↓
+Apache/Nginx
+```
+
+El servidor no necesita ejecutar Vite.
+
+---
+
+# 59. REGLA ABSOLUTA DE PRODUCCIÓN
+
+La aplicación debe funcionar aunque Node.js no esté instalado en el servidor de producción, siempre que el build del frontend haya sido generado.
+
+No introducir dependencias críticas que requieran:
+
+```text
+node
+npm
+pnpm
+PM2
+Vite server
+Node runtime
+```
+
+durante la operación normal del sitio.
+
+Una futura excepción requiere aprobación explícita.
+
+---
+
+# 60. DOCKER
+
+Docker es opcional.
+
+Puede utilizarse para:
+
+* desarrollo;
+* staging;
+* producción;
+* servicios aislados.
+
+No debe utilizarse para introducir complejidad innecesaria.
+
+No utilizar Docker como justificación para mantener un servidor Node permanente.
+
+---
+
+# 61. CALIDAD DE CÓDIGO
+
+El código debe ser:
+
+* claro;
+* tipado;
+* modular;
+* mantenible;
+* directo;
+* profesional.
+
+Evitar:
+
+* archivos gigantes;
+* funciones gigantes;
+* `any` innecesario;
+* wrappers sin propósito;
+* abstracciones prematuras;
+* código muerto;
+* configuraciones mágicas;
+* duplicación;
+* componentes creados únicamente para dividir archivos artificialmente.
+
+---
+
+# 62. APARIENCIA DE CÓDIGO
+
+El proyecto debe evitar el patrón de "código generado indiscriminadamente por IA".
+
+Evitar:
+
+```text
+// This function handles...
+// This component renders...
+```
+
+cuando el comentario no aporta información.
+
+Evitar nombres genéricos como:
+
+```text
+GenericManager
+UniversalHandler
+DataProcessorV2
+SuperComponent
+```
+
+si no representan una responsabilidad real.
+
+La estructura debe reflejar el dominio real del proyecto.
+
+---
+
+# 63. API DOCUMENTATION
+
+La documentación de API debe distinguir:
+
+```text
+IMPLEMENTED
+PLANNED
+NOT IMPLEMENTED
+```
+
+Nunca documentar como existente un endpoint que todavía no existe.
+
+---
+
+# 64. VERSIONADO DE API
+
+La versión inicial:
+
+```text
+/api/v1/
+```
+
+Los cambios incompatibles deben utilizar una nueva versión.
+
+No romper silenciosamente contratos existentes.
+
+---
+
+# 65. DEFINITION OF DONE
+
+Una fase se considera terminada únicamente cuando:
+
+* la funcionalidad está implementada;
+* el build funciona;
+* las pruebas relevantes funcionan;
+* los errores encontrados fueron corregidos;
+* se verificó seguridad relevante;
+* documentación actualizada;
+* no existen cambios fuera del alcance;
+* no se dejaron implementaciones falsas o incompletas presentadas como terminadas.
+
+---
+
+# 66. CONTROL DE ALCANCE
+
+Si una tarea pertenece a otra fase:
+
+**NO implementarla.**
+
+Registrar:
+
+```text
+Future Phase
+```
+
+No crear infraestructura únicamente "por si algún día se necesita".
+
+---
+
+# 67. TECNOLOGÍAS QUE NO DEBEN INTRODUCIRSE PREMATURAMENTE
+
+No añadir sin necesidad:
+
+* microservicios;
+* Kubernetes;
+* colas distribuidas;
+* Redis;
+* RabbitMQ;
+* Kafka;
+* OpenSearch;
+* Meilisearch;
+* Typesense;
+* GraphQL;
+* Node.js backend;
+* servidores adicionales;
+* arquitecturas distribuidas.
+
+La complejidad debe justificarse por una necesidad real.
+
+---
+
+# 68. REGLA DE INSPECCIÓN
+
+Antes de modificar un archivo:
+
+1. localizarlo;
+2. leerlo;
+3. comprender su responsabilidad;
+4. comprobar dependencias;
+5. modificar lo mínimo necesario.
+
+Nunca sobrescribir un proyecto existente sin inspección.
+
+---
+
+# 69. REGLAS DEL REPOSITORIO
+
+Si el repositorio remoto está disponible:
+
+* verificar acceso;
+* inspeccionar branch;
+* inspeccionar commits;
+* inspeccionar archivos;
+* sincronizar cuando corresponda.
+
+Si no existe acceso:
+
+**NO asumir que está vacío.**
+
+**NO inventar archivos.**
+
+**NO inventar commits.**
+
+**NO afirmar que se hizo push/pull.**
+
+Si existe una copia local verificada, se puede continuar localmente, pero no afirmar sincronización remota.
+
+Nunca solicitar ni escribir credenciales, tokens o secretos.
+
+Si el repositorio realmente está vacío, puede inicializarse.
+
+Si contiene código, inspeccionarlo antes de modificarlo o eliminarlo.
+
+---
+
+# 70. FASES OFICIALES
+
+```text
+PHASE 0  — Foundation, Architecture & Environment
+PHASE 1  — Project Scaffold
+PHASE 2  — Database Foundation
+PHASE 3  — API Foundation
+PHASE 4  — Authentication & RBAC
+PHASE 5  — CMS Editorial
+PHASE 6  — Public News Portal
+PHASE 7  — Media Engine
+PHASE 8  — SEO + News Discoverability
+PHASE 9  — Advertising + Public Forms
+PHASE 10 — Performance
+PHASE 11 — PWA + Notifications
+PHASE 12 — Migration Engine
+PHASE 13 — Historical Migration
+PHASE 14 — Security Audit
+PHASE 15 — Production
+PHASE 16 — CRM Integration
+```
+
+---
+
+# 71. PHASE 0 — FOUNDATION
+
+Objetivos:
+
+* verificar repositorio;
+* inspeccionar entorno;
+* registrar versiones;
+* definir desarrollo;
+* definir build;
+* definir producción;
+* documentar Node.js como build-time;
+* definir XAMPP/Docker;
+* validar arquitectura;
+* crear estructura mínima;
+* preparar documentación.
+
+Comprobar:
+
+```text
+Windows
+Git
+Node.js
+npm
+pnpm
+PHP
+Composer
+MySQL
+XAMPP
+Apache
+Docker
+Docker Compose
+```
+
+No implementar todavía:
+
+* CMS;
+* login;
+* 2FA;
+* WebAuthn;
+* RBAC;
+* artículos;
+* portal público;
+* migración;
+* SEO funcional;
+* News Sitemap;
+* PWA;
+* Push;
+* Ads;
+* CRM.
+
+---
+
+# 72. PHASE 1 — PROJECT SCAFFOLD
+
+Crear la estructura real:
+
+```text
+frontend
+backend
+database
+docs
+tools
+```
+
+Configurar:
+
+* React;
+* TypeScript;
+* Vite;
+* Tailwind;
+* React Router;
+* PHP;
+* Composer cuando corresponda;
+* configuración base;
+* entorno.
+
+No implementar todavía funcionalidades editoriales.
+
+---
+
+# 73. PHASE 2 — DATABASE FOUNDATION
+
+Crear:
+
+* conexión PDO;
+* configuración;
+* migrations;
+* seeds;
+* esquema base;
+* tenants;
+* sites;
+* usuarios base;
+* estructuras necesarias.
+
+Aplicar:
+
+* UUID;
+* índices;
+* foreign keys;
+* timestamps;
+* constraints.
+
+No crear tablas para funcionalidades futuras que todavía no tengan diseño aprobado.
+
+---
+
+# 74. PHASE 3 — API FOUNDATION
+
+Crear:
+
+```text
+/api/v1/
+```
+
+Implementar:
+
+* routing;
+* JSON;
+* HTTP codes;
+* error handling;
+* middleware base;
+* health endpoint;
+* conexión DB.
+
+No implementar todavía todo el CMS.
+
+---
+
+# 75. PHASE 4 — AUTHENTICATION & RBAC
+
+Implementar:
+
+* login;
+* logout;
+* sesiones;
+* password hashing;
+* roles;
+* permisos;
+* autorización;
+* multi-tenant access;
+* CSRF cuando corresponda;
+* rate limiting;
+* brute-force protection;
+* TOTP;
+* recovery codes;
+* WebAuthn/Passkeys.
+
+---
+
+# 76. PHASE 5 — CMS EDITORIAL
+
+Implementar:
 
 * artículos;
 * autores;
 * categorías;
 * tags;
-* imágenes;
-* fechas;
-* slugs;
-* redirects;
-* HTML;
-* SEO;
-* canonical;
-* sitemap;
-* News Sitemap.
-
-Realizar muestras manuales.
-
----
-
-# 52. CRM
-
-NO implementar inicialmente.
-
-Futuro:
-
-```text
-EspoCRM
-   ↓
-Integration API
-   ↓
-Lyberate
-```
-
-Podrá incluir:
-
-* site_uuid;
-* version;
-* status;
-* last_seen;
-* health;
-* HMAC;
-* rotatable credentials.
-
-No desarrollar CRM hasta la fase final.
-
----
-
-# 53. DEPENDENCIAS
-
-Antes de instalar:
-
-1. comprobar si ya existe una solución;
-2. comprobar necesidad;
-3. evaluar impacto;
-4. instalar únicamente si aporta valor real.
-
-No instalar librerías por moda.
-
----
-
-# 54. DOCUMENTACIÓN
-
-Mantener:
-
-```text
-MASTER.md
-PHASES.md
-ARCHITECTURE.md
-
-docs/API.md
-docs/SECURITY.md
-docs/DEPLOYMENT.md
-docs/DESIGN.md
-docs/MIGRATION.md
-```
-
-Documentación breve y útil.
-
----
-
-# 55. TESTING
-
-Cada fase debe probar lo que modifica.
-
-Prioridad:
-
-1. funcionalidad modificada;
-2. integración afectada;
-3. build;
-4. regresiones relevantes.
-
-No ejecutar pruebas irrelevantes únicamente por rutina.
-
----
-
-# 56. FINAL DE TAREA
-
-El reporte debe ser breve:
-
-```text
-IMPLEMENTADO
-- ...
-
-ARCHIVOS MODIFICADOS
-- ...
-
-TESTS
-- ...
-
-PROBLEMAS
-- ...
-
-FUTURO
-- ...
-```
-
-No repetir la arquitectura.
-
-No repetir este documento.
-
-No incluir explicaciones innecesarias.
-
----
-
-# 57. PRINCIPIO FINAL
-
-La tecnología debe permanecer detrás del producto.
-
-El usuario debe percibir:
-
-* una página rápida;
-* cómoda;
-* profesional;
-* confiable;
-* editorial;
-* hecha específicamente para el medio.
-
-No debe percibir una colección de componentes generados automáticamente.
-
-La complejidad técnica existe para mejorar:
-
-* seguridad;
-* rendimiento;
-* mantenimiento;
+* estados;
+* editor;
+* scheduling;
 * publicación;
-* SEO;
-* descubrimiento;
-* experiencia.
+* permisos editoriales;
+* administración.
 
-Construir menos.
+---
 
-Construir correctamente.
+# 77. PHASE 6 — PUBLIC NEWS PORTAL
 
-Construir para durar.
+Implementar:
+
+* homepage;
+* categorías;
+* artículo;
+* autores;
+* relacionadas;
+* búsqueda;
+* navegación;
+* responsive;
+* formulario inicial de envío de noticias según alcance definido.
+
+---
+
+# 78. PHASE 7 — MEDIA ENGINE
+
+Implementar:
+
+* upload;
+* validación;
+* almacenamiento;
+* originales;
+* AVIF/WebP;
+* variantes;
+* metadata;
+* `srcset`;
+* `sizes`;
+* optimización;
+* deduplicación.
+
+---
+
+# 79. PHASE 8 — SEO + NEWS DISCOVERABILITY
+
+Implementar:
+
+* metadata;
+* canonical;
+* Open Graph;
+* Twitter/X;
+* JSON-LD;
+* NewsArticle;
+* sitemap;
+* News Sitemap;
+* robots.txt;
+* RSS/Atom;
+* URLs limpias;
+* author/publisher metadata.
+
+---
+
+# 80. PHASE 9 — ADVERTISING + PUBLIC FORMS
+
+Implementar:
+
+* campañas;
+* slots;
+* administración;
+* formulario Envíanos tu noticia;
+* almacenamiento;
+* revisión;
+* protección contra abuso.
+
+---
+
+# 81. PHASE 10 — PERFORMANCE
+
+Auditar y optimizar:
+
+* frontend;
+* API;
+* SQL;
+* imágenes;
+* caching;
+* payloads;
+* lazy loading;
+* code splitting;
+* N+1;
+* índices;
+* compresión.
+
+No agregar infraestructura innecesaria.
+
+---
+
+# 82. PHASE 11 — PWA + NOTIFICATIONS
+
+Implementar:
+
+* manifest;
+* service worker;
+* instalación;
+* fallback;
+* cache;
+* Web Push;
+* preferencias;
+* desuscripción.
+
+---
+
+# 83. PHASE 12 — MIGRATION ENGINE
+
+Construir el motor reusable.
+
+Debe soportar:
+
+* discovery;
+* extract;
+* transform;
+* load;
+* media;
+* redirects;
+* reports;
+* dry-run;
+* execute;
+* idempotencia.
+
+---
+
+# 84. PHASE 13 — HISTORICAL MIGRATION
+
+Migrar Contacto con la Noticia.
+
+Proceso:
+
+```text
+Discovery
+↓
+Backup
+↓
+Extract
+↓
+Transform
+↓
+Dry Run
+↓
+Test Migration
+↓
+Full Migration
+↓
+Delta Migration
+↓
+Validation
+↓
+Go Live
+```
+
+No borrar el sitio histórico antes de validar.
+
+---
+
+# 85. PHASE 14 — SECURITY AUDIT
+
+Auditar:
+
+* autenticación;
+* autorización;
+* multi-tenant;
+* sesiones;
+* CSRF;
+* CORS;
+* uploads;
+* SQL;
+* XSS;
+* headers;
+* rate limiting;
+* logs;
+* secretos;
+* errores;
+* webhooks.
+
+---
+
+# 86. PHASE 15 — PRODUCTION
+
+Preparar:
+
+* build final;
+* Apache/Nginx;
+* PHP;
+* MySQL;
+* HTTPS;
+* variables de entorno;
+* backups;
+* migrations;
+* permisos;
+* caching;
+* monitoring básico;
+* health check.
+
+Confirmar explícitamente:
+
+```text
+Node.js NO es requerido como runtime.
+```
+
+---
+
+# 87. PHASE 16 — CRM INTEGRATION
+
+Implementar:
+
+* integración EspoCRM;
+* integration mappings;
+* API authentication;
+* webhooks;
+* HMAC;
+* validación tenant/site;
+* idempotencia;
+* replay protection;
+* heartbeat;
+* integration status;
+* sincronización de entidades aprobadas.
+
+No adelantar esta fase.
+
+---
+
+# 88. REGLA FINAL DE EJECUCIÓN
+
+Cada agente debe terminar una fase con:
+
+```text
+IMPLEMENTED
+VERIFIED
+DOCUMENTED
+STOPPED
+```
+
+Nunca:
+
+```text
+IMPLEMENTED
+→ automáticamente continuar
+→ siguiente fase
+→ siguiente fase
+→ siguiente fase
+```
+
+La fase siguiente solamente comienza mediante una instrucción explícita.
+
+---
+
+# 89. PRINCIPIO ARQUITECTÓNICO FINAL
+
+La plataforma debe mantener esta separación:
+
+```text
+                    DEVELOPMENT
+
+Node.js
+   │
+   ├── npm/pnpm
+   ├── Vite
+   ├── TypeScript
+   └── React build
+             │
+             ▼
+       frontend/dist/
+
+
+                    PRODUCTION
+
+             Internet
+                 │
+                HTTPS
+                 │
+          Apache / Nginx
+             │       │
+             │       └──────────────┐
+             ▼                      ▼
+       frontend/dist/             PHP 8.x
+                                    │
+                                    ▼
+                                  REST API
+                                    │
+                                    ▼
+                                   PDO
+                                    │
+                                    ▼
+                                  MySQL
+```
+
+**Node.js pertenece al desarrollo y al proceso de build.**
+
+**PHP + MySQL + Apache/Nginx constituyen el runtime principal de producción.**
+
+Esta decisión es obligatoria para Lyberate y debe respetarse durante todas las fases.
+

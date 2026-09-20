@@ -1,0 +1,11 @@
+# Lyberate Backend API .htaccess
+RewriteEngine On
+
+# Redirect all requests to index.php if not an existing file or directory
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^ index.php [QSA,L]
+
+# Prevent directory listings
+Options -Indexes
+
