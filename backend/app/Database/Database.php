@@ -38,11 +38,25 @@ class Database
                 );
             } catch (PDOException $e) {
                 // In production, do not leak credentials or exact DSN details
-                throw new RuntimeException('Error al conectar con la base de datos MySQL.');
+                throw new RuntimeException('Error al conectar con la base de datos MySQL: ' . $e->getMessage(), (int) $e->getCode(), $e);
             }
         }
 
         return self::$instance;
+    }
+
+    /**
+     * Check if database connection is active and responsive.
+     */
+    public static function ping(): bool
+    {
+        try {
+            $pdo = self::getConnection();
+            $stmt = $pdo->query('SELECT 1');
+            return $stmt !== false;
+        } catch (\Throwable) {
+            return false;
+        }
     }
 
     /**
@@ -53,4 +67,3 @@ class Database
         self::$instance = null;
     }
 }
-

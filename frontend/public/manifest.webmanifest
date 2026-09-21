@@ -1,0 +1,81 @@
+{
+  "name": "Contacto con la Noticia",
+  "short_name": "Contacto",
+  "description": "Periódico Digital de Guárico y Venezuela — Información veraz, inmediata y contrastada",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#ffffff",
+  "theme_color": "#0c0a09",
+  "lang": "es-VE",
+  "categories": [
+    "news",
+    "magazines"
+  ],
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Última Hora",
+      "short_name": "Última Hora",
+      "description": "Noticias más recientes de Contacto con la Noticia",
+      "url": "/?seccion=ultimas",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Regionales",
+      "short_name": "Regionales",
+      "description": "Noticias del estado Guárico",
+      "url": "/categoria/regionales",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Buscar Noticias",
+      "short_name": "Buscar",
+      "description": "Buscador y hemeroteca digital",
+      "url": "/buscar",
+      "icons": [
+        {
+          "src": "/icons/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
+

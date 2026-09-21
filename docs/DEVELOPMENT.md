@@ -59,3 +59,24 @@ Antes de agregar una biblioteca a `package.json` o `composer.json`:
 3. Instalar únicamente lo indispensable para la fase actual.
 4. Queda prohibida la instalación anticipada de librerías para fases futuras.
 
+---
+
+## 5. Gestión de Base de Datos y Migraciones
+
+Las migraciones DDL se encuentran en `database/migrations/` numeradas secuencialmente (`001_` a `014_`).
+
+### Ejecución de Migraciones:
+- **Mediante script CLI nativo:**
+  ```bash
+  php database/migrate.php
+  ```
+- **Poblado de Seeds Oficiales (Roles, Permisos, Sitio Inicial y Categorías):**
+  ```bash
+  php database/seed.php
+  ```
+- **Vía MySQL directo (en contenedor Docker `lyberate_db`):**
+  ```bash
+  docker exec -i lyberate_db mysql -u lyberate_user -plyberate_password lyberate_db < database/migrations/001_create_tenants_table.sql
+  ```
+
+

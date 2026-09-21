@@ -73,10 +73,13 @@ Tenant (Organización / Cliente)
         └── Campaigns (Publicidad y configuración local)
 ```
 
-### Aislamiento Estricto en Backend:
+### Aislamiento Estricto en Backend y Base de Datos:
 - La autorización **nunca** depende únicamente de valores enviados por el cliente (`tenant_uuid`, `site_uuid`, roles).
 - El backend autentica al usuario mediante sesión segura y valida que dicho usuario tenga permisos explícitos sobre el tenant y sitio solicitados.
-- Queda prohibido permitir que un usuario acceda a recursos de otro tenant alterando un identificador en una petición HTTP.
+- **Integridad Referencial Compuesta en MySQL (Fase 2):**
+  Para impedir referencias cruzadas entre tenants y sitios a nivel de motor SQL, la tabla `sites` posee la clave única compuesta `(tenant_uuid, site_uuid)`.
+  Las tablas dependientes (`users`, `authors`, `categories`, `tags`, `media`, `articles`, `ad_campaigns`, `audit_logs`, `sessions`, `site_settings`) implementan claves foráneas compuestas obligatorias hacia `sites(tenant_uuid, site_uuid)`.
+  Asimismo, `articles` refuerza la pertenencia local mediante claves compuestas hacia `categories(tenant_uuid, site_uuid, category_uuid)` y `authors(tenant_uuid, site_uuid, author_uuid)`, haciendo imposible físicamente que un artículo del Sitio A apunte a categorías o autores del Sitio B.
 
 ---
 

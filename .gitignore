@@ -38,6 +38,8 @@ pnpm-debug.log*
 
 # Database local dumps & SQLite temp
 *.sql
+!database/migrations/*.sql
+!database/seeds/*.sql
 *.sqlite
 *.db
 database/dumps/

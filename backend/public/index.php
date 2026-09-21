@@ -25,40 +25,27 @@ spl_autoload_register(function (string $class): void {
     }
 });
 
-// 2. Global Exception and Error Handling
-set_exception_handler(function (Throwable $e): void {
-    \App\Core\Response::error(
-        'Error interno del servidor.',
-        'INTERNAL_SERVER_ERROR',
-        500
-    );
-});
+// 2. Load Environment Configuration
+\App\Core\Env::load(dirname(__DIR__, 2) . '/.env');
+\App\Core\Env::load(__DIR__ . '/../.env');
 
-// 3. Load Application Configuration
+// 3. Load App Configuration
 $appConfig = require __DIR__ . '/../config/app.php';
 
-// 4. CORS Headers
-$origin = $_SERVER['HTTP_ORIGIN'] ?? '';
-if (in_array($origin, $appConfig['cors']['allowed_origins'], true)) {
-    header("Access-Control-Allow-Origin: {$origin}");
-    header('Access-Control-Allow-Credentials: true');
-    header('Access-Control-Allow-Methods: ' . implode(', ', $appConfig['cors']['allowed_methods']));
-    header('Access-Control-Allow-Headers: ' . implode(', ', $appConfig['cors']['allowed_headers']));
-}
+// 4. Centralized Exception & Error Handling
+\App\Core\ExceptionHandler::register((bool) ($appConfig['debug'] ?? false));
 
-// Handle preflight OPTIONS request
-if (($_SERVER['REQUEST_METHOD'] ?? '') === 'OPTIONS') {
-    http_response_code(204);
-    exit;
-}
+// 5. Build Encapsulated Request
+$request = \App\Core\Request::fromGlobals();
 
-// 5. Initialize Router and Load Routes
+// 6. Initialize Router and Middleware Pipeline
 $router = new \App\Core\Router();
+$router->use(new \App\Middleware\RequestContextMiddleware());
+$router->use(new \App\Middleware\CorsMiddleware($appConfig['cors'] ?? null));
+$router->use(new \App\Middleware\JsonBodyParserMiddleware());
+
+// 7. Load Route Definitions
 require __DIR__ . '/../routes/api.php';
 
-// 6. Dispatch Request
-$method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
-$uri = $_SERVER['REQUEST_URI'] ?? '/';
-
-$router->dispatch($method, $uri);
-
+// 8. Dispatch Request
+$router->dispatch($request);

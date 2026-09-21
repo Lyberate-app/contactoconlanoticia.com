@@ -5,11 +5,19 @@ export const HomePage: React.FC = () => {
   return (
     <main className="max-w-4xl mx-auto px-4 py-12">
       <header className="border-b border-stone-200 pb-8 mb-8">
-        <div className="flex items-center gap-3 text-stone-600 mb-3">
-          <Newspaper className="w-7 h-7 text-stone-800" />
-          <span className="text-xs font-semibold tracking-wider uppercase text-stone-500">
-            Plataforma Lyberate
-          </span>
+        <div className="flex items-center justify-between gap-3 text-stone-600 mb-3">
+          <div className="flex items-center gap-3">
+            <Newspaper className="w-7 h-7 text-stone-800" />
+            <span className="text-xs font-semibold tracking-wider uppercase text-stone-500">
+              Plataforma Lyberate
+            </span>
+          </div>
+          <a
+            href="/login"
+            className="text-xs font-medium text-stone-700 hover:text-stone-950 underline underline-offset-4"
+          >
+            Acceso Editorial &rarr;
+          </a>
         </div>
         <h1 className="text-3xl sm:text-4xl font-serif font-bold text-stone-900 tracking-tight">
           Contacto con la Noticia
