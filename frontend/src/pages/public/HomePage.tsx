@@ -5,25 +5,49 @@ import { publicApi, HomeFeedData } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { AdSlot } from '../../components/common/AdSlot';
 import { LeadArticle, ArticleCard, NewsTicker } from '../../components/articles';
+import { SITE_URL } from '../../config/env';
 
 export const HomePage: React.FC = () => {
   const [feed, setFeed] = useState<HomeFeedData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const websiteSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'NewsMediaOrganization',
-    name: 'Contacto con la Noticia',
-    url: typeof window !== 'undefined' ? window.location.origin : 'https://contactoconlanoticia.com',
-    logo: typeof window !== 'undefined' ? `${window.location.origin}/logo.png` : 'https://contactoconlanoticia.com/logo.png',
-    description: 'Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo.',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: `${typeof window !== 'undefined' ? window.location.origin : 'https://contactoconlanoticia.com'}/buscar?q={search_term_string}`,
-      'query-input': 'required name=search_term_string',
+  const homeJsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Contacto con la Noticia',
+      url: `${SITE_URL}/`,
+      potentialAction: {
+        '@type': 'SearchAction',
+        target: {
+          '@type': 'EntryPoint',
+          urlTemplate: `${SITE_URL}/buscar?q={search_term_string}`,
+        },
+        'query-input': 'required name=search_term_string',
+      },
     },
-  };
+    {
+      '@context': 'https://schema.org',
+      '@type': 'NewsMediaOrganization',
+      name: 'Contacto con la Noticia',
+      url: `${SITE_URL}/`,
+      logo: {
+        '@type': 'ImageObject',
+        url: `${SITE_URL}/icons/icon-512x512.png`,
+        width: 512,
+        height: 512,
+      },
+      description: 'Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo.',
+      sameAs: [
+        'https://twitter.com/contactonoticia',
+        'https://facebook.com/contactoconlanoticia',
+        'https://instagram.com/contactoconlanoticia',
+      ],
+      publishingPrinciples: `${SITE_URL}/`,
+      ethicsPolicy: `${SITE_URL}/`,
+    },
+  ];
 
   useEffect(() => {
     setLoading(true);
@@ -77,9 +101,13 @@ export const HomePage: React.FC = () => {
       <SeoHead
         title="Contacto con la Noticia | Diario Digital Independiente"
         description="Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo."
-        canonicalUrl={typeof window !== 'undefined' ? `${window.location.origin}/` : 'https://contactoconlanoticia.com/'}
+        canonicalUrl={`${SITE_URL}/`}
         type="website"
-        jsonLd={websiteSchema}
+        imageUrl="/icons/icon-512x512.png"
+        imageWidth={512}
+        imageHeight={512}
+        imageAlt="Contacto con la Noticia"
+        jsonLd={homeJsonLd}
       />
 
       {/* 1. BREAKING NEWS TICKER */}

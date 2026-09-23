@@ -1,0 +1,23 @@
+# ==============================================================================
+# Contacto con la Noticia — Robots.txt
+# https://contactoconlanoticia.com
+# ==============================================================================
+
+User-agent: *
+Allow: /
+
+# Directivas de seguridad y áreas operativas privadas
+Disallow: /admin/
+Disallow: /login
+Disallow: /enviar-noticia
+Disallow: /buscar
+
+# Rastreo de imágenes optimizado
+User-agent: Googlebot-Image
+Allow: /icons/
+Allow: /placeholder-news.jpg
+
+# Declaración canónica de índices XML
+Sitemap: https://contactoconlanoticia.com/sitemap.xml
+Sitemap: https://contactoconlanoticia.com/sitemap-news.xml
+

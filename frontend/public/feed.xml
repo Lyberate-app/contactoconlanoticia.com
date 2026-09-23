@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Contacto con la Noticia</title>
+    <link>https://contactoconlanoticia.com</link>
+    <description>Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo.</description>
+    <language>es-ve</language>
+    <copyright>2026 Contacto con la Noticia. Todos los derechos reservados.</copyright>
+    <lastBuildDate>Wed, 23 Sep 2026 16:00:00 GMT</lastBuildDate>
+    <atom:link href="https://contactoconlanoticia.com/feed.xml" rel="self" type="application/rss+xml" />
+
+    <item>
+      <title>Avanzan obras de rehabilitación integral en el puente sobre el río Portuguesa</title>
+      <link>https://contactoconlanoticia.com/noticia/puente-rio-portuguesa-reparacion-vialidad-guarico</link>
+      <guid isPermaLink="true">https://contactoconlanoticia.com/noticia/puente-rio-portuguesa-reparacion-vialidad-guarico</guid>
+      <description>Equipos técnicos y maquinaria pesada completan el vaciado de losas y refuerzo de pilotes estructurales para garantizar la transitabilidad de carga pesada.</description>
+      <category>Regionales</category>
+      <pubDate>Wed, 23 Sep 2026 14:30:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Zafra maicera en Guárico supera proyecciones de rendimiento en ciclo de invierno</title>
+      <link>https://contactoconlanoticia.com/noticia/zafra-maicera-guarico-supera-expectativas</link>
+      <guid isPermaLink="true">https://contactoconlanoticia.com/noticia/zafra-maicera-guarico-supera-expectativas</guid>
+      <description>Productores de los municipios Mellado y Miranda reportan un incremento del 18% en toneladas métricas cosechadas gracias a condiciones climáticas favorables.</description>
+      <category>Economía</category>
+      <pubDate>Wed, 23 Sep 2026 12:15:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Alcaldía de Roscio completa modernización de alumbrado público con tecnología LED en avenidas principales</title>
+      <link>https://contactoconlanoticia.com/noticia/alcaldia-san-juan-alumbrado-led</link>
+      <guid isPermaLink="true">https://contactoconlanoticia.com/noticia/alcaldia-san-juan-alumbrado-led</guid>
+      <description>El plan de optimización de servicios urbanos instaló más de 450 luminarias de bajo consumo en corredores viales de San Juan de los Morros.</description>
+      <category>Regionales</category>
+      <pubDate>Wed, 23 Sep 2026 10:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Comunidades organizadas de Calabozo reactivan red comunitaria de agua potable</title>
+      <link>https://contactoconlanoticia.com/noticia/comunidades-organizadas-calabozo-red-agua</link>
+      <guid isPermaLink="true">https://contactoconlanoticia.com/noticia/comunidades-organizadas-calabozo-red-agua</guid>
+      <description>Con apoyo técnico y autogestión comunal, más de 800 familias de la parroquia Calabozo recuperan el servicio continuo por tubería.</description>
+      <category>Comunidades</category>
+      <pubDate>Wed, 23 Sep 2026 08:45:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Colisión múltiple en la Troncal 2 deja daños materiales sin pérdidas humanas</title>
+      <link>https://contactoconlanoticia.com/noticia/accidente-troncal-2-sin-victimas</link>
+      <guid isPermaLink="true">https://contactoconlanoticia.com/noticia/accidente-troncal-2-sin-victimas</guid>
+      <description>Cuerpos de auxilio vial y Protección Civil atendieron oportunamente el siniestro a la altura del sector Dos Caminos restableciendo el paso vehicular.</description>
+      <category>Sucesos</category>
+      <pubDate>Wed, 23 Sep 2026 15:20:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Esteros de Camaguán se preparan para temporada alta de avistamiento de fauna y turismo ecológico</title>
+      <link>https://contactoconlanoticia.com/noticia/esteros-camaguan-temporada-turismo-llanos</link>
+      <guid isPermaLink="true">https://contactoconlanoticia.com/noticia/esteros-camaguan-temporada-turismo-llanos</guid>
+      <description>Operadores turísticos y guías ambientales locales reportan una alta demanda de reservas para expediciones fluviales y avistamiento de aves en los humedales llaneros.</description>
+      <category>Cultura</category>
+      <pubDate>Tue, 22 Sep 2026 16:00:00 GMT</pubDate>
+    </item>
+  </channel>
+</rss>
+

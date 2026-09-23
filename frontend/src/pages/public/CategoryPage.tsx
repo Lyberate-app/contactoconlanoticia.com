@@ -4,6 +4,7 @@ import { Newspaper, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { publicApi, PublicCategory, PublicArticleSummary, PaginationMeta } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { ArticleCard } from '../../components/articles';
+import { SITE_URL } from '../../config/env';
 
 export const CategoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -83,10 +84,22 @@ export const CategoryPage: React.FC = () => {
     );
   }
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://contactoconlanoticia.com';
-  const canonicalUrl = `${origin}/categoria/${category.slug}`;
+  const canonicalUrl = `${SITE_URL}/categoria/${category.slug}`;
 
-  const categoryBreadcrumbs = [
+  const categoryJsonLd = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: `Noticias de ${category.name} | Contacto con la Noticia`,
+      description: category.description || `Últimas noticias y reportajes de la sección ${category.name} en Contacto con la Noticia.`,
+      url: canonicalUrl,
+      inLanguage: 'es-VE',
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'Contacto con la Noticia',
+        url: `${SITE_URL}/`,
+      },
+    },
     {
       '@context': 'https://schema.org',
       '@type': 'BreadcrumbList',
@@ -95,7 +108,7 @@ export const CategoryPage: React.FC = () => {
           '@type': 'ListItem',
           position: 1,
           name: 'Portada',
-          item: origin,
+          item: `${SITE_URL}/`,
         },
         {
           '@type': 'ListItem',
@@ -114,7 +127,8 @@ export const CategoryPage: React.FC = () => {
         description={category.description || `Últimas noticias y reportajes de la sección ${category.name} en Contacto con la Noticia.`}
         canonicalUrl={canonicalUrl}
         type="website"
-        jsonLd={categoryBreadcrumbs}
+        section={category.name}
+        jsonLd={categoryJsonLd}
       />
 
       {/* 1. SECTION HEADER */}

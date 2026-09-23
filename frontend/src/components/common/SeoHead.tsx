@@ -1,22 +1,29 @@
 import React, { useEffect } from 'react';
+import { SITE_URL } from '../../config/env';
 
 export interface SeoProps {
   title: string;
   description?: string;
   canonicalUrl?: string;
   type?: 'website' | 'article';
-  imageUrl?: string;
+  imageUrl?: string | null;
+  imageWidth?: number;
+  imageHeight?: number;
+  imageAlt?: string;
   publishedTime?: string;
   modifiedTime?: string;
   section?: string;
   authorName?: string;
   noIndex?: boolean;
+  twitterSite?: string;
+  twitterCreator?: string;
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
 }
 
 const DEFAULT_SITE_NAME = 'Contacto con la Noticia';
 const DEFAULT_DESCRIPTION = 'Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo.';
 const DEFAULT_IMAGE = '/placeholder-news.jpg';
+const DEFAULT_TWITTER_SITE = '@contactonoticia';
 
 export const SeoHead: React.FC<SeoProps> = ({
   title,
@@ -24,11 +31,16 @@ export const SeoHead: React.FC<SeoProps> = ({
   canonicalUrl,
   type = 'website',
   imageUrl,
+  imageWidth = 1200,
+  imageHeight = 630,
+  imageAlt,
   publishedTime,
   modifiedTime,
   section,
   authorName,
   noIndex = false,
+  twitterSite = DEFAULT_TWITTER_SITE,
+  twitterCreator,
   jsonLd,
 }) => {
   useEffect(() => {
@@ -68,10 +80,10 @@ export const SeoHead: React.FC<SeoProps> = ({
       element.setAttribute('href', href);
     };
 
-    const currentUrl = canonicalUrl || window.location.href;
+    const currentUrl = canonicalUrl || (typeof window !== 'undefined' ? `${SITE_URL}${window.location.pathname}` : SITE_URL);
     const finalImage = imageUrl
-      ? (imageUrl.startsWith('http') ? imageUrl : `${window.location.origin}${imageUrl}`)
-      : `${window.location.origin}${DEFAULT_IMAGE}`;
+      ? (imageUrl.startsWith('http') ? imageUrl : `${SITE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`)
+      : `${SITE_URL}${DEFAULT_IMAGE}`;
 
     // 2. Standard Meta Tags
     setMetaTag('name', 'description', description);
@@ -85,6 +97,9 @@ export const SeoHead: React.FC<SeoProps> = ({
     setMetaTag('property', 'og:description', description);
     setMetaTag('property', 'og:url', currentUrl);
     setMetaTag('property', 'og:image', finalImage);
+    setMetaTag('property', 'og:image:width', String(imageWidth));
+    setMetaTag('property', 'og:image:height', String(imageHeight));
+    setMetaTag('property', 'og:image:alt', imageAlt || title);
     setMetaTag('property', 'og:locale', 'es_VE');
 
     if (type === 'article') {
@@ -101,9 +116,12 @@ export const SeoHead: React.FC<SeoProps> = ({
 
     // 4. Twitter / X Cards
     setMetaTag('name', 'twitter:card', 'summary_large_image');
+    setMetaTag('name', 'twitter:site', twitterSite);
+    setMetaTag('name', 'twitter:creator', twitterCreator || twitterSite);
     setMetaTag('name', 'twitter:title', title);
     setMetaTag('name', 'twitter:description', description);
     setMetaTag('name', 'twitter:image', finalImage);
+    setMetaTag('name', 'twitter:image:alt', imageAlt || title);
 
     // 5. JSON-LD Structured Data
     let scriptTag = document.getElementById('lyberate-structured-data') as HTMLScriptElement | null;
@@ -118,24 +136,24 @@ export const SeoHead: React.FC<SeoProps> = ({
     } else if (scriptTag) {
       scriptTag.remove();
     }
-
-    return () => {
-      // Optional cleanup on unmount
-    };
   }, [
     title,
     description,
     canonicalUrl,
     type,
     imageUrl,
+    imageWidth,
+    imageHeight,
+    imageAlt,
     publishedTime,
     modifiedTime,
     section,
     authorName,
     noIndex,
+    twitterSite,
+    twitterCreator,
     jsonLd,
   ]);
 
   return null;
 };
-

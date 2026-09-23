@@ -16,6 +16,7 @@ import { AdSlot } from '../../components/common/AdSlot';
 import { OptimizedImage } from '../../components/common/OptimizedImage';
 import { RelatedArticles } from '../../components/articles';
 import { formatDate } from '../../utils/date';
+import { SITE_URL } from '../../config/env';
 
 export const ArticlePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -24,8 +25,7 @@ export const ArticlePage: React.FC = () => {
   const [notFound, setNotFound] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://contactoconlanoticia.com';
-  const canonicalUrl = article?.seo?.canonical_url || `${origin}/noticia/${article?.slug || slug}`;
+  const canonicalUrl = article?.seo?.canonical_url || `${SITE_URL}/noticia/${article?.slug || slug}`;
 
   const jsonLdPayload = article ? [
     {
@@ -38,26 +38,34 @@ export const ArticlePage: React.FC = () => {
       headline: article.seo?.meta_title || article.title,
       description: article.seo?.meta_description || article.excerpt || article.subtitle || '',
       image: article.featured_media?.url
-        ? [article.featured_media.url.startsWith('http') ? article.featured_media.url : `${origin}${article.featured_media.url}`]
-        : [`${origin}/placeholder-news.jpg`],
+        ? [article.featured_media.url.startsWith('http') ? article.featured_media.url : `${SITE_URL}${article.featured_media.url}`]
+        : [`${SITE_URL}/placeholder-news.jpg`],
       datePublished: article.published_at.replace(' ', 'T') + 'Z',
       dateModified: (article.modified_at || article.published_at).replace(' ', 'T') + 'Z',
+      inLanguage: 'es-VE',
       author: {
         '@type': 'Person',
         name: article.author_name || 'Redacción Contacto',
-        url: `${origin}/autor/${article.author_slug}`,
+        url: `${SITE_URL}/autor/${article.author_slug}`,
       },
       publisher: {
         '@type': 'NewsMediaOrganization',
         name: 'Contacto con la Noticia',
-        url: origin,
+        url: `${SITE_URL}/`,
         logo: {
           '@type': 'ImageObject',
-          url: `${origin}/logo.png`,
+          url: `${SITE_URL}/icons/icon-512x512.png`,
+          width: 512,
+          height: 512,
         },
+        publishingPrinciples: `${SITE_URL}/`,
       },
       articleSection: article.category_name,
       keywords: article.tags?.map(t => t.name) || [],
+      copyrightHolder: {
+        '@type': 'NewsMediaOrganization',
+        name: 'Contacto con la Noticia',
+      },
     },
     {
       '@context': 'https://schema.org',
@@ -67,13 +75,13 @@ export const ArticlePage: React.FC = () => {
           '@type': 'ListItem',
           position: 1,
           name: 'Portada',
-          item: origin,
+          item: `${SITE_URL}/`,
         },
         {
           '@type': 'ListItem',
           position: 2,
           name: article.category_name,
-          item: `${origin}/categoria/${article.category_slug}`,
+          item: `${SITE_URL}/categoria/${article.category_slug}`,
         },
         {
           '@type': 'ListItem',
@@ -177,6 +185,7 @@ export const ArticlePage: React.FC = () => {
         modifiedTime={(article.modified_at || article.published_at).replace(' ', 'T') + 'Z'}
         section={article.category_name}
         authorName={article.author_name}
+        imageAlt={article.featured_media?.alt_text || article.featured_media?.caption || article.title}
         jsonLd={jsonLdPayload}
       />
 

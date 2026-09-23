@@ -779,8 +779,45 @@ La **Fase FE-4: CMS Editorial, Gestión Multimedia y Editor Periodístico** ha s
 * Se respetó la instrucción explícita de **no realizar commit ni push**.
 
 ---
-*Fin del informe de auditoría técnica y fases implementadas (FE-1, FE-2, FE-3 y FE-4).*
 
+## 26. FE-5 Implementation Status (Completada)
 
+La **Fase FE-5: SEO y Descubrimiento Editorial** ha sido completada y verificada exitosamente en el frontend de **Contacto con la Noticia**.
 
+### 26.1 Acciones Implementadas
 
+1. **Configuración Canónica Centralizada (`src/config/env.ts` y `.env.example`):**
+   - Incorporación de `SITE_URL` con lectura de `VITE_SITE_URL` y fallback canónico a `https://contactoconlanoticia.com`.
+   - Eliminación de dependencias dinámicas hacia `window.location.origin` en metadatos y esquemas para garantizar consistencia en producción y desarrollo.
+   - Documentación de `VITE_SITE_URL` en `.env.example`.
+
+2. **Componente de Encabezados y Metadatos (`src/components/common/SeoHead.tsx`):**
+   - Metadatos Open Graph enriquecidos con dimensiones canónicas (`og:image:width=1200`, `og:image:height=630`), texto alternativo (`og:image:alt`) y localización `es_VE`.
+   - Soporte para etiquetas Twitter/X Cards completas (`twitter:card="summary_large_image"`, `twitter:site="@contactonoticia"`, `twitter:creator`).
+   - Normalización de URLs canónicas con fallback estructurado.
+   - Limpieza y reseteo sistemático de metadatos de artículos al desmontar o transicionar entre páginas.
+   - Flexibilidad de tipos admitiendo `imageUrl?: string | null`.
+
+3. **Esquemas Estructurados Schema.org (JSON-LD):**
+   - **`HomePage.tsx`:** Esquema dual `WebSite` con acción de búsqueda `potentialAction: SearchAction` y `NewsMediaOrganization` con logotipo 512x512, redes sociales (`sameAs`) y principios editoriales.
+   - **`CategoryPage.tsx`:** Inyección de esquema `CollectionPage` con descripción editorial y `BreadcrumbList` jerárquico (Portada → Sección).
+   - **`AuthorPage.tsx`:** Inyección de esquema `ProfilePage` con `Person`, fotografía del redactor, cargo y afiliación editorial (`worksFor`).
+   - **`ArticlePage.tsx`:** Esquema `NewsArticle` completo compatible con Google Search y Google News, incluyendo fechas ISO 8601, autor, editor `NewsMediaOrganization`, `articleSection`, palabras clave, idioma `es-VE` y titular.
+   - **`SearchPage.tsx`:** Configuración explícita `noIndex={true}` para cumplir con las directrices de indexación de Google contra contenido delgado.
+   - **`SubmitNewsPage.tsx`:** Inyección canónica con metadatos descriptivos.
+
+4. **Archivos de Descubrimiento e Indexación (`frontend/public/`):**
+   - **`robots.txt`:** Reglas para `User-agent: *`, protección de rutas privadas (`/admin/`, `/login`, `/enviar-noticia`, `/buscar`) y enlace a los sitemaps.
+   - **`sitemap.xml`:** Índice de URLs canónicas para portada, 8 secciones editoriales, perfiles de redactores y catálogo de noticias publicadas.
+   - **`sitemap-news.xml`:** Índice según la especificación de Google News con artículos recientes publicados en las últimas 48 horas.
+   - **`feed.xml`:** Feed RSS 2.0 válido con elementos de noticias, fechas RFC 822 y canal de sindicación.
+   - **`index.html`:** Enlace de autodescubrimiento `<link rel="alternate" type="application/rss+xml" href="/feed.xml" />`.
+
+### 26.2 Verificación de Resultados
+
+* `npx tsc --noEmit`: **0 errores** (código de salida 0).
+* `npm run build`: **0 errores** (`tsc --noEmit && vite build`, 1645 módulos transformados, `dist/` generado exitosamente con inclusión de `robots.txt`, `sitemap.xml`, `sitemap-news.xml` y `feed.xml`).
+* Límites arquitectónicos respetados: Todo el trabajo se limitó a `frontend/` y `docs/FRONTEND_AUDIT.md`. No se modificaron `backend/`, `database/` ni `tools/`.
+
+---
+*Fin del informe de auditoría técnica y fases implementadas (FE-1, FE-2, FE-3, FE-4 y FE-5).*

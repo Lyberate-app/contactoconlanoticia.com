@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Send, Camera, ShieldCheck, MapPin, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
 import { submitCitizenNews } from '../../services/submissionApi';
 import { SeoHead } from '../../components/common/SeoHead';
+import { SITE_URL } from '../../config/env';
 
 export const SubmitNewsPage: React.FC = () => {
   const [formData, setFormData] = useState({
@@ -95,7 +96,7 @@ export const SubmitNewsPage: React.FC = () => {
       <SeoHead
         title="Envíanos tu Noticia | Contacto con la Noticia"
         description="Participa en la cobertura informativa de los Llanos venezolanos. Envía denuncias, sucesos y reportes comunitarios a nuestra redacción."
-        canonicalUrl={typeof window !== 'undefined' ? `${window.location.origin}/enviar-noticia` : 'https://contactoconlanoticia.com/enviar-noticia'}
+        canonicalUrl={`${SITE_URL}/enviar-noticia`}
         type="website"
       />
 

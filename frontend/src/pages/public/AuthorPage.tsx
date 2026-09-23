@@ -4,6 +4,7 @@ import { User, Newspaper, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-re
 import { publicApi, PublicAuthor, PublicArticleSummary, PaginationMeta } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { ArticleCard } from '../../components/articles';
+import { SITE_URL } from '../../config/env';
 
 export const AuthorPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -82,20 +83,34 @@ export const AuthorPage: React.FC = () => {
     );
   }
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://contactoconlanoticia.com';
-  const canonicalUrl = `${origin}/autor/${author.slug}`;
+  const canonicalUrl = `${SITE_URL}/autor/${author.slug}`;
+  const authorAvatar = author.avatar_url
+    ? (author.avatar_url.startsWith('http') ? author.avatar_url : `${SITE_URL}${author.avatar_url}`)
+    : `${SITE_URL}/placeholder-news.jpg`;
 
   const authorSchema = [
     {
       '@context': 'https://schema.org',
-      '@type': 'Person',
-      name: author.name,
-      description: author.bio || `Artículos y cobertura periodística de ${author.name} en Contacto con la Noticia.`,
+      '@type': 'ProfilePage',
+      name: `Perfil de ${author.name} | Contacto con la Noticia`,
       url: canonicalUrl,
-      worksFor: {
-        '@type': 'NewsMediaOrganization',
+      isPartOf: {
+        '@type': 'WebSite',
         name: 'Contacto con la Noticia',
-        url: origin,
+        url: `${SITE_URL}/`,
+      },
+      mainEntity: {
+        '@type': 'Person',
+        name: author.name,
+        description: author.bio || `Artículos y cobertura periodística de ${author.name} en Contacto con la Noticia.`,
+        url: canonicalUrl,
+        image: authorAvatar,
+        jobTitle: 'Periodista / Redactor',
+        worksFor: {
+          '@type': 'NewsMediaOrganization',
+          name: 'Contacto con la Noticia',
+          url: `${SITE_URL}/`,
+        },
       },
     },
     {
@@ -106,7 +121,7 @@ export const AuthorPage: React.FC = () => {
           '@type': 'ListItem',
           position: 1,
           name: 'Portada',
-          item: origin,
+          item: `${SITE_URL}/`,
         },
         {
           '@type': 'ListItem',
@@ -125,6 +140,8 @@ export const AuthorPage: React.FC = () => {
         description={author.bio || `Perfil y noticias publicadas por el periodista ${author.name} en Contacto con la Noticia.`}
         canonicalUrl={canonicalUrl}
         type="website"
+        imageUrl={author.avatar_url || undefined}
+        imageAlt={`Fotografía de ${author.name}`}
         authorName={author.name}
         jsonLd={authorSchema}
       />
