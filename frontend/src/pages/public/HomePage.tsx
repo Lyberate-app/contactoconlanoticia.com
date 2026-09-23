@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, User, TrendingUp, Newspaper, ChevronRight } from 'lucide-react';
+import { TrendingUp, Newspaper, ChevronRight } from 'lucide-react';
 import { publicApi, HomeFeedData } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { AdSlot } from '../../components/common/AdSlot';
+import { LeadArticle, ArticleCard, NewsTicker } from '../../components/articles';
 
 export const HomePage: React.FC = () => {
   const [feed, setFeed] = useState<HomeFeedData | null>(null);
@@ -40,11 +41,14 @@ export const HomePage: React.FC = () => {
   if (loading) {
     return (
       <div className="space-y-8 animate-pulse">
-        <div className="h-96 bg-stone-200/70 rounded"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="h-64 bg-stone-200/70 rounded"></div>
-          <div className="h-64 bg-stone-200/70 rounded"></div>
-          <div className="h-64 bg-stone-200/70 rounded"></div>
+        <div className="h-6 w-full bg-stone-200 rounded"></div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          <div className="lg:col-span-7 h-96 bg-stone-200 rounded"></div>
+          <div className="lg:col-span-5 space-y-4">
+            <div className="h-28 bg-stone-200 rounded"></div>
+            <div className="h-28 bg-stone-200 rounded"></div>
+            <div className="h-28 bg-stone-200 rounded"></div>
+          </div>
         </div>
       </div>
     );
@@ -66,23 +70,10 @@ export const HomePage: React.FC = () => {
     );
   }
 
-  const { lead_article, secondary_articles, latest_articles, trending_articles, sections } = feed;
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr.replace(' ', 'T'));
-      return new Intl.DateTimeFormat('es-VE', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }).format(d);
-    } catch {
-      return dateStr;
-    }
-  };
+  const { breaking_news, lead_article, secondary_articles, latest_articles, trending_articles, sections } = feed;
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-8">
       <SeoHead
         title="Contacto con la Noticia | Diario Digital Independiente"
         description="Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo."
@@ -91,100 +82,38 @@ export const HomePage: React.FC = () => {
         jsonLd={websiteSchema}
       />
 
-      {/* 1. LEAD STORY + TOP EDITORIAL GRID */}
+      {/* 1. BREAKING NEWS TICKER */}
+      {breaking_news && breaking_news.length > 0 && (
+        <NewsTicker articles={breaking_news} label="Última Hora" />
+      )}
+
+      {/* 2. LEAD STORY + SECONDARY COLUMN */}
       {lead_article && (
         <section className="border-b border-stone-300 pb-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
             {/* Lead Article (Left 7 Cols) */}
-            <article className="lg:col-span-7 space-y-3">
-              <div className="flex items-center gap-2">
-                <Link
-                  to={`/categoria/${lead_article.category_slug}`}
-                  className="text-xs font-bold uppercase tracking-wider text-red-700 hover:underline"
-                >
-                  {lead_article.category_name}
-                </Link>
-                <span className="text-stone-300 text-xs">·</span>
-                <span className="text-xs text-stone-500 font-medium">Tema Principal</span>
-              </div>
-
-              <Link to={`/noticias/${lead_article.slug}`} className="block group">
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-bold text-stone-950 leading-tight group-hover:text-red-900 transition-colors">
-                  {lead_article.title}
-                </h2>
-              </Link>
-
-              {lead_article.subtitle && (
-                <p className="text-base sm:text-lg font-serif italic text-stone-700 leading-snug">
-                  {lead_article.subtitle}
-                </p>
-              )}
-
-              {/* Photo representation frame */}
-              <div className="relative aspect-[16/9] bg-stone-200 border border-stone-300 overflow-hidden rounded-sm flex items-center justify-center text-stone-500">
-                <div className="text-center p-4">
-                  <Newspaper className="w-10 h-10 mx-auto text-stone-400 mb-2" />
-                  <span className="text-xs font-serif italic text-stone-600">Fotografía: Archivo Contacto con la Noticia / San Juan de los Morros</span>
-                </div>
-              </div>
-
-              {lead_article.excerpt && (
-                <p className="text-sm text-stone-700 leading-relaxed pt-1">
-                  {lead_article.excerpt}
-                </p>
-              )}
-
-              <div className="flex items-center gap-3 text-xs text-stone-500 pt-2 border-t border-stone-200">
-                <span className="flex items-center gap-1 font-medium text-stone-800">
-                  <User className="w-3.5 h-3.5 text-stone-400" />
-                  <Link to={`/autor/${lead_article.author_slug}`} className="hover:underline">
-                    {lead_article.author_name}
-                  </Link>
-                </span>
-                <span>·</span>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-stone-400" />
-                  {formatDate(lead_article.published_at)}
-                </span>
-              </div>
-            </article>
+            <div className="lg:col-span-7">
+              <LeadArticle article={lead_article} kicker="Tema Principal" />
+            </div>
 
             {/* Secondary News Column (Right 5 Cols) */}
-            <div className="lg:col-span-5 space-y-6 lg:border-l lg:border-stone-200 lg:pl-8">
-              <h3 className="font-serif font-bold text-xs uppercase tracking-wider text-stone-900 border-b border-stone-300 pb-1">
-                Noticias Destacadas
-              </h3>
+            <div className="lg:col-span-5 space-y-4 lg:border-l lg:border-stone-200 lg:pl-8">
+              <div className="border-b border-stone-300 pb-1 mb-2">
+                <h3 className="font-serif font-bold text-xs uppercase tracking-wider text-stone-900">
+                  Noticias Destacadas
+                </h3>
+              </div>
 
-              <div className="divide-y divide-stone-200 space-y-5">
-                {secondary_articles.map((art, idx) => (
-                  <article key={art.article_uuid} className={idx > 0 ? 'pt-5' : ''}>
-                    <Link
-                      to={`/categoria/${art.category_slug}`}
-                      className="text-[11px] font-bold uppercase tracking-wider text-red-700 hover:underline"
-                    >
-                      {art.category_name}
-                    </Link>
-
-                    <Link to={`/noticias/${art.slug}`} className="block group mt-1">
-                      <h4 className="text-base sm:text-lg font-serif font-bold text-stone-900 leading-snug group-hover:text-red-900 transition-colors">
-                        {art.title}
-                      </h4>
-                    </Link>
-
-                    {art.excerpt && (
-                      <p className="text-xs text-stone-600 line-clamp-2 mt-1 leading-relaxed">
-                        {art.excerpt}
-                      </p>
-                    )}
-
-                    <div className="flex items-center gap-2 text-[11px] text-stone-500 mt-2">
-                      <Link to={`/autor/${art.author_slug}`} className="hover:underline text-stone-700">
-                        {art.author_name}
-                      </Link>
-                      <span>·</span>
-                      <span>{formatDate(art.published_at)}</span>
-                    </div>
-                  </article>
+              <div className="divide-y divide-stone-200">
+                {secondary_articles.map((art) => (
+                  <ArticleCard
+                    key={art.article_uuid}
+                    article={art}
+                    variant="horizontal"
+                    showAuthor={true}
+                    showExcerpt={true}
+                    className="py-3.5"
+                  />
                 ))}
               </div>
             </div>
@@ -195,10 +124,10 @@ export const HomePage: React.FC = () => {
       {/* TOP_NEWS AD SLOT */}
       <AdSlot placement="TOP_NEWS" />
 
-      {/* 2. MAIN BODY: LATEST NEWS STREAM + SIDEBAR */}
+      {/* 3. MAIN BODY: LATEST NEWS STREAM + SIDEBAR */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Left / Main Column (8 Cols) */}
-        <div className="lg:col-span-8 space-y-8">
+        <div className="lg:col-span-8 space-y-10">
           {/* Section: Últimas Noticias */}
           <div>
             <div className="flex items-center justify-between border-b-2 border-stone-900 pb-1 mb-6">
@@ -209,44 +138,23 @@ export const HomePage: React.FC = () => {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {latest_articles.map(art => (
-                <article
+              {latest_articles.map((art) => (
+                <ArticleCard
                   key={art.article_uuid}
-                  className="bg-white border border-stone-200 p-4 space-y-2 hover:border-stone-400 transition-colors"
-                >
-                  <Link
-                    to={`/categoria/${art.category_slug}`}
-                    className="text-[10px] font-bold uppercase tracking-wider text-red-700 hover:underline"
-                  >
-                    {art.category_name}
-                  </Link>
-
-                  <Link to={`/noticias/${art.slug}`} className="block group">
-                    <h4 className="font-serif font-bold text-stone-900 text-sm leading-snug group-hover:text-red-900 transition-colors">
-                      {art.title}
-                    </h4>
-                  </Link>
-
-                  {art.excerpt && (
-                    <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-                      {art.excerpt}
-                    </p>
-                  )}
-
-                  <div className="text-[11px] text-stone-400 pt-2 border-t border-stone-100 flex items-center justify-between">
-                    <span>{art.author_name}</span>
-                    <span>{formatDate(art.published_at)}</span>
-                  </div>
-                </article>
+                  article={art}
+                  variant="vertical"
+                  showExcerpt={true}
+                  showAuthor={true}
+                />
               ))}
             </div>
           </div>
 
-          {/* Section Highlights from canonical categories */}
+          {/* Categorized Editorial Sections */}
           {Object.entries(sections).map(([slug, sec]) => (
-            <div key={slug} className="border-t border-stone-300 pt-6">
-              <div className="flex items-center justify-between border-b border-stone-200 pb-2 mb-4">
-                <h3 className="font-serif text-base font-bold uppercase text-stone-950 tracking-wider">
+            <div key={slug} className="border-t border-stone-300 pt-8">
+              <div className="flex items-center justify-between border-b border-stone-200 pb-2 mb-6">
+                <h3 className="font-serif text-base sm:text-lg font-bold uppercase text-stone-950 tracking-wider">
                   {sec.category.name}
                 </h3>
                 <Link
@@ -258,18 +166,15 @@ export const HomePage: React.FC = () => {
                 </Link>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {sec.articles.map(art => (
-                  <article key={art.article_uuid} className="space-y-1.5">
-                    <Link to={`/noticias/${art.slug}`} className="block group">
-                      <h4 className="font-serif font-bold text-stone-900 text-xs sm:text-sm leading-snug group-hover:text-red-900 transition-colors">
-                        {art.title}
-                      </h4>
-                    </Link>
-                    <div className="text-[10px] text-stone-400">
-                      {formatDate(art.published_at)}
-                    </div>
-                  </article>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                {sec.articles.slice(0, 3).map((art) => (
+                  <ArticleCard
+                    key={art.article_uuid}
+                    article={art}
+                    variant="vertical"
+                    showExcerpt={false}
+                    showAuthor={true}
+                  />
                 ))}
               </div>
             </div>
@@ -290,23 +195,23 @@ export const HomePage: React.FC = () => {
               </h3>
             </div>
 
-            <ol className="divide-y divide-stone-100 space-y-3">
+            <ol className="divide-y divide-stone-100">
               {trending_articles.map((art, idx) => (
-                <li key={art.article_uuid} className={idx > 0 ? 'pt-3' : ''}>
+                <li key={art.article_uuid} className="py-2.5 first:pt-0 last:pb-0">
                   <div className="flex items-start gap-3">
-                    <span className="font-serif font-bold text-2xl text-stone-300 leading-none shrink-0 w-6 text-right">
+                    <span className="font-serif font-black text-2xl text-stone-300 leading-none shrink-0 w-6 text-right">
                       {idx + 1}
                     </span>
-                    <div className="space-y-1">
+                    <div className="space-y-1 min-w-0">
                       <Link
                         to={`/categoria/${art.category_slug}`}
-                        className="text-[10px] font-bold uppercase tracking-wider text-red-700 hover:underline block"
+                        className="text-[10px] font-bold uppercase tracking-wider text-red-700 hover:underline block truncate"
                       >
                         {art.category_name}
                       </Link>
                       <Link
-                        to={`/noticias/${art.slug}`}
-                        className="font-serif font-bold text-xs text-stone-900 hover:text-red-900 leading-snug line-clamp-2"
+                        to={`/noticia/${art.slug}`}
+                        className="font-serif font-bold text-xs sm:text-[13px] text-stone-900 hover:text-red-900 leading-snug line-clamp-2 block transition-colors"
                       >
                         {art.title}
                       </Link>
@@ -317,32 +222,35 @@ export const HomePage: React.FC = () => {
             </ol>
           </div>
 
-          {/* Opinión & Columnistas Box */}
+          {/* Tribuna Editorial */}
           <div className="bg-stone-100 border border-stone-200 p-5 rounded-sm space-y-4">
             <h3 className="font-serif font-bold text-xs uppercase tracking-wider text-stone-950 border-b border-stone-300 pb-1">
               Tribuna Editorial
             </h3>
 
-            <div className="space-y-3 text-xs text-stone-700">
+            <div className="space-y-3.5 text-xs text-stone-700">
               <div className="border-b border-stone-200 pb-3">
                 <span className="font-serif font-semibold text-stone-900 block">Carlos Mendoza</span>
                 <span className="text-[11px] text-stone-500 italic block mb-1">Análisis Regional</span>
-                <p className="line-clamp-2 text-stone-600">
-                  "El valor de la producción llanera frente a los retos económicos del ciclo agrícola nacional."
+                <p className="line-clamp-2 text-stone-600 leading-relaxed font-serif">
+                  "El valor de la producción cerealera llanera frente a los retos económicos del ciclo agrícola nacional."
                 </p>
               </div>
 
               <div>
                 <span className="font-serif font-semibold text-stone-900 block">Elena Vásquez</span>
                 <span className="text-[11px] text-stone-500 italic block mb-1">Seguridad y Comunidad</span>
-                <p className="line-clamp-2 text-stone-600">
-                  "La convivencia ciudadana y el fortalecimiento de la prevención vecinal en San Juan de los Morros."
+                <p className="line-clamp-2 text-stone-600 leading-relaxed font-serif">
+                  "La articulación vecinal y la preservación de los afluentes urbanos en la capital guariqueña."
                 </p>
               </div>
             </div>
           </div>
         </aside>
       </section>
+
+      {/* FOOTER AD SLOT */}
+      <AdSlot placement="FOOTER" />
     </div>
   );
 };

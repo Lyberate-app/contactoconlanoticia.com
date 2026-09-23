@@ -13,6 +13,9 @@ import {
 import { publicApi, PublicArticleDetail } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { AdSlot } from '../../components/common/AdSlot';
+import { OptimizedImage } from '../../components/common/OptimizedImage';
+import { RelatedArticles } from '../../components/articles';
+import { formatDate } from '../../utils/date';
 
 export const ArticlePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -111,22 +114,6 @@ export const ArticlePage: React.FC = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
-  };
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr.replace(' ', 'T'));
-      return new Intl.DateTimeFormat('es-VE', {
-        weekday: 'long',
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(d);
-    } catch {
-      return dateStr;
-    }
   };
 
   if (loading) {
@@ -243,12 +230,12 @@ export const ArticlePage: React.FC = () => {
           <div className="text-[11px] text-stone-500 space-y-0.5 sm:text-right">
             <div className="flex items-center gap-1 sm:justify-end">
               <Calendar className="w-3.5 h-3.5 text-stone-400" />
-              <span>Publicado: {formatDate(article.published_at)}</span>
+              <span>Publicado: {formatDate(article.published_at, 'full')}</span>
             </div>
             {article.modified_at && (
               <div className="flex items-center gap-1 text-stone-400 sm:justify-end">
                 <Clock className="w-3 h-3" />
-                <span>Actualizado: {formatDate(article.modified_at)}</span>
+                <span>Actualizado: {formatDate(article.modified_at, 'full')}</span>
               </div>
             )}
           </div>
@@ -311,20 +298,26 @@ export const ArticlePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. FEATURED IMAGE FRAME */}
-      <div className="space-y-1.5">
-        <div className="aspect-[16/9] bg-stone-200 border border-stone-300 rounded overflow-hidden flex items-center justify-center text-stone-500">
+      {/* 4. FEATURED IMAGE */}
+      {article.featured_media?.url ? (
+        <OptimizedImage
+          src={article.featured_media.url}
+          alt={article.featured_media.alt_text || article.title}
+          caption={article.featured_media.caption}
+          credit={article.featured_media.credit}
+          priority={true}
+          aspectRatio="16/9"
+        />
+      ) : (
+        <div className="aspect-[16/9] bg-stone-100 border border-stone-200 rounded-sm overflow-hidden flex items-center justify-center text-stone-400">
           <div className="text-center p-6">
-            <Newspaper className="w-12 h-12 mx-auto text-stone-400 mb-2" />
-            <span className="text-xs font-serif italic text-stone-600">
-              Cobertura informativa oficial · Contacto con la Noticia
+            <Newspaper className="w-10 h-10 mx-auto text-stone-300 mb-2" />
+            <span className="text-xs font-serif italic text-stone-500">
+              Cobertura informativa · Contacto con la Noticia
             </span>
           </div>
         </div>
-        <p className="text-[11px] font-serif italic text-stone-500 text-center">
-          Fotografía de archivo / Redacción Central de Contacto con la Noticia en San Juan de los Morros.
-        </p>
-      </div>
+      )}
 
       {/* ARTICLE_TOP AD SLOT */}
       <AdSlot placement="ARTICLE_TOP" />
@@ -432,33 +425,10 @@ export const ArticlePage: React.FC = () => {
       <AdSlot placement="ARTICLE_BOTTOM" />
 
       {/* 8. RELATED ARTICLES */}
-      {article.related_articles && article.related_articles.length > 0 && (
-        <section className="border-t-2 border-stone-900 pt-6 mt-12">
-          <h2 className="font-serif text-lg font-bold uppercase tracking-wider text-stone-950 mb-4">
-            Noticias Relacionadas en {article.category_name}
-          </h2>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {article.related_articles.map(rel => (
-              <article key={rel.article_uuid} className="bg-white border border-stone-200 p-4 space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-red-700 block">
-                  {rel.category_name}
-                </span>
-
-                <Link to={`/noticias/${rel.slug}`} className="block group">
-                  <h3 className="font-serif font-bold text-stone-900 text-sm leading-snug group-hover:text-red-900 transition-colors">
-                    {rel.title}
-                  </h3>
-                </Link>
-
-                <div className="text-[11px] text-stone-400 pt-2 border-t border-stone-100">
-                  {formatDate(rel.published_at)}
-                </div>
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
+      <RelatedArticles
+        articles={article.related_articles}
+        categoryName={article.category_name}
+      />
     </div>
   );
 };

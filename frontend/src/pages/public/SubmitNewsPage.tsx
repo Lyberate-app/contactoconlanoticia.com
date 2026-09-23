@@ -82,8 +82,9 @@ export const SubmitNewsPage: React.FC = () => {
 
       await submitCitizenNews(data);
       setSubmitted(true);
-    } catch (err: any) {
-      setErrorMessage(err.message || 'Ocurrió un error al enviar el reporte. Por favor intente más tarde.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Ocurrió un error al enviar el reporte. Por favor intente más tarde.';
+      setErrorMessage(msg);
     } finally {
       setLoading(false);
     }
@@ -301,7 +302,7 @@ export const SubmitNewsPage: React.FC = () => {
                 </div>
                 {files.length > 0 && (
                   <div className="mt-2 text-[11px] text-stone-600 font-medium">
-                    {files.length} archivo(s) seleccionado(s): {files.map((f) => f.name).join(', ')}
+                    {files.length} archivo(s) seleccionado(s): {files.map((f: File) => f.name).join(', ')}
                   </div>
                 )}
               </div>

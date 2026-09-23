@@ -2,25 +2,10 @@
  * Web Push & PWA API Client
  */
 
-export interface PushTopic {
-  id: string;
-  name: string;
-}
+import { apiClient } from './apiClient';
+import type { PushTopic, PushConfig, SubscribePushPayload } from '../types/push';
 
-export interface PushConfig {
-  enabled: boolean;
-  public_key: string | null;
-  available_topics: PushTopic[];
-}
-
-export interface SubscribePushPayload {
-  endpoint: string;
-  keys: {
-    p256dh: string;
-    auth: string;
-  };
-  topics?: string[];
-}
+export type { PushTopic, PushConfig, SubscribePushPayload };
 
 /**
  * Utility function to convert a Base64URL string to a Uint8Array
@@ -46,75 +31,30 @@ export function urlBase64ToUint8Array(base64String: string): Uint8Array {
  * Fetch public push configuration.
  */
 export async function getPushConfig(): Promise<PushConfig> {
-  const res = await fetch('/api/v1/public/push/config', {
-    headers: {
-      'Accept': 'application/json'
-    }
-  });
-
-  if (!res.ok) {
-    throw new Error('Error al consultar configuración de notificaciones.');
-  }
-
-  const json = await res.json();
-  return json.data;
+  const res = await apiClient.get<PushConfig>('/public/push/config');
+  return res.data;
 }
 
 /**
  * Register push subscription in backend.
  */
-export async function subscribeToPush(payload: SubscribePushPayload): Promise<any> {
-  const res = await fetch('/api/v1/public/push/subscribe', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify(payload)
-  });
-
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error?.message || 'Error al registrar suscripción push.');
-  }
-
-  return json.data;
+export async function subscribeToPush(payload: SubscribePushPayload): Promise<unknown> {
+  const res = await apiClient.post('/public/push/subscribe', payload);
+  return res.data;
 }
 
 /**
  * Unsubscribe push endpoint in backend.
  */
-export async function unsubscribeFromPush(endpoint: string): Promise<any> {
-  const res = await fetch('/api/v1/public/push/unsubscribe', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({ endpoint })
-  });
-
-  const json = await res.json();
-  return json.data;
+export async function unsubscribeFromPush(endpoint: string): Promise<unknown> {
+  const res = await apiClient.post('/public/push/unsubscribe', { endpoint });
+  return res.data;
 }
 
 /**
  * Update topic preferences for existing push subscription.
  */
-export async function updatePushPreferences(endpoint: string, topics: string[]): Promise<any> {
-  const res = await fetch('/api/v1/public/push/preferences', {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json'
-    },
-    body: JSON.stringify({ endpoint, topics })
-  });
-
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error?.message || 'Error al actualizar preferencias de notificación.');
-  }
-
-  return json.data;
+export async function updatePushPreferences(endpoint: string, topics: string[]): Promise<unknown> {
+  const res = await apiClient.put('/public/push/preferences', { endpoint, topics });
+  return res.data;
 }

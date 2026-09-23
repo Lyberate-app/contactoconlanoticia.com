@@ -2,144 +2,231 @@
  * LYBERATE — EDITORIAL CMS CLIENT SERVICE
  *
  * Handles articles, categories, authors, and taxonomy for the newsroom CMS.
+ * Supports mock development mode when VITE_DATA_MODE=mock.
  */
 
-export interface ArticleSummary {
-  article_uuid: string;
-  title: string;
-  subtitle: string | null;
-  excerpt: string | null;
-  slug: string;
-  status: 'DRAFT' | 'PENDING_REVIEW' | 'SCHEDULED' | 'PUBLISHED' | 'ARCHIVED' | 'TRASH';
-  published_at: string | null;
-  modified_at: string | null;
-  created_at: string;
-  updated_at: string;
-  author_uuid: string;
-  author_name: string;
-  author_slug: string;
-  category_uuid: string;
-  category_name: string;
-  category_slug: string;
-  featured_media_uuid: string | null;
-}
+import { apiClient, ApiError } from './apiClient';
+import { isMockMode } from '../config/env';
+import { mockStorage } from '../mocks/mockStorage';
+import type {
+  ArticleSummary,
+  ArticleDetail,
+  ArticleStatus,
+  ArticleTag,
+  Tag,
+  CreateArticlePayload,
+  UpdateArticlePayload,
+  DashboardStats,
+} from '../types/article';
+import type { Category } from '../types/category';
+import type { Author } from '../types/author';
+import type { PaginationMeta } from '../types/api';
 
-export interface ArticleDetail extends ArticleSummary {
-  content: string;
-  seo?: {
-    meta_title: string | null;
-    meta_description: string | null;
-    canonical_url: string | null;
-    og_title: string | null;
-    og_description: string | null;
-    og_image_media_uuid: string | null;
-  } | null;
-  tags?: Array<{
-    tag_uuid: string;
-    name: string;
-    slug: string;
-  }>;
-}
-
-export interface Category {
-  category_uuid: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  sort_order: number;
-}
-
-export interface Author {
-  author_uuid: string;
-  name: string;
-  slug: string;
-  bio: string | null;
-}
-
-export interface Tag {
-  tag_uuid: string;
-  name: string;
-  slug: string;
-}
-
-const API_BASE = '/api/v1/admin';
+export type {
+  ArticleSummary,
+  ArticleDetail,
+  ArticleStatus,
+  ArticleTag,
+  Tag,
+  Category,
+  Author,
+  CreateArticlePayload,
+  UpdateArticlePayload,
+  DashboardStats,
+};
 
 export const editorialService = {
   async getArticles(params: Record<string, string> = {}): Promise<{
     articles: ArticleSummary[];
-    pagination: { total: number; page: number; limit: number; total_pages: number };
+    pagination: PaginationMeta;
   }> {
-    const qs = new URLSearchParams(params).toString();
-    const res = await fetch(`${API_BASE}/articles${qs ? '?' + qs : ''}`, {
-      method: 'GET',
-      credentials: 'include',
+    if (isMockMode()) {
+      let list = mockStorage.getArticles();
+
+      if (params.status) {
+        list = list.filter((a) => a.status === params.status);
+      } else if (params.include_trash !== 'true') {
+        list = list.filter((a) => a.status !== 'TRASH');
+      }
+
+      if (params.category_uuid) {
+        list = list.filter((a) => a.category_uuid === params.category_uuid);
+      }
+
+      if (params.author_uuid) {
+        list = list.filter((a) => a.author_uuid === params.author_uuid);
+      }
+
+      if (params.search) {
+        const q = params.search.toLowerCase();
+        list = list.filter((a) => a.title.toLowerCase().includes(q) || a.content.toLowerCase().includes(q));
+      }
+
+      const page = Math.max(1, parseInt(params.page || '1', 10));
+      const limit = Math.max(1, parseInt(params.limit || '15', 10));
+      const total = list.length;
+      const total_pages = Math.ceil(total / limit) || 1;
+      const offset = (page - 1) * limit;
+      const paginated = list.slice(offset, offset + limit);
+
+      return {
+        articles: paginated,
+        pagination: { total, page, limit, total_pages },
+      };
+    }
+
+    const res = await apiClient.get<{ articles: ArticleSummary[]; pagination: PaginationMeta }>('/admin/articles', {
+      params,
     });
-    const json = await res.json();
-    return json.data || { articles: [], pagination: { total: 0, page: 1, limit: 20, total_pages: 0 } };
+    return res.data || { articles: [], pagination: { total: 0, page: 1, limit: 20, total_pages: 0 } };
   },
 
   async getArticle(uuid: string): Promise<ArticleDetail | null> {
-    const res = await fetch(`${API_BASE}/articles/${uuid}`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    const json = await res.json();
-    return json.data?.article || null;
+    if (isMockMode()) {
+      return mockStorage.getArticleByUuid(uuid);
+    }
+
+    try {
+      const res = await apiClient.get<{ article: ArticleDetail }>(`/admin/articles/${encodeURIComponent(uuid)}`);
+      return res.data?.article || null;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) {
+        return null;
+      }
+      throw err;
+    }
   },
 
-  async createArticle(data: any): Promise<any> {
-    const res = await fetch(`${API_BASE}/articles`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    });
-    return res.json();
+  async createArticle(data: CreateArticlePayload): Promise<{
+    success: boolean;
+    data?: { article: ArticleDetail };
+    error?: { code: string; message: string };
+  }> {
+    if (isMockMode()) {
+      const article = mockStorage.saveArticle(data);
+      return { success: true, data: { article } };
+    }
+
+    try {
+      const res = await apiClient.post<{ article: ArticleDetail }>('/admin/articles', data);
+      return { success: true, data: res.data };
+    } catch (err) {
+      if (err instanceof ApiError) {
+        return { success: false, error: { code: err.code, message: err.message } };
+      }
+      throw err;
+    }
   },
 
-  async updateArticle(uuid: string, data: any): Promise<any> {
-    const res = await fetch(`${API_BASE}/articles/${uuid}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify(data),
-    });
-    return res.json();
+  async updateArticle(
+    uuid: string,
+    data: UpdateArticlePayload
+  ): Promise<{
+    success: boolean;
+    data?: { article: ArticleDetail };
+    error?: { code: string; message: string };
+  }> {
+    if (isMockMode()) {
+      const article = mockStorage.updateArticle(uuid, data);
+      if (!article) {
+        return { success: false, error: { code: 'NOT_FOUND', message: 'Artículo no encontrado.' } };
+      }
+      return { success: true, data: { article } };
+    }
+
+    try {
+      const res = await apiClient.put<{ article: ArticleDetail }>(`/admin/articles/${encodeURIComponent(uuid)}`, data);
+      return { success: true, data: res.data };
+    } catch (err) {
+      if (err instanceof ApiError) {
+        return { success: false, error: { code: err.code, message: err.message } };
+      }
+      throw err;
+    }
   },
 
-  async deleteArticle(uuid: string, permanent: boolean = false): Promise<any> {
-    const res = await fetch(`${API_BASE}/articles/${uuid}?permanent=${permanent}`, {
-      method: 'DELETE',
-      credentials: 'include',
+  async deleteArticle(uuid: string, permanent: boolean = false): Promise<void> {
+    if (isMockMode()) {
+      mockStorage.deleteArticle(uuid, permanent);
+      return;
+    }
+
+    await apiClient.delete(`/admin/articles/${encodeURIComponent(uuid)}`, {
+      params: { permanent: String(permanent) },
     });
-    return res.json();
+  },
+
+  async restoreArticle(uuid: string): Promise<ArticleDetail | null> {
+    if (isMockMode()) {
+      return mockStorage.restoreArticle(uuid);
+    }
+
+    try {
+      const res = await apiClient.post<{ article: ArticleDetail }>(`/admin/articles/${encodeURIComponent(uuid)}/restore`);
+      return res.data?.article || null;
+    } catch {
+      return null;
+    }
+  },
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    if (isMockMode()) {
+      return mockStorage.getDashboardStats();
+    }
+
+    const res = await apiClient.get<{ stats: DashboardStats }>('/admin/dashboard/stats');
+    return res.data?.stats || {
+      total_articles: 0,
+      published_articles: 0,
+      draft_articles: 0,
+      pending_review_articles: 0,
+      scheduled_articles: 0,
+      archived_articles: 0,
+      trash_articles: 0,
+      total_media: 0,
+      total_ads: 0,
+      pending_submissions: 0,
+    };
   },
 
   async getCategories(): Promise<Category[]> {
-    const res = await fetch(`${API_BASE}/categories`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    const json = await res.json();
-    return json.data?.categories || [];
+    if (isMockMode()) {
+      return mockStorage.getCategories().map((c) => ({
+        category_uuid: c.category_uuid,
+        name: c.name,
+        slug: c.slug,
+        description: c.description ?? null,
+        sort_order: c.sort_order,
+      }));
+    }
+
+    const res = await apiClient.get<{ categories: Category[] }>('/admin/categories');
+    return res.data?.categories || [];
   },
 
   async getAuthors(): Promise<Author[]> {
-    const res = await fetch(`${API_BASE}/authors`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    const json = await res.json();
-    return json.data?.authors || [];
+    if (isMockMode()) {
+      const a = mockStorage.getAuthor();
+      return [
+        {
+          author_uuid: a.author_uuid,
+          name: a.name,
+          slug: a.slug,
+          bio: a.bio ?? null,
+        },
+      ];
+    }
+
+    const res = await apiClient.get<{ authors: Author[] }>('/admin/authors');
+    return res.data?.authors || [];
   },
 
   async getTags(): Promise<Tag[]> {
-    const res = await fetch(`${API_BASE}/tags`, {
-      method: 'GET',
-      credentials: 'include',
-    });
-    const json = await res.json();
-    return json.data?.tags || [];
+    if (isMockMode()) {
+      return mockStorage.getTags();
+    }
+
+    const res = await apiClient.get<{ tags: Tag[] }>('/admin/tags');
+    return res.data?.tags || [];
   },
 };
-

@@ -1,72 +1,50 @@
 /**
  * Submission API Service for Citizen Journalism (Fase 12)
+ * Supports mock development mode when VITE_DATA_MODE=mock.
  */
 
-export type SubmissionStatus = 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED' | 'CONVERTED';
+import { apiClient } from './apiClient';
+import { isMockMode } from '../config/env';
+import { mockStorage } from '../mocks/mockStorage';
+import type {
+  SubmissionStatus,
+  SubmissionAttachment,
+  CitizenSubmission,
+  SubmissionPagination,
+  SubmissionsResponse,
+  ConvertSubmissionPayload,
+} from '../types/submission';
+import type { ArticleDetail } from '../types/article';
 
-export interface SubmissionAttachment {
-  name: string;
-  path: string;
-  mime: string;
-  size: number;
-}
-
-export interface CitizenSubmission {
-  submission_uuid: string;
-  tenant_uuid: string;
-  site_uuid: string;
-  submitter_name: string;
-  contact_email: string | null;
-  contact_phone: string | null;
-  location: string;
-  title: string;
-  description: string;
-  message: string | null;
-  video_url: string | null;
-  attachments: SubmissionAttachment[];
-  status: SubmissionStatus;
-  rejection_reason: string | null;
-  reviewed_by_user_uuid: string | null;
-  reviewed_at: string | null;
-  reviewer_name?: string | null;
-  converted_article_uuid: string | null;
-  converted_article_title?: string | null;
-  converted_article_slug?: string | null;
-  assigned_author_uuid: string | null;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SubmissionPagination {
-  total: number;
-  page: number;
-  limit: number;
-  total_pages: number;
-}
-
-export interface SubmissionsResponse {
-  items: CitizenSubmission[];
-  pagination: SubmissionPagination;
-}
+export type {
+  SubmissionStatus,
+  SubmissionAttachment,
+  CitizenSubmission,
+  SubmissionPagination,
+  SubmissionsResponse,
+  ConvertSubmissionPayload,
+};
 
 /**
  * Public: Send news report with optional photos
  */
 export async function submitCitizenNews(formData: FormData): Promise<CitizenSubmission> {
-  const res = await fetch('/api/v1/public/submissions', {
-    method: 'POST',
-    body: formData,
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error?.message || 'Error al enviar el reporte ciudadano.');
+  if (isMockMode()) {
+    const newSub = mockStorage.addSubmission({
+      submitter_name: (formData.get('name') as string) || 'Ciudadano',
+      contact_email: (formData.get('email') as string) || null,
+      contact_phone: (formData.get('phone') as string) || null,
+      location: (formData.get('location') as string) || 'Localidad',
+      title: (formData.get('title') as string) || 'Reporte ciudadano',
+      description: (formData.get('description') as string) || '',
+      message: (formData.get('message') as string) || null,
+      video_url: (formData.get('video_url') as string) || null,
+    });
+    return newSub;
   }
 
-  return json.data;
+  const res = await apiClient.post<CitizenSubmission>('/public/submissions', formData);
+  return res.data;
 }
 
 /**
@@ -78,28 +56,33 @@ export async function getAdminSubmissions(filters?: {
   page?: number;
   limit?: number;
 }): Promise<SubmissionsResponse> {
-  const params = new URLSearchParams();
-  if (filters?.status) params.set('status', filters.status);
-  if (filters?.search) params.set('search', filters.search);
-  if (filters?.page) params.set('page', String(filters.page));
-  if (filters?.limit) params.set('limit', String(filters.limit));
+  if (isMockMode()) {
+    let list = mockStorage.getSubmissions();
+    if (filters?.status) list = list.filter((s) => s.status === filters.status);
+    if (filters?.search) {
+      const q = filters.search.toLowerCase();
+      list = list.filter((s) => s.title.toLowerCase().includes(q) || s.description.toLowerCase().includes(q));
+    }
+    const page = filters?.page || 1;
+    const limit = filters?.limit || 15;
+    return {
+      items: list,
+      pagination: { total: list.length, page, limit, total_pages: 1 },
+    };
+  }
 
-  const qs = params.toString() ? `?${params.toString()}` : '';
-  const res = await fetch(`/api/v1/admin/submissions${qs}`, {
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
+  const res = await apiClient.get<CitizenSubmission[]>('/admin/submissions', {
+    params: {
+      status: filters?.status,
+      search: filters?.search,
+      page: filters?.page,
+      limit: filters?.limit,
     },
   });
 
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error?.message || 'Error al cargar los reportes.');
-  }
-
   return {
-    items: json.data || [],
-    pagination: json.meta?.pagination || { total: 0, page: 1, limit: 20, total_pages: 1 },
+    items: res.data || [],
+    pagination: (res.meta?.pagination as SubmissionPagination) || { total: 0, page: 1, limit: 20, total_pages: 1 },
   };
 }
 
@@ -107,41 +90,31 @@ export async function getAdminSubmissions(filters?: {
  * Admin: Get single submission
  */
 export async function getAdminSubmission(uuid: string): Promise<CitizenSubmission> {
-  const res = await fetch(`/api/v1/admin/submissions/${encodeURIComponent(uuid)}`, {
-    credentials: 'include',
-    headers: {
-      Accept: 'application/json',
-    },
-  });
-
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error?.message || 'Reporte no encontrado.');
+  if (isMockMode()) {
+    const sub = mockStorage.getSubmissions().find((s) => s.submission_uuid === uuid);
+    if (!sub) throw new Error('Reporte no encontrado.');
+    return sub;
   }
 
-  return json.data;
+  const res = await apiClient.get<CitizenSubmission>(`/admin/submissions/${encodeURIComponent(uuid)}`);
+  return res.data;
 }
 
 /**
  * Admin: Reject submission with reason
  */
 export async function rejectAdminSubmission(uuid: string, reason: string): Promise<CitizenSubmission> {
-  const res = await fetch(`/api/v1/admin/submissions/${encodeURIComponent(uuid)}/reject`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify({ reason }),
-  });
-
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error?.message || 'Error al rechazar el reporte.');
+  if (isMockMode()) {
+    const sub = mockStorage.getSubmissions().find((s) => s.submission_uuid === uuid);
+    if (!sub) throw new Error('Reporte no encontrado.');
+    sub.status = 'REJECTED';
+    sub.rejection_reason = reason;
+    sub.reviewed_at = new Date().toISOString();
+    return sub;
   }
 
-  return json.data;
+  const res = await apiClient.post<CitizenSubmission>(`/admin/submissions/${encodeURIComponent(uuid)}/reject`, { reason });
+  return res.data;
 }
 
 /**
@@ -149,29 +122,32 @@ export async function rejectAdminSubmission(uuid: string, reason: string): Promi
  */
 export async function convertAdminSubmission(
   uuid: string,
-  overrides?: {
-    title?: string;
-    subtitle?: string;
-    excerpt?: string;
-    author_uuid?: string;
-    category_uuid?: string;
-  }
-): Promise<{ submission: CitizenSubmission; article: any }> {
-  const res = await fetch(`/api/v1/admin/submissions/${encodeURIComponent(uuid)}/convert`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'application/json',
-    },
-    body: JSON.stringify(overrides || {}),
-  });
+  overrides?: ConvertSubmissionPayload
+): Promise<{ submission: CitizenSubmission; article: ArticleDetail }> {
+  if (isMockMode()) {
+    const sub = mockStorage.getSubmissions().find((s) => s.submission_uuid === uuid);
+    if (!sub) throw new Error('Reporte no encontrado.');
 
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    throw new Error(json.error?.message || 'Error al convertir el reporte en artículo.');
+    const article = mockStorage.saveArticle({
+      title: overrides?.title || sub.title,
+      subtitle: overrides?.subtitle || null,
+      excerpt: overrides?.excerpt || sub.description.slice(0, 150),
+      content: sub.description,
+      author_uuid: overrides?.author_uuid,
+      category_uuid: overrides?.category_uuid,
+      status: 'DRAFT',
+    });
+
+    sub.status = 'CONVERTED';
+    sub.converted_article_uuid = article.article_uuid;
+    sub.reviewed_at = new Date().toISOString();
+
+    return { submission: sub, article };
   }
 
-  return json.data;
+  const res = await apiClient.post<{ submission: CitizenSubmission; article: ArticleDetail }>(
+    `/admin/submissions/${encodeURIComponent(uuid)}/convert`,
+    overrides || {}
+  );
+  return res.data;
 }
-

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { User, Newspaper, ArrowLeft, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { User, Newspaper, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { publicApi, PublicAuthor, PublicArticleSummary, PaginationMeta } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
+import { ArticleCard } from '../../components/articles';
 
 export const AuthorPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -42,19 +43,6 @@ export const AuthorPage: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     setSearchParams({ page: String(newPage) });
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr.replace(' ', 'T'));
-      return new Intl.DateTimeFormat('es-VE', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }).format(d);
-    } catch {
-      return dateStr;
-    }
   };
 
   if (loading) {
@@ -143,9 +131,17 @@ export const AuthorPage: React.FC = () => {
 
       {/* 1. AUTHOR PROFILE HEADER */}
       <header className="bg-white border border-stone-200 p-6 sm:p-8 rounded flex flex-col sm:flex-row items-start sm:items-center gap-6">
-        <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-stone-200 flex items-center justify-center font-serif font-bold text-2xl text-stone-800 shrink-0">
-          {author.name.charAt(0)}
-        </div>
+        {author.avatar_url ? (
+          <img
+            src={author.avatar_url}
+            alt={author.name}
+            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-stone-200 shrink-0"
+          />
+        ) : (
+          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-stone-200 flex items-center justify-center font-serif font-bold text-2xl text-stone-800 shrink-0">
+            {author.name.charAt(0)}
+          </div>
+        )}
 
         <div className="space-y-1.5 flex-1">
           <span className="text-xs font-bold uppercase tracking-wider text-red-700 block">
@@ -179,37 +175,15 @@ export const AuthorPage: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {articles.map(art => (
-              <article
+            {articles.map((art) => (
+              <ArticleCard
                 key={art.article_uuid}
-                className="bg-white border border-stone-200 p-5 flex flex-col justify-between hover:border-stone-400 transition-colors"
-              >
-                <div className="space-y-2">
-                  <Link
-                    to={`/categoria/${art.category_slug}`}
-                    className="text-[10px] font-bold uppercase tracking-wider text-red-700 hover:underline block"
-                  >
-                    {art.category_name}
-                  </Link>
-
-                  <Link to={`/noticias/${art.slug}`} className="block group">
-                    <h3 className="font-serif font-bold text-stone-900 text-base leading-snug group-hover:text-red-900 transition-colors">
-                      {art.title}
-                    </h3>
-                  </Link>
-
-                  {art.excerpt && (
-                    <p className="text-xs text-stone-600 line-clamp-3 leading-relaxed">
-                      {art.excerpt}
-                    </p>
-                  )}
-                </div>
-
-                <div className="pt-3 mt-3 border-t border-stone-100 text-[11px] text-stone-400 flex items-center gap-1">
-                  <Clock className="w-3 h-3" />
-                  <span>{formatDate(art.published_at)}</span>
-                </div>
-              </article>
+                article={art}
+                variant="vertical"
+                showCategory={true}
+                showAuthor={false}
+                showExcerpt={true}
+              />
             ))}
           </div>
         )}

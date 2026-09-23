@@ -4,6 +4,13 @@ import { Search, Menu, X, Clock, SunMedium, ArrowRight, Shield, Bell, Send } fro
 import { publicApi, PublicCategory, PublicArticleSummary } from '../services/publicApi';
 import { PwaManager } from '../components/common/PwaManager';
 import { AdSlot } from '../components/common/AdSlot';
+import { formatMastheadDate } from '../utils/date';
+
+declare global {
+  interface Window {
+    openPushPreferences?: () => void;
+  }
+}
 
 export const PublicLayout: React.FC = () => {
   const [categories, setCategories] = useState<PublicCategory[]>([]);
@@ -52,14 +59,7 @@ export const PublicLayout: React.FC = () => {
     }
   };
 
-  const currentDateStr = new Intl.DateTimeFormat('es-VE', {
-    weekday: 'long',
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date());
-
-  const formattedDate = currentDateStr.charAt(0).toUpperCase() + currentDateStr.slice(1);
+  const formattedDate = formatMastheadDate();
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900 font-sans flex flex-col antialiased selection:bg-red-100 selection:text-red-900">
@@ -80,7 +80,7 @@ export const PublicLayout: React.FC = () => {
           <div className="flex items-center gap-3">
             <button
               type="button"
-              onClick={() => (window as any).openPushPreferences?.()}
+              onClick={() => window.openPushPreferences?.()}
               className="flex items-center gap-1 text-stone-600 hover:text-red-700 transition-colors"
               title="Alertas y notificaciones"
             >

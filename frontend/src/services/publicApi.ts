@@ -1,234 +1,267 @@
 /**
  * Public News Portal API Client
  * Connects to /api/v1/public/* endpoints
+ * Supports mock development mode when VITE_DATA_MODE=mock.
  */
 
-export interface PublicArticleSummary {
-  article_uuid: string;
-  title: string;
-  subtitle?: string | null;
-  excerpt?: string | null;
-  slug: string;
-  published_at: string;
-  modified_at?: string | null;
-  category_name: string;
-  category_slug: string;
-  author_name: string;
-  author_slug: string;
-}
+import { apiClient, ApiError } from './apiClient';
+import { isMockMode } from '../config/env';
+import { mockStorage } from '../mocks/mockStorage';
+import type {
+  PublicArticleSummary,
+  PublicArticleDetail,
+  HomeFeedData,
+  SearchParams,
+  SearchFilterCategory,
+  SearchFilterAuthor,
+  SearchFilterTag,
+  SearchFilterOptions,
+} from '../types/article';
+import type { PublicCategory } from '../types/category';
+import type { PublicAuthor } from '../types/author';
+import type { PaginationMeta } from '../types/api';
 
-export interface PublicArticleDetail {
-  article_uuid: string;
-  title: string;
-  subtitle?: string | null;
-  excerpt?: string | null;
-  content: string;
-  slug: string;
-  published_at: string;
-  modified_at?: string | null;
-  category_name: string;
-  category_slug: string;
-  author_name: string;
-  author_slug: string;
-  author_bio?: string | null;
-  featured_media?: {
-    media_uuid?: string;
-    url: string;
-    alt_text?: string | null;
-    caption?: string | null;
-    credit?: string | null;
-    width?: number;
-    height?: number;
-  } | null;
-  seo?: {
-    meta_title?: string | null;
-    meta_description?: string | null;
-    canonical_url?: string | null;
-    og_title?: string | null;
-    og_description?: string | null;
-  } | null;
-  tags: Array<{
-    tag_uuid: string;
-    name: string;
-    slug: string;
-  }>;
-  related_articles: Array<{
-    article_uuid: string;
-    title: string;
-    slug: string;
-    published_at: string;
-    category_name: string;
-    category_slug: string;
-    author_name: string;
-  }>;
-}
+export type {
+  PublicArticleSummary,
+  PublicArticleDetail,
+  PublicCategory,
+  PublicAuthor,
+  PaginationMeta,
+  HomeFeedData,
+  SearchParams,
+  SearchFilterCategory,
+  SearchFilterAuthor,
+  SearchFilterTag,
+  SearchFilterOptions,
+};
 
-export interface PublicCategory {
-  category_uuid: string;
-  name: string;
-  slug: string;
-  description?: string | null;
-  sort_order: number;
-  articles_count?: number;
-}
-
-export interface PublicAuthor {
-  author_uuid: string;
-  name: string;
-  slug: string;
-  bio?: string | null;
-}
-
-export interface PaginationMeta {
-  total: number;
-  page: number;
-  limit: number;
-  total_pages: number;
-}
-
-export interface HomeFeedData {
-  breaking_news: PublicArticleSummary[];
-  lead_article: PublicArticleSummary | null;
-  secondary_articles: PublicArticleSummary[];
-  latest_articles: PublicArticleSummary[];
-  trending_articles: PublicArticleSummary[];
-  sections: Record<string, {
-    category: PublicCategory;
-    articles: PublicArticleSummary[];
-  }>;
-}
-
-export interface SearchParams {
-  q?: string;
-  category?: string;
-  author?: string;
-  tag?: string;
-  date_from?: string;
-  date_to?: string;
-  sort?: 'relevance' | 'latest' | 'oldest';
-  page?: number;
-  limit?: number;
-}
-
-export interface SearchFilterCategory {
-  category_uuid: string;
-  name: string;
-  slug: string;
-  articles_count: number;
-}
-
-export interface SearchFilterAuthor {
-  author_uuid: string;
-  name: string;
-  slug: string;
-  articles_count: number;
-}
-
-export interface SearchFilterTag {
-  tag_uuid: string;
-  name: string;
-  slug: string;
-  articles_count: number;
-}
-
-export interface SearchFilterOptions {
-  categories: SearchFilterCategory[];
-  authors: SearchFilterAuthor[];
-  tags: SearchFilterTag[];
-}
-
-const API_BASE = '/api/v1/public';
-
-async function fetchJson<T>(url: string): Promise<T> {
-  const res = await fetch(url, {
-    headers: {
-      'Accept': 'application/json',
-    },
-  });
-
-  const json = await res.json();
-  if (!res.ok || !json.success) {
-    const errorMsg = json?.error?.message || `Error ${res.status}: ${res.statusText}`;
-    const err = new Error(errorMsg);
-    (err as unknown as { code?: string; status?: number }).code = json?.error?.code;
-    (err as unknown as { status?: number }).status = res.status;
-    throw err;
-  }
-
-  return json.data;
+function toSummary(art: import('../types/article').ArticleDetail): PublicArticleSummary {
+  return {
+    article_uuid: art.article_uuid,
+    title: art.title,
+    subtitle: art.subtitle,
+    excerpt: art.excerpt,
+    slug: art.slug,
+    published_at: art.published_at || art.created_at,
+    modified_at: art.modified_at,
+    category_name: art.category_name,
+    category_slug: art.category_slug,
+    author_name: art.author_name,
+    author_slug: art.author_slug,
+    featured_media: art.featured_media || null,
+  };
 }
 
 export const publicApi = {
-  getHomeFeed: (): Promise<HomeFeedData> => {
-    return fetchJson<HomeFeedData>(`${API_BASE}/home`);
-  },
+  getHomeFeed: async (): Promise<HomeFeedData> => {
+    if (isMockMode()) {
+      const all = mockStorage.getArticles().filter((a) => a.status === 'PUBLISHED');
+      const summaries = all.map(toSummary);
 
-  getArticles: (params?: { category?: string; author?: string; tag?: string; page?: number; limit?: number }): Promise<{ articles: PublicArticleSummary[]; pagination: PaginationMeta }> => {
-    const query = new URLSearchParams();
-    if (params?.category) query.set('category', params.category);
-    if (params?.author) query.set('author', params.author);
-    if (params?.tag) query.set('tag', params.tag);
-    if (params?.page) query.set('page', String(params.page));
-    if (params?.limit) query.set('limit', String(params.limit));
+      const lead = summaries[0] || null;
+      const secondary = summaries.slice(1, 3);
+      const latest = summaries.slice(0, 6);
+      const trending = [...summaries].reverse().slice(0, 4);
+      const breaking = summaries.slice(0, 2);
 
-    const qs = query.toString();
-    const url = qs ? `${API_BASE}/articles?${qs}` : `${API_BASE}/articles`;
+      const categories = mockStorage.getCategories();
+      const sections: Record<string, { category: PublicCategory; articles: PublicArticleSummary[] }> = {};
 
-    return fetch(`${url}`, { headers: { 'Accept': 'application/json' } })
-      .then(res => res.json())
-      .then(json => {
-        if (!json.success) throw new Error(json?.error?.message || 'Error al cargar artículos');
-        return { articles: json.data, pagination: json.meta.pagination };
-      });
-  },
-
-  getArticleBySlug: (slug: string): Promise<PublicArticleDetail> => {
-    return fetchJson<PublicArticleDetail>(`${API_BASE}/articles/${encodeURIComponent(slug)}`);
-  },
-
-  getCategories: (): Promise<PublicCategory[]> => {
-    return fetchJson<PublicCategory[]>(`${API_BASE}/categories`);
-  },
-
-  getCategoryBySlug: (slug: string, page = 1, limit = 12): Promise<{ category: PublicCategory; articles: PublicArticleSummary[]; pagination: PaginationMeta }> => {
-    return fetch(`${API_BASE}/categories/${encodeURIComponent(slug)}?page=${page}&limit=${limit}`, {
-      headers: { 'Accept': 'application/json' },
-    })
-      .then(res => res.json())
-      .then(json => {
-        if (!json.success) {
-          const err = new Error(json?.error?.message || 'Categoría no encontrada');
-          (err as unknown as { code?: string }).code = json?.error?.code;
-          throw err;
+      for (const cat of categories) {
+        const catArticles = summaries.filter((a) => a.category_slug === cat.slug);
+        if (catArticles.length > 0) {
+          sections[cat.slug] = {
+            category: cat,
+            articles: catArticles,
+          };
         }
-        return {
-          category: json.meta.category,
-          articles: json.data,
-          pagination: json.meta.pagination,
-        };
-      });
+      }
+
+      return {
+        breaking_news: breaking,
+        lead_article: lead,
+        secondary_articles: secondary,
+        latest_articles: latest,
+        trending_articles: trending,
+        sections,
+      };
+    }
+
+    return apiClient.getData<HomeFeedData>('/public/home');
   },
 
-  getAuthorBySlug: (slug: string, page = 1, limit = 12): Promise<{ author: PublicAuthor; articles: PublicArticleSummary[]; pagination: PaginationMeta }> => {
-    return fetch(`${API_BASE}/authors/${encodeURIComponent(slug)}?page=${page}&limit=${limit}`, {
-      headers: { 'Accept': 'application/json' },
-    })
-      .then(res => res.json())
-      .then(json => {
-        if (!json.success) {
-          const err = new Error(json?.error?.message || 'Autor no encontrado');
-          (err as unknown as { code?: string }).code = json?.error?.code;
-          throw err;
-        }
-        return {
-          author: json.meta.author,
-          articles: json.data,
-          pagination: json.meta.pagination,
-        };
-      });
+  getArticles: async (params?: {
+    category?: string;
+    author?: string;
+    tag?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<{ articles: PublicArticleSummary[]; pagination: PaginationMeta }> => {
+    if (isMockMode()) {
+      let list = mockStorage.getArticles().filter((a) => a.status === 'PUBLISHED');
+
+      if (params?.category) {
+        list = list.filter((a) => a.category_slug === params.category || a.category_uuid === params.category);
+      }
+      if (params?.author) {
+        list = list.filter((a) => a.author_slug === params.author || a.author_uuid === params.author);
+      }
+      if (params?.tag) {
+        list = list.filter((a) => a.tags?.some((t) => t.slug === params.tag || t.name === params.tag));
+      }
+
+      const page = Math.max(1, params?.page || 1);
+      const limit = Math.max(1, params?.limit || 12);
+      const total = list.length;
+      const total_pages = Math.ceil(total / limit) || 1;
+      const offset = (page - 1) * limit;
+      const paginated = list.slice(offset, offset + limit).map(toSummary);
+
+      return {
+        articles: paginated,
+        pagination: { total, page, limit, total_pages },
+      };
+    }
+
+    const res = await apiClient.get<PublicArticleSummary[]>('/public/articles', {
+      params: params as Record<string, string | number | undefined>,
+    });
+    return {
+      articles: res.data || [],
+      pagination: (res.meta?.pagination as PaginationMeta) || { total: 0, page: 1, limit: 12, total_pages: 0 },
+    };
   },
 
-  searchArticles: (
+  getArticleBySlug: async (slug: string): Promise<PublicArticleDetail> => {
+    if (isMockMode()) {
+      const art = mockStorage.getArticleBySlug(slug);
+      if (!art || art.status !== 'PUBLISHED') {
+        throw new ApiError('Noticia no encontrada', 'NOT_FOUND', 404);
+      }
+
+      const all = mockStorage.getArticles().filter((a) => a.status === 'PUBLISHED' && a.article_uuid !== art.article_uuid);
+      const related = all.slice(0, 3).map((r) => ({
+        article_uuid: r.article_uuid,
+        title: r.title,
+        slug: r.slug,
+        published_at: r.published_at || r.created_at,
+        category_name: r.category_name,
+        category_slug: r.category_slug,
+        author_name: r.author_name,
+        excerpt: r.excerpt,
+        featured_media: r.featured_media || null,
+      }));
+
+      return {
+        article_uuid: art.article_uuid,
+        title: art.title,
+        subtitle: art.subtitle,
+        excerpt: art.excerpt,
+        content: art.content,
+        slug: art.slug,
+        published_at: art.published_at || art.created_at,
+        modified_at: art.modified_at,
+        category_name: art.category_name,
+        category_slug: art.category_slug,
+        author_name: art.author_name,
+        author_slug: art.author_slug,
+        author_bio: mockStorage.getAuthor().bio,
+        featured_media: art.featured_media || null,
+        seo: art.seo,
+        tags: art.tags || [],
+        related_articles: related,
+      };
+    }
+
+    return apiClient.getData<PublicArticleDetail>(`/public/articles/${encodeURIComponent(slug)}`);
+  },
+
+  getCategories: async (): Promise<PublicCategory[]> => {
+    if (isMockMode()) {
+      return mockStorage.getCategories();
+    }
+
+    return apiClient.getData<PublicCategory[]>('/public/categories');
+  },
+
+  getCategoryBySlug: async (
+    slug: string,
+    page = 1,
+    limit = 12
+  ): Promise<{ category: PublicCategory; articles: PublicArticleSummary[]; pagination: PaginationMeta }> => {
+    if (isMockMode()) {
+      const categories = mockStorage.getCategories();
+      const category = categories.find((c) => c.slug === slug);
+      if (!category) {
+        throw new ApiError('Categoría no encontrada', 'NOT_FOUND', 404);
+      }
+
+      const all = mockStorage
+        .getArticles()
+        .filter((a) => a.status === 'PUBLISHED' && (a.category_slug === slug || a.category_uuid === category.category_uuid))
+        .map(toSummary);
+
+      const total = all.length;
+      const total_pages = Math.ceil(total / limit) || 1;
+      const offset = (page - 1) * limit;
+      const articles = all.slice(offset, offset + limit);
+
+      return {
+        category,
+        articles,
+        pagination: { total, page, limit, total_pages },
+      };
+    }
+
+    const res = await apiClient.get<PublicArticleSummary[]>(`/public/categories/${encodeURIComponent(slug)}`, {
+      params: { page, limit },
+    });
+    return {
+      category: res.meta?.category as PublicCategory,
+      articles: res.data || [],
+      pagination: (res.meta?.pagination as PaginationMeta) || { total: 0, page, limit, total_pages: 0 },
+    };
+  },
+
+  getAuthorBySlug: async (
+    slug: string,
+    page = 1,
+    limit = 12
+  ): Promise<{ author: PublicAuthor; articles: PublicArticleSummary[]; pagination: PaginationMeta }> => {
+    if (isMockMode()) {
+      const author = mockStorage.getAuthor();
+      if (author.slug !== slug) {
+        throw new ApiError('Autor no encontrado', 'NOT_FOUND', 404);
+      }
+
+      const all = mockStorage
+        .getArticles()
+        .filter((a) => a.status === 'PUBLISHED' && a.author_slug === slug)
+        .map(toSummary);
+
+      const total = all.length;
+      const total_pages = Math.ceil(total / limit) || 1;
+      const offset = (page - 1) * limit;
+      const articles = all.slice(offset, offset + limit);
+
+      return {
+        author,
+        articles,
+        pagination: { total, page, limit, total_pages },
+      };
+    }
+
+    const res = await apiClient.get<PublicArticleSummary[]>(`/public/authors/${encodeURIComponent(slug)}`, {
+      params: { page, limit },
+    });
+    return {
+      author: res.meta?.author as PublicAuthor,
+      articles: res.data || [],
+      pagination: (res.meta?.pagination as PaginationMeta) || { total: 0, page, limit, total_pages: 0 },
+    };
+  },
+
+  searchArticles: async (
     queryOrParams: string | SearchParams,
     page = 1,
     limit = 12
@@ -238,40 +271,83 @@ export const publicApi = {
     pagination: PaginationMeta;
     filters_applied?: Record<string, string>;
   }> => {
-    let url = `${API_BASE}/search?`;
-    if (typeof queryOrParams === 'string') {
-      url += `q=${encodeURIComponent(queryOrParams)}&page=${page}&limit=${limit}`;
-    } else {
-      const sp = new URLSearchParams();
-      if (queryOrParams.q) sp.append('q', queryOrParams.q);
-      if (queryOrParams.category) sp.append('category', queryOrParams.category);
-      if (queryOrParams.author) sp.append('author', queryOrParams.author);
-      if (queryOrParams.tag) sp.append('tag', queryOrParams.tag);
-      if (queryOrParams.date_from) sp.append('date_from', queryOrParams.date_from);
-      if (queryOrParams.date_to) sp.append('date_to', queryOrParams.date_to);
-      if (queryOrParams.sort) sp.append('sort', queryOrParams.sort);
-      sp.append('page', String(queryOrParams.page || page));
-      sp.append('limit', String(queryOrParams.limit || limit));
-      url += sp.toString();
+    if (isMockMode()) {
+      const q = (typeof queryOrParams === 'string' ? queryOrParams : queryOrParams.q || '').toLowerCase();
+      const cat = typeof queryOrParams === 'object' ? queryOrParams.category : undefined;
+      const p = typeof queryOrParams === 'object' ? queryOrParams.page || page : page;
+      const l = typeof queryOrParams === 'object' ? queryOrParams.limit || limit : limit;
+
+      let list = mockStorage.getArticles().filter((a) => a.status === 'PUBLISHED');
+      if (q) {
+        list = list.filter((a) => a.title.toLowerCase().includes(q) || a.content.toLowerCase().includes(q));
+      }
+      if (cat) {
+        list = list.filter((a) => a.category_slug === cat || a.category_uuid === cat);
+      }
+
+      const total = list.length;
+      const total_pages = Math.ceil(total / l) || 1;
+      const offset = (p - 1) * l;
+      const articles = list.slice(offset, offset + l).map(toSummary);
+
+      return {
+        query: q,
+        articles,
+        pagination: { total, page: p, limit: l, total_pages },
+        filters_applied: q ? { q } : undefined,
+      };
     }
 
-    return fetch(url, {
-      headers: { 'Accept': 'application/json' },
-    })
-      .then(res => res.json())
-      .then(json => {
-        if (!json.success) throw new Error(json?.error?.message || 'Error en la búsqueda');
-        return {
-          query: json.meta?.filters_applied?.q || (typeof queryOrParams === 'string' ? queryOrParams : queryOrParams.q || ''),
-          articles: json.data,
-          pagination: json.meta.pagination,
-          filters_applied: json.meta?.filters_applied,
-        };
-      });
+    const params: Record<string, string | number | undefined> =
+      typeof queryOrParams === 'string'
+        ? { q: queryOrParams, page, limit }
+        : {
+            q: queryOrParams.q,
+            category: queryOrParams.category,
+            author: queryOrParams.author,
+            tag: queryOrParams.tag,
+            date_from: queryOrParams.date_from,
+            date_to: queryOrParams.date_to,
+            sort: queryOrParams.sort,
+            page: queryOrParams.page || page,
+            limit: queryOrParams.limit || limit,
+          };
+
+    const res = await apiClient.get<PublicArticleSummary[]>('/public/search', { params });
+    const meta = res.meta as { pagination?: PaginationMeta; filters_applied?: Record<string, string> } | undefined;
+    const qStr = typeof queryOrParams === 'string' ? queryOrParams : queryOrParams.q || '';
+
+    return {
+      query: meta?.filters_applied?.q || qStr,
+      articles: res.data || [],
+      pagination: meta?.pagination || { total: 0, page: 1, limit, total_pages: 0 },
+      filters_applied: meta?.filters_applied,
+    };
   },
 
-  getSearchFilters: (): Promise<SearchFilterOptions> => {
-    return fetchJson<SearchFilterOptions>(`${API_BASE}/search/filters`);
+  getSearchFilters: async (): Promise<SearchFilterOptions> => {
+    if (isMockMode()) {
+      const categories = mockStorage.getCategories().map((c) => ({
+        category_uuid: c.category_uuid,
+        name: c.name,
+        slug: c.slug,
+        articles_count: c.articles_count || 1,
+      }));
+      const author = mockStorage.getAuthor();
+      const tags = mockStorage.getTags().map((t) => ({
+        tag_uuid: t.tag_uuid,
+        name: t.name,
+        slug: t.slug,
+        articles_count: 1,
+      }));
+
+      return {
+        categories,
+        authors: [{ author_uuid: author.author_uuid, name: author.name, slug: author.slug, articles_count: 3 }],
+        tags,
+      };
+    }
+
+    return apiClient.getData<SearchFilterOptions>('/public/search/filters');
   },
 };
-

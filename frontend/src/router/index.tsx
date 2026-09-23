@@ -1,6 +1,8 @@
 import React, { Suspense } from 'react';
-import { createBrowserRouter, Navigate } from 'react-router-dom';
+import { createBrowserRouter } from 'react-router-dom';
 import { PublicLayout } from '../layouts/PublicLayout';
+import { EditorialLayout } from '../layouts/EditorialLayout';
+import { ProtectedRoute } from '../components/common/ProtectedRoute';
 
 // Lazy loaded public pages
 const HomePage = React.lazy(() => import('../pages/public/HomePage').then(m => ({ default: m.HomePage })));
@@ -13,8 +15,10 @@ const SubmitNewsPage = React.lazy(() => import('../pages/public/SubmitNewsPage')
 
 // Lazy loaded authentication and editorial CMS pages
 const LoginPage = React.lazy(() => import('../pages/LoginPage').then(m => ({ default: m.LoginPage })));
+const EditorialDashboardPage = React.lazy(() => import('../pages/editorial/EditorialDashboardPage').then(m => ({ default: m.EditorialDashboardPage })));
 const ArticlesListPage = React.lazy(() => import('../pages/editorial/ArticlesListPage').then(m => ({ default: m.ArticlesListPage })));
 const ArticleEditorPage = React.lazy(() => import('../pages/editorial/ArticleEditorPage').then(m => ({ default: m.ArticleEditorPage })));
+const MediaLibraryPage = React.lazy(() => import('../pages/editorial/MediaLibraryPage').then(m => ({ default: m.MediaLibraryPage })));
 const AdCampaignsPage = React.lazy(() => import('../pages/editorial/AdCampaignsPage').then(m => ({ default: m.AdCampaignsPage })));
 const SubmissionsModerationPage = React.lazy(() => import('../pages/editorial/SubmissionsModerationPage').then(m => ({ default: m.SubmissionsModerationPage })));
 
@@ -41,6 +45,7 @@ export const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      // Spanish & canonical English aliases
       {
         path: 'noticia/:slug',
         element: (
@@ -66,7 +71,23 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'article/:slug',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ArticlePage />
+          </Suspense>
+        ),
+      },
+      {
         path: 'categoria/:slug',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <CategoryPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'category/:slug',
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <CategoryPage />
@@ -82,6 +103,14 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'author/:slug',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AuthorPage />
+          </Suspense>
+        ),
+      },
+      {
         path: 'buscar',
         element: (
           <Suspense fallback={<LoadingFallback />}>
@@ -90,7 +119,23 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'search',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <SearchPage />
+          </Suspense>
+        ),
+      },
+      {
         path: 'enviar-noticia',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <SubmitNewsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'submit-news',
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <SubmitNewsPage />
@@ -107,6 +152,7 @@ export const router = createBrowserRouter([
       },
     ],
   },
+
   // Authentication
   {
     path: '/login',
@@ -116,49 +162,80 @@ export const router = createBrowserRouter([
       </Suspense>
     ),
   },
-  // Editorial CMS Routes
+
+  // Administrative / Editorial CMS Routes (Protected by AuthGuard)
   {
     path: '/admin',
-    element: <Navigate to="/admin/articles" replace />,
-  },
-  {
-    path: '/admin/articles',
     element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <ArticlesListPage />
-      </Suspense>
+      <ProtectedRoute>
+        <EditorialLayout />
+      </ProtectedRoute>
     ),
-  },
-  {
-    path: '/admin/articles/new',
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <ArticleEditorPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/admin/articles/edit/:uuid',
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <ArticleEditorPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/admin/ads',
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <AdCampaignsPage />
-      </Suspense>
-    ),
-  },
-  {
-    path: '/admin/submissions',
-    element: (
-      <Suspense fallback={<LoadingFallback />}>
-        <SubmissionsModerationPage />
-      </Suspense>
-    ),
+    children: [
+      {
+        index: true,
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <EditorialDashboardPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'articles',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ArticlesListPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'articles/new',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ArticleEditorPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'articles/edit/:uuid',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ArticleEditorPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'articles/:id/edit',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ArticleEditorPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'media',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <MediaLibraryPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'ads',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AdCampaignsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'submissions',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <SubmissionsModerationPage />
+          </Suspense>
+        ),
+      },
+    ],
   },
 ]);

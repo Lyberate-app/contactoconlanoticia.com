@@ -12,7 +12,6 @@ import {
   Eye,
   AlertTriangle,
 } from 'lucide-react';
-import { EditorialLayout } from '../../layouts/EditorialLayout';
 import {
   getAdminSubmissions,
   rejectAdminSubmission,
@@ -20,6 +19,7 @@ import {
   CitizenSubmission,
   SubmissionStatus,
 } from '../../services/submissionApi';
+import { formatDate } from '../../utils/date';
 
 export const SubmissionsModerationPage: React.FC = () => {
   const [submissions, setSubmissions] = useState<CitizenSubmission[]>([]);
@@ -143,23 +143,8 @@ export const SubmissionsModerationPage: React.FC = () => {
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr.replace(' ', 'T'));
-      return new Intl.DateTimeFormat('es-VE', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-      }).format(d);
-    } catch {
-      return dateStr;
-    }
-  };
-
   return (
-    <EditorialLayout activeTab="submissions">
+    <>
       <div className="space-y-6">
         {/* Intro Banner */}
         <div className="bg-stone-100 border border-stone-300 p-4 rounded text-xs text-stone-700 flex items-start justify-between gap-4">
@@ -246,7 +231,7 @@ export const SubmissionsModerationPage: React.FC = () => {
                   {submissions.map((sub) => (
                     <tr key={sub.submission_uuid} className="hover:bg-stone-50/80 transition-colors">
                       <td className="py-3 px-4 whitespace-nowrap text-stone-500 font-mono text-[11px]">
-                        {formatDate(sub.created_at)}
+                        {formatDate(sub.created_at, 'withTime')}
                       </td>
                       <td className="py-3 px-4">
                         <div className="font-semibold text-stone-900">{sub.submitter_name}</div>
@@ -357,7 +342,7 @@ export const SubmissionsModerationPage: React.FC = () => {
             <div className="flex items-center gap-2 mb-2">
               {getStatusBadge(selectedSubmission.status)}
               <span className="text-xs text-stone-400 font-mono">
-                {formatDate(selectedSubmission.created_at)}
+                {formatDate(selectedSubmission.created_at, 'withTime')}
               </span>
             </div>
 
@@ -535,6 +520,6 @@ export const SubmissionsModerationPage: React.FC = () => {
           </div>
         </div>
       )}
-    </EditorialLayout>
+    </>
   );
 };

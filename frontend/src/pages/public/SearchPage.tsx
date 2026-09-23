@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import {
   Search,
   Newspaper,
   ChevronLeft,
   ChevronRight,
-  Clock,
   Filter,
   X,
   Calendar,
@@ -20,6 +19,7 @@ import {
   SearchFilterOptions,
 } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
+import { ArticleCard } from '../../components/articles';
 
 export const SearchPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -165,19 +165,6 @@ export const SearchPage: React.FC = () => {
     sp.delete(key);
     sp.set('page', '1');
     setSearchParams(sp);
-  };
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr.replace(' ', 'T'));
-      return new Intl.DateTimeFormat('es-VE', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }).format(d);
-    } catch {
-      return dateStr;
-    }
   };
 
   const activeFiltersCount = [
@@ -341,7 +328,7 @@ export const SearchPage: React.FC = () => {
                   </span>
                   <select
                     value={selectedSort}
-                    onChange={(e) => setSelectedSort(e.target.value as any)}
+                    onChange={(e) => setSelectedSort(e.target.value as 'relevance' | 'latest' | 'oldest')}
                     className="bg-white border border-stone-300 rounded px-2.5 py-1 text-xs text-stone-800 focus:outline-none focus:ring-1 focus:ring-stone-700"
                   >
                     <option value="latest">Más recientes</option>
@@ -474,47 +461,15 @@ export const SearchPage: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="divide-y divide-stone-200 space-y-6">
-              {articles.map((art, idx) => (
-                <article key={art.article_uuid} className={idx > 0 ? 'pt-6' : ''}>
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <Link
-                      to={`/categoria/${art.category_slug}`}
-                      className="text-[10px] font-bold uppercase tracking-wider text-red-700 hover:underline"
-                    >
-                      {art.category_name}
-                    </Link>
-                    <span className="text-stone-300 text-xs">·</span>
-                    <span className="text-[11px] text-stone-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatDate(art.published_at)}
-                    </span>
-                  </div>
-
-                  <Link to={`/noticia/${art.slug}`} className="block group">
-                    <h2 className="font-serif font-bold text-stone-900 text-lg sm:text-xl leading-snug group-hover:text-red-900 transition-colors">
-                      {art.title}
-                    </h2>
-                  </Link>
-
-                  {art.subtitle && (
-                    <p className="text-xs sm:text-sm font-serif italic text-stone-600 mt-1 line-clamp-1">
-                      {art.subtitle}
-                    </p>
-                  )}
-
-                  {art.excerpt && (
-                    <p className="text-xs sm:text-sm text-stone-600 line-clamp-2 leading-relaxed mt-1.5">
-                      {art.excerpt}
-                    </p>
-                  )}
-
-                  <div className="mt-2.5 text-[11px] text-stone-500 flex items-center gap-2">
-                    <span>
-                      Por <Link to={`/autor/${art.author_slug}`} className="hover:underline font-medium text-stone-700">{art.author_name}</Link>
-                    </span>
-                  </div>
-                </article>
+            <div className="divide-y divide-stone-200">
+              {articles.map((art) => (
+                <ArticleCard
+                  key={art.article_uuid}
+                  article={art}
+                  variant="horizontal"
+                  showExcerpt={true}
+                  showAuthor={true}
+                />
               ))}
             </div>
           )}

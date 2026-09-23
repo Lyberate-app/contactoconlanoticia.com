@@ -1,16 +1,34 @@
-import React, { useState } from 'react';
-import { Newspaper, Lock, Mail, KeyRound, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
-import { authService, AuthUser } from '../services/auth';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { Newspaper, Lock, Mail, KeyRound, AlertCircle, ArrowRight } from 'lucide-react';
+import { authService } from '../services/auth';
 
 export const LoginPage: React.FC = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const from = (location.state as { from?: { pathname?: string } })?.from?.pathname || '/admin/articles';
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
   const [ticket, setTicket] = useState('');
-  const [step, setStep] = useState<'credentials' | '2fa' | 'authenticated'>('credentials');
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [step, setStep] = useState<'credentials' | '2fa'>('credentials');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    let isMounted = true;
+    authService.getMe().then((res) => {
+      if (!isMounted) return;
+      if (res.success && res.data?.user) {
+        navigate(from, { replace: true });
+      }
+    }).catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, [from, navigate]);
 
   const handleCredentialsSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,10 +48,9 @@ export const LoginPage: React.FC = () => {
         setTicket(res.data.ticket);
         setStep('2fa');
       } else if (res.data?.user) {
-        setUser(res.data.user);
-        setStep('authenticated');
+        navigate(from, { replace: true });
       }
-    } catch (err) {
+    } catch {
       setError('No se pudo conectar con el servidor de autenticación.');
     } finally {
       setLoading(false);
@@ -55,32 +72,17 @@ export const LoginPage: React.FC = () => {
       }
 
       if (res.data?.user) {
-        setUser(res.data.user);
-        setStep('authenticated');
+        navigate(from, { replace: true });
       }
-    } catch (err) {
+    } catch {
       setError('Error al procesar el código de autenticación.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = async () => {
-    setLoading(true);
-    try {
-      await authService.logout();
-      setUser(null);
-      setStep('credentials');
-      setPassword('');
-      setCode('');
-      setTicket('');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <main className="min-h-screen bg-stone-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-stone-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans">
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center items-center gap-3">
           <Newspaper className="w-8 h-8 text-stone-800" />
@@ -88,7 +90,7 @@ export const LoginPage: React.FC = () => {
             Lyberate
           </span>
         </div>
-        <h2 className="mt-4 text-center text-xl font-medium tracking-tight text-stone-700">
+        <h2 className="mt-4 text-center text-xl font-medium tracking-tight text-stone-700 font-serif">
           Contacto con la Noticia
         </h2>
         <p className="mt-1 text-center text-xs text-stone-500 uppercase tracking-wider">
@@ -144,7 +146,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full mt-2 flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium py-3 px-4 transition-colors disabled:opacity-50"
+                className="w-full mt-2 flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium py-3 px-4 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {loading ? 'Verificando...' : 'Iniciar Sesión'}
                 {!loading && <ArrowRight className="w-4 h-4" />}
@@ -179,7 +181,7 @@ export const LoginPage: React.FC = () => {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium py-3 px-4 transition-colors disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-sm font-medium py-3 px-4 transition-colors disabled:opacity-50 cursor-pointer"
               >
                 {loading ? 'Validando 2FA...' : 'Verificar y Continuar'}
               </button>
@@ -187,54 +189,23 @@ export const LoginPage: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setStep('credentials')}
-                className="w-full text-xs text-stone-500 hover:text-stone-800 text-center block pt-2"
+                className="w-full text-xs text-stone-500 hover:text-stone-800 text-center block pt-2 cursor-pointer"
               >
                 &larr; Volver al paso anterior
               </button>
             </form>
           )}
 
-          {step === 'authenticated' && user && (
-            <div className="space-y-6">
-              <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
-                <div>
-                  <div className="font-semibold">Sesión Activa</div>
-                  <div className="text-xs text-emerald-700">Autenticación server-side verificada con éxito.</div>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-xs text-stone-600">
-                <div className="flex justify-between border-b border-stone-100 py-1.5">
-                  <span className="font-medium text-stone-500">Nombre:</span>
-                  <span className="font-semibold text-stone-900">{user.name}</span>
-                </div>
-                <div className="flex justify-between border-b border-stone-100 py-1.5">
-                  <span className="font-medium text-stone-500">Email:</span>
-                  <span className="font-mono text-stone-800">{user.email}</span>
-                </div>
-                <div className="flex justify-between border-b border-stone-100 py-1.5">
-                  <span className="font-medium text-stone-500">Roles:</span>
-                  <span className="font-semibold text-stone-900">{user.roles.join(', ')}</span>
-                </div>
-                <div className="flex justify-between border-b border-stone-100 py-1.5">
-                  <span className="font-medium text-stone-500">Permisos:</span>
-                  <span className="text-stone-700">{user.permissions.length} activos</span>
-                </div>
-              </div>
-
-              <button
-                onClick={handleLogout}
-                disabled={loading}
-                className="w-full border border-stone-300 hover:bg-stone-50 text-stone-800 text-sm font-medium py-2.5 px-4 transition-colors"
-              >
-                {loading ? 'Cerrando sesión...' : 'Cerrar Sesión'}
-              </button>
-            </div>
-          )}
+          <div className="mt-6 pt-4 border-t border-stone-100 text-center">
+            <Link
+              to="/"
+              className="text-xs text-stone-500 hover:text-stone-800 transition-colors"
+            >
+              &larr; Volver al portal de noticias
+            </Link>
+          </div>
         </div>
       </div>
     </main>
   );
 };
-

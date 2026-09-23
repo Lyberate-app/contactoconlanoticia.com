@@ -6,8 +6,8 @@ import {
   deleteAdminCampaign,
   AdCampaign,
 } from '../../services/adsApi';
-import { Megaphone, Plus, Trash2, Edit2, CheckCircle2, XCircle, ExternalLink, RefreshCw } from 'lucide-react';
-import { EditorialLayout } from '../../layouts/EditorialLayout';
+import { Megaphone, Plus, Trash2, Edit2, CheckCircle2, XCircle, ExternalLink, RefreshCw, Image as ImageIcon } from 'lucide-react';
+import { MediaPickerModal } from '../../components/media/MediaPickerModal';
 
 const LOCATIONS = [
   { id: 'HEADER_BANNER', name: 'Banner Cabecera (Header Banner)' },
@@ -28,6 +28,8 @@ export const AdCampaignsPage: React.FC = () => {
   const [editingCampaign, setEditingCampaign] = useState<AdCampaign | null>(null);
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [selectedMediaUrl, setSelectedMediaUrl] = useState<string | null>(null);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -63,6 +65,7 @@ export const AdCampaignsPage: React.FC = () => {
 
   const handleOpenCreate = () => {
     setEditingCampaign(null);
+    setSelectedMediaUrl(null);
     setFormData({
       company_name: '',
       campaign_name: '',
@@ -80,6 +83,7 @@ export const AdCampaignsPage: React.FC = () => {
 
   const handleOpenEdit = (c: AdCampaign) => {
     setEditingCampaign(c);
+    setSelectedMediaUrl(c.media_url || null);
     setFormData({
       company_name: c.company_name,
       campaign_name: c.campaign_name,
@@ -139,8 +143,7 @@ export const AdCampaignsPage: React.FC = () => {
   };
 
   return (
-    <EditorialLayout activeTab="ads">
-      <div className="space-y-6">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-200 pb-4">
         <div>
@@ -318,7 +321,7 @@ export const AdCampaignsPage: React.FC = () => {
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-stone-950/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-stone-900/70 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white border border-stone-200 max-w-lg w-full p-6 shadow-2xl relative my-8">
             <button
               onClick={() => setIsModalOpen(false)}
@@ -416,20 +419,53 @@ export const AdCampaignsPage: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-stone-700 font-medium mb-1">
-                  UUID del Archivo Multimedia (opcional)
+              <div className="border border-stone-200 p-3 bg-stone-50 space-y-2">
+                <label className="block text-stone-700 font-medium">
+                  Banner Publicitario (Archivo Multimedia)
                 </label>
-                <input
-                  type="text"
-                  value={formData.media_uuid}
-                  onChange={(e) => setFormData({ ...formData, media_uuid: e.target.value })}
-                  className="w-full border border-stone-300 rounded p-2 bg-stone-50 focus:bg-white font-mono text-[11px]"
-                  placeholder="Ej: c0a80101-0000-0000-0000-000000000001"
-                />
-                <p className="text-[10px] text-stone-500 mt-0.5">
-                  Puedes copiar el UUID de cualquier imagen cargada en la biblioteca de medios.
-                </p>
+
+                {selectedMediaUrl || formData.media_uuid ? (
+                  <div className="flex items-center gap-3 bg-white p-2 border border-stone-200">
+                    <img
+                      src={selectedMediaUrl || 'https://images.unsplash.com/photo-1595974482597-4b8da8879bc5?auto=format&fit=crop&w=400&q=80'}
+                      alt="Banner Preview"
+                      className="w-20 h-10 object-cover border border-stone-300"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] font-mono text-stone-600 truncate">
+                        UUID: {formData.media_uuid || 'Seleccionado'}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setIsMediaPickerOpen(true)}
+                        className="text-[11px] text-blue-700 hover:underline mr-3"
+                      >
+                        Cambiar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setFormData({ ...formData, media_uuid: '' });
+                          setSelectedMediaUrl(null);
+                        }}
+                        className="text-[11px] text-red-600 hover:underline"
+                      >
+                        Quitar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setIsMediaPickerOpen(true)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-stone-800 hover:bg-stone-900 text-white text-[11px] font-semibold transition-colors"
+                    >
+                      <ImageIcon className="w-3.5 h-3.5" />
+                      <span>Seleccionar de la Biblioteca de Medios</span>
+                    </button>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -490,7 +526,18 @@ export const AdCampaignsPage: React.FC = () => {
           </div>
         </div>
       )}
-      </div>
-    </EditorialLayout>
+
+      {/* Media Picker Modal */}
+      <MediaPickerModal
+        isOpen={isMediaPickerOpen}
+        onClose={() => setIsMediaPickerOpen(false)}
+        onSelect={(media) => {
+          setFormData({ ...formData, media_uuid: media.media_uuid });
+          setSelectedMediaUrl(media.url);
+        }}
+        selectedMediaUuid={formData.media_uuid}
+        title="Seleccionar Banner Publicitario"
+      />
+    </div>
   );
 };

@@ -1,7 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { EditorialLayout } from '../../layouts/EditorialLayout';
+import { Link } from 'react-router-dom';
 import { editorialService, ArticleSummary, Category } from '../../services/editorial';
-import { Plus, Search, Edit3, Trash2, Calendar, User, Tag as TagIcon, Clock } from 'lucide-react';
+import {
+  Plus,
+  Search,
+  Edit3,
+  Trash2,
+  Calendar,
+  User,
+  Tag as TagIcon,
+  Clock,
+  ExternalLink,
+  RotateCcw,
+  Image as ImageIcon,
+} from 'lucide-react';
 
 const STATUS_TABS = [
   { label: 'Todos', value: '' },
@@ -19,8 +31,10 @@ export const ArticlesListPage: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'latest' | 'oldest' | 'title'>('latest');
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -40,8 +54,21 @@ export const ArticlesListPage: React.FC = () => {
       if (selectedStatus === 'TRASH') params.include_trash = 'true';
 
       const res = await editorialService.getArticles(params);
-      setArticles(res.articles);
+      let list = [...res.articles];
+
+      // Client-side sort if needed
+      if (sortBy === 'oldest') {
+        list.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      } else if (sortBy === 'title') {
+        list.sort((a, b) => a.title.localeCompare(b.title));
+      } else {
+        // latest
+        list.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      }
+
+      setArticles(list);
       setTotalPages(res.pagination.total_pages || 1);
+      setTotalCount(res.pagination.total || list.length);
     } catch (err) {
       console.error(err);
     } finally {
@@ -51,7 +78,7 @@ export const ArticlesListPage: React.FC = () => {
 
   useEffect(() => {
     loadArticles();
-  }, [selectedStatus, selectedCategory, page]);
+  }, [selectedStatus, selectedCategory, page, sortBy]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,15 +90,24 @@ export const ArticlesListPage: React.FC = () => {
     const isTrash = selectedStatus === 'TRASH';
     const confirmMsg = isTrash
       ? '¿Eliminar este artículo definitivamente? Esta acción no se puede deshacer.'
-      : '¿Enviar este artículo a la papelera?';
+      : '¿Enviar este artículo a la papelera? Podrá restaurarlo después.';
 
     if (!window.confirm(confirmMsg)) return;
 
     try {
       await editorialService.deleteArticle(uuid, isTrash);
       loadArticles();
-    } catch (err) {
+    } catch {
       alert('Error al procesar la eliminación.');
+    }
+  };
+
+  const handleRestore = async (uuid: string) => {
+    try {
+      await editorialService.restoreArticle(uuid);
+      loadArticles();
+    } catch {
+      alert('Error al restaurar el artículo.');
     }
   };
 
@@ -93,7 +129,7 @@ export const ArticlesListPage: React.FC = () => {
   };
 
   return (
-    <EditorialLayout activeTab="articles">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-stone-200 gap-4">
         <div>
@@ -101,20 +137,20 @@ export const ArticlesListPage: React.FC = () => {
             Mesa de Redacción
           </h1>
           <p className="text-xs text-stone-500 mt-1">
-            Gestión editorial de artículos y coberturas informativas de Contacto con la Noticia.
+            Gestión editorial de artículos y coberturas informativas de Contacto con la Noticia &bull; {totalCount} artículos registrados
           </p>
         </div>
-        <a
-          href="/admin/articles/new"
-          className="inline-flex items-center justify-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-medium px-4 py-2.5 shadow-sm transition-colors"
+        <Link
+          to="/admin/articles/new"
+          className="inline-flex items-center justify-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold px-4 py-2.5 shadow-sm transition-colors"
         >
           <Plus className="w-4 h-4" />
           <span>Redactar Noticia</span>
-        </a>
+        </Link>
       </div>
 
       {/* Filters Bar */}
-      <div className="mt-6 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         {/* Status Tabs */}
         <div className="flex flex-wrap gap-1 bg-stone-200/80 p-1 rounded">
           {STATUS_TABS.map((tab) => (
@@ -135,8 +171,8 @@ export const ArticlesListPage: React.FC = () => {
           ))}
         </div>
 
-        {/* Search & Category */}
-        <div className="flex items-center gap-3">
+        {/* Search, Category & Sorting */}
+        <div className="flex flex-wrap items-center gap-3">
           <select
             value={selectedCategory}
             onChange={(e) => {
@@ -153,13 +189,23 @@ export const ArticlesListPage: React.FC = () => {
             ))}
           </select>
 
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as 'latest' | 'oldest' | 'title')}
+            className="text-xs border border-stone-300 bg-white px-2.5 py-1.5 text-stone-700 focus:outline-none focus:border-stone-800"
+          >
+            <option value="latest">Más recientes</option>
+            <option value="oldest">Más antiguos</option>
+            <option value="title">Título (A-Z)</option>
+          </select>
+
           <form onSubmit={handleSearchSubmit} className="relative">
             <input
               type="text"
               placeholder="Buscar título o texto..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="text-xs border border-stone-300 bg-white pl-8 pr-3 py-1.5 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-stone-800 w-48 sm:w-64"
+              className="text-xs border border-stone-300 bg-white pl-8 pr-3 py-1.5 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-stone-800 w-44 sm:w-56"
             />
             <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2" />
           </form>
@@ -167,7 +213,7 @@ export const ArticlesListPage: React.FC = () => {
       </div>
 
       {/* Articles Table */}
-      <div className="mt-6 bg-white border border-stone-200 shadow-sm overflow-hidden">
+      <div className="bg-white border border-stone-200 shadow-sm overflow-hidden">
         {loading ? (
           <div className="p-12 text-center text-xs text-stone-500">Cargando mesa editorial...</div>
         ) : articles.length === 0 ? (
@@ -177,56 +223,109 @@ export const ArticlesListPage: React.FC = () => {
         ) : (
           <div className="divide-y divide-stone-200">
             {articles.map((a) => (
-              <article key={a.article_uuid} className="p-4 sm:p-5 hover:bg-stone-50/70 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                    {getStatusBadge(a.status)}
-                    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-stone-600 bg-stone-100 px-2 py-0.5 rounded">
-                      <TagIcon className="w-3 h-3 text-stone-400" />
-                      {a.category_name}
-                    </span>
-                    <span className="inline-flex items-center gap-1 text-[11px] text-stone-500">
-                      <User className="w-3 h-3 text-stone-400" />
-                      {a.author_name}
-                    </span>
+              <article
+                key={a.article_uuid}
+                className="p-4 sm:p-5 hover:bg-stone-50/70 transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+              >
+                {/* Left Area: Thumbnail + Info */}
+                <div className="flex items-start gap-4 flex-1 min-w-0">
+                  {/* Thumbnail */}
+                  <div className="w-16 h-12 sm:w-20 sm:h-14 bg-stone-100 border border-stone-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                    {a.featured_media?.url ? (
+                      <img
+                        src={a.featured_media.url}
+                        alt={a.title}
+                        loading="lazy"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <ImageIcon className="w-5 h-5 text-stone-300" />
+                    )}
                   </div>
 
-                  <h2 className="text-base font-serif font-bold text-stone-900 leading-snug tracking-tight truncate">
-                    <a href={`/admin/articles/edit/${a.article_uuid}`} className="hover:underline">
-                      {a.title}
-                    </a>
-                  </h2>
-
-                  {a.subtitle && (
-                    <p className="text-xs text-stone-500 line-clamp-1 mt-0.5">{a.subtitle}</p>
-                  )}
-
-                  <div className="flex items-center gap-4 mt-2 text-[11px] text-stone-400">
-                    <span className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      {a.published_at ? new Date(a.published_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' }) : 'No publicado'}
-                    </span>
-                    {a.modified_at && (
-                      <span className="flex items-center gap-1 text-stone-400">
-                        <Clock className="w-3 h-3" />
-                        Modificado: {new Date(a.modified_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
+                      {getStatusBadge(a.status)}
+                      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-stone-600 bg-stone-100 px-2 py-0.5 rounded">
+                        <TagIcon className="w-3 h-3 text-stone-400" />
+                        {a.category_name}
                       </span>
+                      <span className="inline-flex items-center gap-1 text-[11px] text-stone-500">
+                        <User className="w-3 h-3 text-stone-400" />
+                        {a.author_name}
+                      </span>
+                    </div>
+
+                    <h2 className="text-base font-serif font-bold text-stone-900 leading-snug tracking-tight truncate">
+                      <Link to={`/admin/articles/edit/${a.article_uuid}`} className="hover:underline">
+                        {a.title}
+                      </Link>
+                    </h2>
+
+                    {a.subtitle && (
+                      <p className="text-xs text-stone-500 line-clamp-1 mt-0.5">{a.subtitle}</p>
                     )}
-                    <span className="font-mono text-stone-400 text-[10px] truncate max-w-xs">
-                      /{a.slug}
-                    </span>
+
+                    <div className="flex flex-wrap items-center gap-4 mt-2 text-[11px] text-stone-400">
+                      <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {a.published_at
+                          ? new Date(a.published_at).toLocaleDateString('es-ES', {
+                              day: '2-digit',
+                              month: 'short',
+                              year: 'numeric',
+                            })
+                          : 'No publicado'}
+                      </span>
+                      {a.modified_at && (
+                        <span className="flex items-center gap-1 text-stone-400">
+                          <Clock className="w-3 h-3" />
+                          Modificado: {new Date(a.modified_at).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' })}
+                        </span>
+                      )}
+                      <span className="font-mono text-stone-400 text-[10px] truncate max-w-xs">
+                        /{a.slug}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="flex items-center gap-2 self-end sm:self-center">
-                  <a
-                    href={`/admin/articles/edit/${a.article_uuid}`}
-                    className="p-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded transition-colors"
-                    title="Editar noticia"
-                  >
-                    <Edit3 className="w-4 h-4" />
-                  </a>
+                {/* Right Area: Action Buttons */}
+                <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                  {/* View Live Article Link */}
+                  {a.status === 'PUBLISHED' && (
+                    <a
+                      href={`/noticia/${a.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1.5 text-stone-400 hover:text-stone-900 hover:bg-stone-100 rounded transition-colors"
+                      title="Ver en portal público"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
+
+                  {/* Restore Button (when in TRASH) */}
+                  {selectedStatus === 'TRASH' ? (
+                    <button
+                      onClick={() => handleRestore(a.article_uuid)}
+                      className="p-1.5 text-emerald-600 hover:text-emerald-900 hover:bg-emerald-50 rounded transition-colors flex items-center gap-1 text-xs font-semibold"
+                      title="Restaurar artículo a borrador"
+                    >
+                      <RotateCcw className="w-3.5 h-3.5" />
+                      <span>Restaurar</span>
+                    </button>
+                  ) : (
+                    <Link
+                      to={`/admin/articles/edit/${a.article_uuid}`}
+                      className="p-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-100 rounded transition-colors"
+                      title="Editar noticia"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </Link>
+                  )}
+
+                  {/* Delete Button */}
                   <button
                     onClick={() => handleDelete(a.article_uuid)}
                     className="p-1.5 text-red-600 hover:text-red-900 hover:bg-red-50 rounded transition-colors"
@@ -246,24 +345,23 @@ export const ArticlesListPage: React.FC = () => {
             <button
               disabled={page <= 1}
               onClick={() => setPage(page - 1)}
-              className="px-3 py-1.5 border border-stone-300 rounded bg-white disabled:opacity-40"
+              className="px-3 py-1.5 border border-stone-300 rounded bg-white disabled:opacity-40 hover:bg-stone-100"
             >
               &larr; Anterior
             </button>
             <span>
-              Página {page} de {totalPages}
+              Página {page} de {totalPages} ({totalCount} artículos)
             </span>
             <button
               disabled={page >= totalPages}
               onClick={() => setPage(page + 1)}
-              className="px-3 py-1.5 border border-stone-300 rounded bg-white disabled:opacity-40"
+              className="px-3 py-1.5 border border-stone-300 rounded bg-white disabled:opacity-40 hover:bg-stone-100"
             >
               Siguiente &rarr;
             </button>
           </div>
         )}
       </div>
-    </EditorialLayout>
+    </div>
   );
 };
-

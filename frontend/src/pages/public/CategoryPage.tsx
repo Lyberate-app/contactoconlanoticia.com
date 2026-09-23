@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Newspaper, ArrowLeft, ChevronLeft, ChevronRight, Clock } from 'lucide-react';
+import { Newspaper, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 import { publicApi, PublicCategory, PublicArticleSummary, PaginationMeta } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
+import { ArticleCard } from '../../components/articles';
 
 export const CategoryPage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -42,19 +43,6 @@ export const CategoryPage: React.FC = () => {
   const handlePageChange = (newPage: number) => {
     setSearchParams({ page: String(newPage) });
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const formatDate = (dateStr: string) => {
-    try {
-      const d = new Date(dateStr.replace(' ', 'T'));
-      return new Intl.DateTimeFormat('es-VE', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }).format(d);
-    } catch {
-      return dateStr;
-    }
   };
 
   if (loading) {
@@ -157,41 +145,15 @@ export const CategoryPage: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {articles.map(art => (
-            <article
+          {articles.map((art) => (
+            <ArticleCard
               key={art.article_uuid}
-              className="bg-white border border-stone-200 p-5 flex flex-col justify-between hover:border-stone-400 transition-colors"
-            >
-              <div className="space-y-2">
-                <Link to={`/noticias/${art.slug}`} className="block group">
-                  <h2 className="font-serif font-bold text-stone-900 text-lg leading-snug group-hover:text-red-900 transition-colors">
-                    {art.title}
-                  </h2>
-                </Link>
-
-                {art.subtitle && (
-                  <p className="text-xs font-serif italic text-stone-600 line-clamp-2">
-                    {art.subtitle}
-                  </p>
-                )}
-
-                {art.excerpt && (
-                  <p className="text-xs text-stone-600 line-clamp-3 leading-relaxed">
-                    {art.excerpt}
-                  </p>
-                )}
-              </div>
-
-              <div className="pt-4 mt-4 border-t border-stone-100 flex items-center justify-between text-[11px] text-stone-500">
-                <Link to={`/autor/${art.author_slug}`} className="hover:underline text-stone-700">
-                  {art.author_name}
-                </Link>
-                <span className="flex items-center gap-1">
-                  <Clock className="w-3 h-3 text-stone-400" />
-                  {formatDate(art.published_at)}
-                </span>
-              </div>
-            </article>
+              article={art}
+              variant="vertical"
+              showCategory={false}
+              showAuthor={true}
+              showExcerpt={true}
+            />
           ))}
         </div>
       )}
