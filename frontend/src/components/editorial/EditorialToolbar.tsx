@@ -71,17 +71,17 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
   const handleDivider = () => insertSyntax('\n\n---\n\n', '', '');
 
   const btnClass =
-    'p-1.5 text-stone-600 hover:text-stone-900 hover:bg-stone-200 rounded transition-colors flex items-center justify-center';
+    'w-8 h-8 rounded-xl text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all flex items-center justify-center';
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-1.5 bg-stone-100 border border-stone-300 border-b-0 text-xs">
+    <div className="flex flex-wrap items-center gap-1 p-2 bg-white/70 dark:bg-stone-800/70 backdrop-blur-md border border-white/60 dark:border-white/10 rounded-t-[22px] border-b-0 text-xs">
       <button
         type="button"
         onClick={handleBold}
         className={btnClass}
         title="Negrita (**texto**)"
       >
-        <Bold className="w-3.5 h-3.5" />
+        <Bold className="w-4 h-4" />
       </button>
       <button
         type="button"
@@ -89,10 +89,10 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className={btnClass}
         title="Cursiva (*texto*)"
       >
-        <Italic className="w-3.5 h-3.5" />
+        <Italic className="w-4 h-4" />
       </button>
 
-      <span className="w-px h-4 bg-stone-300 mx-1" />
+      <span className="w-px h-4 bg-stone-300/80 dark:bg-stone-700 mx-1" />
 
       <button
         type="button"
@@ -100,7 +100,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className={btnClass}
         title="Subtítulo Principal H2"
       >
-        <Heading2 className="w-3.5 h-3.5" />
+        <Heading2 className="w-4 h-4" />
       </button>
       <button
         type="button"
@@ -108,10 +108,10 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className={btnClass}
         title="Subtítulo Secundario H3"
       >
-        <Heading3 className="w-3.5 h-3.5" />
+        <Heading3 className="w-4 h-4" />
       </button>
 
-      <span className="w-px h-4 bg-stone-300 mx-1" />
+      <span className="w-px h-4 bg-stone-300/80 dark:bg-stone-700 mx-1" />
 
       <button
         type="button"
@@ -119,7 +119,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className={btnClass}
         title="Cita Periodística (> cita)"
       >
-        <Quote className="w-3.5 h-3.5" />
+        <Quote className="w-4 h-4" />
       </button>
 
       <button
@@ -128,7 +128,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className={btnClass}
         title="Lista con Viñetas (- item)"
       >
-        <List className="w-3.5 h-3.5" />
+        <List className="w-4 h-4" />
       </button>
 
       <button
@@ -137,10 +137,10 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className={btnClass}
         title="Lista Numerada (1. item)"
       >
-        <ListOrdered className="w-3.5 h-3.5" />
+        <ListOrdered className="w-4 h-4" />
       </button>
 
-      <span className="w-px h-4 bg-stone-300 mx-1" />
+      <span className="w-px h-4 bg-stone-300/80 dark:bg-stone-700 mx-1" />
 
       <button
         type="button"
@@ -148,7 +148,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className={btnClass}
         title="Insertar Enlace ([texto](url))"
       >
-        <LinkIcon className="w-3.5 h-3.5" />
+        <LinkIcon className="w-4 h-4" />
       </button>
 
       <button
@@ -157,9 +157,8 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className={btnClass}
         title="Separador de Sección (---)"
       >
-        <Minus className="w-3.5 h-3.5" />
+        <Minus className="w-4 h-4" />
       </button>
     </div>
   );
 };
-

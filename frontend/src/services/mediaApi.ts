@@ -72,7 +72,23 @@ export const mediaService = {
     error?: { code: string; message: string };
   }> {
     if (isMockMode()) {
-      const media = mockStorage.saveMedia(payload);
+      const resolvedPayload = { ...payload };
+      if (payload.file && !payload.url) {
+        if (typeof window !== 'undefined' && typeof FileReader !== 'undefined' && payload.file.size < 2 * 1024 * 1024) {
+          try {
+            const dataUrl = await new Promise<string>((resolve, reject) => {
+              const reader = new FileReader();
+              reader.onload = () => resolve(reader.result as string);
+              reader.onerror = reject;
+              reader.readAsDataURL(payload.file!);
+            });
+            resolvedPayload.url = dataUrl;
+          } catch {
+            // Non-blocking fallback
+          }
+        }
+      }
+      const media = mockStorage.saveMedia(resolvedPayload);
       return { success: true, data: { media } };
     }
 
@@ -142,4 +158,3 @@ export const mediaService = {
     await apiClient.delete(`/admin/media/${encodeURIComponent(uuid)}`);
   },
 };
-

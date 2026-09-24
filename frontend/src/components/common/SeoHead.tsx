@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { SITE_URL } from '../../config/env';
+import { useSettings } from '../../context/SettingsContext';
 
 export interface SeoProps {
   title: string;
@@ -20,14 +21,11 @@ export interface SeoProps {
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
 }
 
-const DEFAULT_SITE_NAME = 'Contacto con la Noticia';
-const DEFAULT_DESCRIPTION = 'Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo.';
 const DEFAULT_IMAGE = '/placeholder-news.jpg';
-const DEFAULT_TWITTER_SITE = '@contactonoticia';
 
 export const SeoHead: React.FC<SeoProps> = ({
   title,
-  description = DEFAULT_DESCRIPTION,
+  description,
   canonicalUrl,
   type = 'website',
   imageUrl,
@@ -39,15 +37,21 @@ export const SeoHead: React.FC<SeoProps> = ({
   section,
   authorName,
   noIndex = false,
-  twitterSite = DEFAULT_TWITTER_SITE,
+  twitterSite,
   twitterCreator,
   jsonLd,
 }) => {
+  const { settings } = useSettings();
+  const siteName = settings.identity.siteName || 'Contacto con la Noticia';
+  const effectiveDescription = description || settings.identity.tagline || 'Periódico digital independiente.';
+  const effectiveTwitterSite = twitterSite || settings.social.twitterSite || '@contactonoticia';
+  const effectiveFallbackImage = settings.logos.ogFallbackImageUrl || DEFAULT_IMAGE;
+
   useEffect(() => {
     // 1. Update Title
-    const formattedTitle = title.includes(DEFAULT_SITE_NAME)
+    const formattedTitle = title.includes(siteName)
       ? title
-      : `${title} | ${DEFAULT_SITE_NAME}`;
+      : `${title} | ${siteName}`;
     document.title = formattedTitle;
 
     // Helper to set or create meta tag
@@ -83,18 +87,18 @@ export const SeoHead: React.FC<SeoProps> = ({
     const currentUrl = canonicalUrl || (typeof window !== 'undefined' ? `${SITE_URL}${window.location.pathname}` : SITE_URL);
     const finalImage = imageUrl
       ? (imageUrl.startsWith('http') ? imageUrl : `${SITE_URL}${imageUrl.startsWith('/') ? '' : '/'}${imageUrl}`)
-      : `${SITE_URL}${DEFAULT_IMAGE}`;
+      : `${SITE_URL}${effectiveFallbackImage}`;
 
     // 2. Standard Meta Tags
-    setMetaTag('name', 'description', description);
+    setMetaTag('name', 'description', effectiveDescription);
     setMetaTag('name', 'robots', noIndex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
     setCanonical(currentUrl);
 
     // 3. Open Graph Tags
     setMetaTag('property', 'og:type', type);
-    setMetaTag('property', 'og:site_name', DEFAULT_SITE_NAME);
+    setMetaTag('property', 'og:site_name', siteName);
     setMetaTag('property', 'og:title', title);
-    setMetaTag('property', 'og:description', description);
+    setMetaTag('property', 'og:description', effectiveDescription);
     setMetaTag('property', 'og:url', currentUrl);
     setMetaTag('property', 'og:image', finalImage);
     setMetaTag('property', 'og:image:width', String(imageWidth));
@@ -116,10 +120,10 @@ export const SeoHead: React.FC<SeoProps> = ({
 
     // 4. Twitter / X Cards
     setMetaTag('name', 'twitter:card', 'summary_large_image');
-    setMetaTag('name', 'twitter:site', twitterSite);
-    setMetaTag('name', 'twitter:creator', twitterCreator || twitterSite);
+    setMetaTag('name', 'twitter:site', effectiveTwitterSite);
+    setMetaTag('name', 'twitter:creator', twitterCreator || effectiveTwitterSite);
     setMetaTag('name', 'twitter:title', title);
-    setMetaTag('name', 'twitter:description', description);
+    setMetaTag('name', 'twitter:description', effectiveDescription);
     setMetaTag('name', 'twitter:image', finalImage);
     setMetaTag('name', 'twitter:image:alt', imageAlt || title);
 
@@ -138,7 +142,10 @@ export const SeoHead: React.FC<SeoProps> = ({
     }
   }, [
     title,
-    description,
+    siteName,
+    effectiveDescription,
+    effectiveTwitterSite,
+    effectiveFallbackImage,
     canonicalUrl,
     type,
     imageUrl,
@@ -150,7 +157,6 @@ export const SeoHead: React.FC<SeoProps> = ({
     section,
     authorName,
     noIndex,
-    twitterSite,
     twitterCreator,
     jsonLd,
   ]);

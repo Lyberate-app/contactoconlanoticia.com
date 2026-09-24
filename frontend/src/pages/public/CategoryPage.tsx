@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { Newspaper, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Newspaper, ArrowLeft, ChevronLeft, ChevronRight, Compass } from 'lucide-react';
 import { publicApi, PublicCategory, PublicArticleSummary, PaginationMeta } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { ArticleCard } from '../../components/articles';
@@ -48,13 +48,12 @@ export const CategoryPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-8 space-y-6 animate-pulse">
-        <div className="h-10 w-48 bg-stone-200 rounded"></div>
-        <div className="h-4 w-96 bg-stone-200 rounded"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
-          <div className="h-64 bg-stone-200 rounded"></div>
-          <div className="h-64 bg-stone-200 rounded"></div>
-          <div className="h-64 bg-stone-200 rounded"></div>
+      <div className="py-6 space-y-6 animate-pulse">
+        <div className="h-24 glass-card rounded-[28px]"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+          <div className="h-64 glass-card rounded-[24px]"></div>
+          <div className="h-64 glass-card rounded-[24px]"></div>
+          <div className="h-64 glass-card rounded-[24px]"></div>
         </div>
       </div>
     );
@@ -62,19 +61,21 @@ export const CategoryPage: React.FC = () => {
 
   if (notFound || !category) {
     return (
-      <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
+      <div className="max-w-2xl mx-auto py-16 text-center space-y-5 glass-card p-8 rounded-[28px] shadow-xl">
         <SeoHead title="Sección no encontrada" noIndex={true} />
-        <Newspaper className="w-12 h-12 text-stone-400 mx-auto" />
+        <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-700 mx-auto flex items-center justify-center">
+          <Newspaper className="w-8 h-8" />
+        </div>
         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
           Sección no encontrada
         </h1>
-        <p className="text-stone-600 text-sm max-w-md mx-auto">
+        <p className="text-stone-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
           La sección o categoría editorial que intenta consultar no existe o ha sido dada de baja.
         </p>
-        <div className="pt-4">
+        <div className="pt-2">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-stone-800"
+            className="inline-flex items-center gap-2 bg-stone-900 text-white px-5 py-2.5 rounded-full text-xs font-semibold hover:bg-rose-900 transition-colors shadow-md"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver a la portada</span>
@@ -121,7 +122,7 @@ export const CategoryPage: React.FC = () => {
   ];
 
   return (
-    <div className="py-4 space-y-8">
+    <div className="py-2 space-y-6">
       <SeoHead
         title={`Noticias de ${category.name}`}
         description={category.description || `Últimas noticias y reportajes de la sección ${category.name} en Contacto con la Noticia.`}
@@ -131,16 +132,23 @@ export const CategoryPage: React.FC = () => {
         jsonLd={categoryJsonLd}
       />
 
-      {/* 1. SECTION HEADER */}
-      <header className="border-b-2 border-stone-900 pb-4">
-        <span className="text-xs font-bold uppercase tracking-wider text-red-700 block mb-1">
-          Sección Editorial
-        </span>
-        <h1 className="text-3xl sm:text-4xl font-serif font-black text-stone-950 uppercase tracking-tight">
+      {/* 1. iOS 27 GLASS SECTION HERO */}
+      <header className="glass-card p-6 sm:p-8 rounded-[28px] relative overflow-hidden shadow-sm">
+        <div className="flex items-center gap-2 mb-2">
+          <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center">
+            <Compass className="w-3.5 h-3.5" />
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-rose-700">
+            Sección Editorial
+          </span>
+        </div>
+
+        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-black text-stone-950 uppercase tracking-tight">
           {category.name}
         </h1>
+
         {category.description && (
-          <p className="text-sm font-serif italic text-stone-600 mt-1 max-w-2xl">
+          <p className="text-xs sm:text-sm font-serif italic text-stone-600 mt-2 max-w-2xl leading-relaxed">
             {category.description}
           </p>
         )}
@@ -148,7 +156,7 @@ export const CategoryPage: React.FC = () => {
 
       {/* 2. ARTICLES GRID */}
       {articles.length === 0 ? (
-        <div className="bg-white border border-stone-200 p-8 text-center my-6 rounded">
+        <div className="glass-card p-10 text-center my-6 rounded-[28px] max-w-md mx-auto shadow-sm">
           <Newspaper className="w-8 h-8 text-stone-400 mx-auto mb-2" />
           <h2 className="text-base font-serif font-bold text-stone-800">
             No hay noticias publicadas en esta sección
@@ -158,7 +166,7 @@ export const CategoryPage: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {articles.map((art) => (
             <ArticleCard
               key={art.article_uuid}
@@ -172,31 +180,31 @@ export const CategoryPage: React.FC = () => {
         </div>
       )}
 
-      {/* 3. PAGINATION */}
+      {/* 3. iOS 27 GLASS PAGINATION */}
       {pagination && pagination.total_pages > 1 && (
-        <div className="pt-6 border-t border-stone-200 flex items-center justify-between">
+        <div className="pt-4 flex items-center justify-between">
           <button
             type="button"
             onClick={() => handlePageChange(page - 1)}
             disabled={page <= 1}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-stone-700 hover:text-stone-950 disabled:opacity-30 disabled:pointer-events-none px-3 py-1.5 border border-stone-300 rounded bg-white"
+            className="glass-pill px-4 py-2 text-xs font-semibold text-stone-800 hover:text-rose-700 disabled:opacity-30 disabled:pointer-events-none inline-flex items-center gap-1.5 shadow-sm active:scale-95"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Página Anterior</span>
+            <span>Anterior</span>
           </button>
 
-          <span className="text-xs text-stone-500">
-            Página <span className="font-semibold text-stone-800">{page}</span> de{' '}
-            <span className="font-semibold text-stone-800">{pagination.total_pages}</span>
+          <span className="glass-pill px-3.5 py-1 text-xs text-stone-600">
+            Página <span className="font-bold text-stone-900">{page}</span> de{' '}
+            <span className="font-bold text-stone-900">{pagination.total_pages}</span>
           </span>
 
           <button
             type="button"
             onClick={() => handlePageChange(page + 1)}
             disabled={page >= pagination.total_pages}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-stone-700 hover:text-stone-950 disabled:opacity-30 disabled:pointer-events-none px-3 py-1.5 border border-stone-300 rounded bg-white"
+            className="glass-pill px-4 py-2 text-xs font-semibold text-stone-800 hover:text-rose-700 disabled:opacity-30 disabled:pointer-events-none inline-flex items-center gap-1.5 shadow-sm active:scale-95"
           >
-            <span>Página Siguiente</span>
+            <span>Siguiente</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -204,4 +212,3 @@ export const CategoryPage: React.FC = () => {
     </div>
   );
 };
-

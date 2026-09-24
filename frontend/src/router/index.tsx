@@ -21,6 +21,7 @@ const ArticleEditorPage = React.lazy(() => import('../pages/editorial/ArticleEdi
 const MediaLibraryPage = React.lazy(() => import('../pages/editorial/MediaLibraryPage').then(m => ({ default: m.MediaLibraryPage })));
 const AdCampaignsPage = React.lazy(() => import('../pages/editorial/AdCampaignsPage').then(m => ({ default: m.AdCampaignsPage })));
 const SubmissionsModerationPage = React.lazy(() => import('../pages/editorial/SubmissionsModerationPage').then(m => ({ default: m.SubmissionsModerationPage })));
+const SettingsPage = React.lazy(() => import('../pages/editorial/SettingsPage').then(m => ({ default: m.SettingsPage })));
 
 const LoadingFallback: React.FC = () => (
   <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center">
@@ -233,6 +234,14 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <SubmissionsModerationPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'settings',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <SettingsPage />
           </Suspense>
         ),
       },

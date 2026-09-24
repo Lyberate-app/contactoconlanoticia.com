@@ -1,10 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Search, Menu, X, Clock, SunMedium, ArrowRight, Shield, Bell, Send } from 'lucide-react';
+import {
+  Search,
+  Menu,
+  X,
+  SunMedium,
+  ArrowRight,
+  Shield,
+  Bell,
+  Send,
+  Home,
+  Compass,
+  Sparkles,
+  ChevronRight,
+} from 'lucide-react';
 import { publicApi, PublicCategory, PublicArticleSummary } from '../services/publicApi';
 import { PwaManager } from '../components/common/PwaManager';
 import { AdSlot } from '../components/common/AdSlot';
 import { formatMastheadDate } from '../utils/date';
+import { useSettings } from '../context/SettingsContext';
 
 declare global {
   interface Window {
@@ -13,10 +27,13 @@ declare global {
 }
 
 export const PublicLayout: React.FC = () => {
+  const { settings } = useSettings();
   const [categories, setCategories] = useState<PublicCategory[]>([]);
   const [breakingNews, setBreakingNews] = useState<PublicArticleSummary[]>([]);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
+  const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -43,11 +60,20 @@ export const PublicLayout: React.FC = () => {
         }
       })
       .catch(() => {});
+
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu on route change
+  // Close drawers on route change
   useEffect(() => {
-    setMobileMenuOpen(false);
+    setBottomSheetOpen(false);
+    setSearchModalOpen(false);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -55,274 +81,246 @@ export const PublicLayout: React.FC = () => {
     if (searchQuery.trim()) {
       navigate(`/buscar?q=${encodeURIComponent(searchQuery.trim())}`);
       setSearchQuery('');
-      setMobileMenuOpen(false);
+      setBottomSheetOpen(false);
+      setSearchModalOpen(false);
     }
   };
 
   const formattedDate = formatMastheadDate();
 
   return (
-    <div className="min-h-screen bg-stone-50 text-stone-900 font-sans flex flex-col antialiased selection:bg-red-100 selection:text-red-900">
-      {/* 1. TOP UTILITY BAR */}
-      <div className="border-b border-stone-200 bg-white text-xs text-stone-600">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-4 flex-wrap">
-            <span className="font-serif font-medium text-stone-800">{formattedDate}</span>
-            <span className="hidden sm:inline text-stone-300">|</span>
-            <span className="hidden sm:inline">Edición Digital · San Juan de los Morros, Guárico</span>
-            <span className="hidden md:inline text-stone-300">|</span>
-            <span className="hidden md:inline-flex items-center gap-1 text-stone-500">
-              <SunMedium className="w-3.5 h-3.5 text-amber-600" />
-              <span>31°C · Soleado</span>
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => window.openPushPreferences?.()}
-              className="flex items-center gap-1 text-stone-600 hover:text-red-700 transition-colors"
-              title="Alertas y notificaciones"
-            >
-              <Bell className="w-3.5 h-3.5 text-stone-500" />
-              <span className="hidden sm:inline">Alertas</span>
-            </button>
-            <span className="text-stone-300">|</span>
-            <Link
-              to="/enviar-noticia"
-              className="flex items-center gap-1 text-red-700 hover:text-red-900 font-medium transition-colors"
-              title="Envíanos tu noticia o denuncia comunitaria"
-            >
-              <Send className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Envíanos tu noticia</span>
-            </Link>
-            <span className="text-stone-300">|</span>
-            <Link
-              to="/buscar"
-              className="flex items-center gap-1 hover:text-stone-950 transition-colors"
-              title="Buscar noticias"
-            >
-              <Search className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Buscar</span>
-            </Link>
-            <span className="text-stone-300">|</span>
-            <Link
-              to="/login"
-              className="flex items-center gap-1 text-stone-500 hover:text-stone-900 transition-colors"
-              title="Acceso al panel editorial"
-            >
-              <Shield className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Redacción</span>
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* 2. NEWSPAPER MASTHEAD */}
-      <header className="bg-white border-b border-stone-300">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-4">
-          <div className="text-center">
-            <div className="text-[11px] font-semibold tracking-widest text-stone-500 uppercase mb-1">
-              Diario Regional Independiente · Fundado en 2011
-            </div>
-
-            <Link to="/" className="inline-block group">
-              <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif font-black tracking-tight text-stone-950 uppercase group-hover:text-red-900 transition-colors">
-                Contacto con la Noticia
-              </h1>
-            </Link>
-
-            <p className="mt-1 text-xs sm:text-sm font-serif italic text-stone-600 max-w-xl mx-auto">
-              "Información oportuna, veraz y con sentido social para el estado Guárico y los Llanos Centrales"
-            </p>
-          </div>
-
-          {/* Newspaper Double Rules */}
-          <div className="mt-4 pt-1 border-t-2 border-b border-stone-900"></div>
-        </div>
-
-        {/* 3. PRIMARY NAVIGATION BAR */}
-        <nav className="border-b border-stone-300 bg-stone-100/70">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-            {/* Desktop Categories Links */}
-            <div className="hidden md:flex items-center space-x-1 lg:space-x-2 py-2 overflow-x-auto">
-              <Link
-                to="/"
-                className={`px-3 py-1 text-xs lg:text-sm font-semibold uppercase tracking-wider transition-colors ${
-                  location.pathname === '/'
-                    ? 'text-red-700 border-b-2 border-red-700 -mb-[9px] pb-[7px]'
-                    : 'text-stone-700 hover:text-stone-950'
-                }`}
-              >
-                Portada
-              </Link>
-              {categories.map(cat => {
-                const isActive = location.pathname === `/categoria/${cat.slug}`;
-                return (
-                  <Link
-                    key={cat.category_uuid}
-                    to={`/categoria/${cat.slug}`}
-                    className={`px-3 py-1 text-xs lg:text-sm font-semibold uppercase tracking-wider transition-colors whitespace-nowrap ${
-                      isActive
-                        ? 'text-red-700 border-b-2 border-red-700 -mb-[9px] pb-[7px]'
-                        : 'text-stone-700 hover:text-stone-950'
-                    }`}
-                  >
-                    {cat.name}
-                  </Link>
-                );
-              })}
-            </div>
-
-            {/* Mobile Menu Trigger & Search */}
-            <div className="flex md:hidden items-center justify-between w-full py-2.5">
-              <button
-                type="button"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="flex items-center gap-1.5 text-xs font-semibold uppercase text-stone-800 p-1"
-                aria-label="Abrir menú"
-              >
-                {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                <span>Secciones</span>
-              </button>
-
-              <Link
-                to="/buscar"
-                className="p-1.5 text-stone-700 hover:text-stone-950"
-                aria-label="Buscar noticias"
-              >
-                <Search className="w-4 h-4" />
-              </Link>
-            </div>
-
-            {/* Desktop Quick Search Form */}
-            <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-1.5 py-1">
-              <div className="relative">
-                <input
-                  type="text"
-                  placeholder="Buscar en el diario..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-44 lg:w-56 bg-white border border-stone-300 rounded px-2.5 py-1 text-xs text-stone-800 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-stone-600 focus:border-stone-600"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-1.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-800"
-                  aria-label="Ejecutar búsqueda"
-                >
-                  <Search className="w-3.5 h-3.5" />
-                </button>
-              </div>
-            </form>
-          </div>
-
-          {/* Mobile Dropdown Drawer */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-stone-200 bg-white px-4 pt-3 pb-6 space-y-3">
-              <form onSubmit={handleSearchSubmit} className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="Buscar noticias..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="flex-1 bg-stone-50 border border-stone-300 rounded px-3 py-1.5 text-xs text-stone-900"
-                />
-                <button
-                  type="submit"
-                  className="bg-stone-900 text-white px-3 py-1.5 rounded text-xs font-medium"
-                >
-                  Buscar
-                </button>
-              </form>
-
-              <div className="border-t border-stone-100 pt-2 grid grid-cols-2 gap-2">
-                <Link
-                  to="/"
-                  className="py-1.5 text-xs font-semibold uppercase text-stone-800 hover:text-red-700"
-                >
-                  Portada
-                </Link>
-                {categories.map(cat => (
-                  <Link
-                    key={cat.category_uuid}
-                    to={`/categoria/${cat.slug}`}
-                    className="py-1.5 text-xs font-semibold uppercase text-stone-800 hover:text-red-700"
-                  >
-                    {cat.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
-        </nav>
-      </header>
-
-      {/* 4. BREAKING NEWS TICKER (SUBTLE) */}
-      {breakingNews.length > 0 && (
-        <div className="bg-stone-900 text-stone-100 border-b border-stone-800 text-xs py-1.5">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-3">
-            <span className="inline-flex items-center gap-1 font-bold text-[10px] tracking-wider uppercase bg-red-700 text-white px-2 py-0.5 rounded-sm shrink-0">
-              <Clock className="w-3 h-3" />
-              Última Hora
+    <div className="min-h-screen text-stone-900 font-sans flex flex-col antialiased selection:bg-rose-500/20 selection:text-rose-950 ambient-glow-mesh relative">
+      {/* 1. iOS DYNAMIC ISLAND BREAKING NEWS CAPSULE (TOP FLOATING) */}
+      {settings.features.showBreakingNewsTicker && breakingNews.length > 0 && (
+        <div className="sticky top-2 z-50 px-3 sm:px-6 pointer-events-none flex justify-center">
+          <div className="pointer-events-auto max-w-xl w-full glass-pill-dark text-white text-xs px-3.5 py-1.5 rounded-full flex items-center gap-2.5 shadow-2xl transition-all duration-300 hover:scale-[1.01]">
+            <span className="flex items-center gap-1.5 shrink-0 bg-rose-600/90 text-white font-bold text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full shadow-inner">
+              <span className="w-1.5 h-1.5 rounded-full bg-white radar-pulse"></span>
+              En Vivo
             </span>
 
-            <div className="truncate flex-1">
+            <div className="truncate flex-1 min-w-0">
               <Link
-                to={`/noticias/${breakingNews[0].slug}`}
-                className="hover:underline hover:text-white transition-colors"
+                to={`/noticia/${breakingNews[0].slug}`}
+                className="text-stone-200 hover:text-white transition-colors truncate block text-[11px] sm:text-xs"
               >
                 {breakingNews[0].title}
               </Link>
             </div>
 
             {breakingNews.length > 1 && (
-              <span className="hidden sm:inline text-stone-400 text-[11px] shrink-0">
-                +{breakingNews.length - 1} informaciones más
+              <span className="text-[10px] text-stone-400 font-medium shrink-0 hidden sm:inline">
+                +{breakingNews.length - 1} más
               </span>
             )}
           </div>
         </div>
       )}
 
-      {/* 5. TOP LEADERBOARD AD SPACE (728x90) */}
-      <AdSlot placement="HEADER_BANNER" className="px-4 sm:px-6 lg:px-8" />
+      {/* 2. STICKY FROSTED GLASS HEADER (iOS 27 Glass) */}
+      <header
+        className={`sticky top-0 z-40 transition-all duration-300 ${
+          isScrolled
+            ? 'glass-panel shadow-sm border-b border-white/60 py-2 sm:py-2.5'
+            : 'bg-white/80 backdrop-blur-xl border-b border-stone-200/60 py-2.5 sm:py-3.5'
+        }`}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Top Row: Date, Weather Chip & Redaction */}
+          <div className="flex items-center justify-between gap-3 text-xs mb-1.5 sm:mb-2 text-stone-500">
+            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+              <span className="font-medium text-stone-700 text-[11px] sm:text-xs tracking-tight">
+                {formattedDate}
+              </span>
+              <span className="hidden sm:inline text-stone-300">·</span>
+              <span className="hidden sm:inline text-[11px] text-stone-500">
+                {settings.identity.editionName}
+              </span>
+              {settings.features.showWeatherWidget && (
+                <div className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-900 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">
+                  <SunMedium className="w-3 h-3 text-amber-600" />
+                  <span>31°C · Soleado</span>
+                </div>
+              )}
+            </div>
 
-      {/* 6. MAIN CONTENT OUTLET */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            {/* Header Right Actions (Alerts, Citizen Submit, Redacción) */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => window.openPushPreferences?.()}
+                className="glass-pill px-2.5 py-1 text-[11px] font-medium text-stone-700 hover:text-rose-700 flex items-center gap-1.5"
+                title="Alertas y Notificaciones"
+              >
+                <Bell className="w-3 h-3 text-rose-600" />
+                <span className="hidden sm:inline">Alertas</span>
+              </button>
+
+              {settings.features.showCitizenSubmissionButton && (
+                <Link
+                  to="/enviar-noticia"
+                  className="hidden md:inline-flex items-center gap-1.5 glass-pill px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-50/70"
+                >
+                  <Send className="w-3 h-3" />
+                  <span>Envíanos tu noticia</span>
+                </Link>
+              )}
+
+              <Link
+                to="/login"
+                className="hidden lg:inline-flex items-center gap-1 text-[11px] text-stone-500 hover:text-stone-900 transition-colors px-1"
+                title="Acceso editorial"
+              >
+                <Shield className="w-3 h-3" />
+                <span>Redacción</span>
+              </Link>
+            </div>
+          </div>
+
+          {/* Middle Row: Brand Masthead */}
+          <div className="flex items-center justify-between py-1">
+            <Link to="/" className="inline-block group">
+              {settings.logos.headerLogoUrl ? (
+                <img
+                  src={settings.logos.headerLogoUrl}
+                  alt={settings.identity.siteName}
+                  style={{ maxHeight: `${settings.logos.headerLogoHeight || 44}px` }}
+                  className="object-contain"
+                />
+              ) : (
+                <div className="flex items-baseline gap-2">
+                  <h1
+                    style={{
+                      fontFamily: 'var(--font-serif)',
+                      fontWeight: Number(settings.typography.headingWeight) || 900,
+                      color: settings.colors.primary,
+                    }}
+                    className="text-2xl sm:text-4xl md:text-5xl uppercase tracking-tighter group-hover:opacity-90 transition-opacity"
+                  >
+                    {settings.identity.siteName}
+                  </h1>
+                </div>
+              )}
+            </Link>
+
+            {/* Desktop Quick Search Pill */}
+            <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-1.5">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar noticias..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-48 lg:w-64 glass-pill px-3.5 py-1.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-900"
+                  aria-label="Buscar"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+
+            {/* Mobile Header Menu & Search Icons */}
+            <div className="flex md:hidden items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => setSearchModalOpen(true)}
+                className="w-8 h-8 rounded-full glass-pill flex items-center justify-center text-stone-700"
+                aria-label="Buscar"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setBottomSheetOpen(true)}
+                className="w-8 h-8 rounded-full glass-pill flex items-center justify-center text-stone-800"
+                aria-label="Secciones"
+              >
+                <Menu className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+
+          {/* Desktop Categories Pill Navigation Bar */}
+          <div className="hidden md:flex items-center gap-1 pt-2.5 pb-1 overflow-x-auto no-scrollbar border-t border-stone-200/50">
+            <Link
+              to="/"
+              className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
+                location.pathname === '/'
+                  ? 'bg-rose-900 text-white shadow-sm'
+                  : 'text-stone-600 hover:text-stone-950 hover:bg-stone-100/70'
+              }`}
+            >
+              Portada
+            </Link>
+            {categories.map((cat) => {
+              const isActive = location.pathname === `/categoria/${cat.slug}`;
+              return (
+                <Link
+                  key={cat.category_uuid}
+                  to={`/categoria/${cat.slug}`}
+                  className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 whitespace-nowrap ${
+                    isActive
+                      ? 'bg-rose-900 text-white shadow-sm'
+                      : 'text-stone-600 hover:text-stone-950 hover:bg-stone-100/70'
+                  }`}
+                >
+                  {cat.name}
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </header>
+
+      {/* 3. LEADERBOARD AD SPACE */}
+      <AdSlot placement="HEADER_BANNER" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full pt-4" />
+
+      {/* 4. MAIN CONTENT ROUTED PAGES */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 pb-safe-nav">
         <Outlet />
       </main>
 
-      {/* FOOTER AD SPACE */}
-      <AdSlot placement="FOOTER" className="px-4 sm:px-6 lg:px-8" />
+      {/* 5. FOOTER AD SPACE */}
+      <AdSlot placement="FOOTER" className="px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full pb-4" />
 
-      {/* 7. NEWSPAPER FOOTER */}
-      <footer className="border-t-2 border-stone-900 bg-white text-stone-800 text-xs mt-12">
+      {/* 6. iOS 27 GLASS FOOTER */}
+      <footer className="mt-12 glass-panel border-t border-white/60 text-stone-700 text-xs pb-24 md:pb-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-stone-200">
-            {/* Column 1: Newspaper Identity */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-stone-200/60">
+            {/* Column 1: Identity */}
             <div className="space-y-3">
-              <h2 className="font-serif text-lg font-bold text-stone-950 uppercase tracking-tight">
-                Contacto con la Noticia
+              <h2
+                style={{
+                  fontFamily: 'var(--font-serif)',
+                  color: settings.colors.primary,
+                }}
+                className="text-lg font-black uppercase tracking-tight"
+              >
+                {settings.identity.siteName}
               </h2>
               <p className="text-stone-600 leading-relaxed text-xs">
-                Periódico digital independiente fundado en San Juan de los Morros, estado Guárico. Cobertura comprometida con el desarrollo comunitario, productivo e institucional de los Llanos Centrales venezolanos.
+                {settings.identity.tagline}
               </p>
               <div className="text-stone-500 text-[11px]">
-                Sede Central: Av. Bolívar, Edificio Centro Cívico, San Juan de los Morros, Estado Guárico.
+                {settings.identity.address || `Sede: ${settings.identity.centralLocation}`}
               </div>
             </div>
 
             {/* Column 2: Sections */}
             <div>
-              <h3 className="font-serif font-bold text-stone-950 uppercase text-xs tracking-wider mb-3 border-b border-stone-200 pb-1">
-                Secciones
+              <h3 className="font-bold text-stone-950 uppercase text-[11px] tracking-wider mb-3">
+                Secciones Principales
               </h3>
               <ul className="space-y-1.5 text-stone-600">
-                {categories.map(cat => (
+                {categories.map((cat) => (
                   <li key={cat.category_uuid}>
                     <Link
                       to={`/categoria/${cat.slug}`}
-                      className="hover:text-red-700 hover:underline transition-colors"
+                      className="hover:text-rose-700 hover:underline transition-colors"
                     >
                       {cat.name}
                     </Link>
@@ -333,50 +331,293 @@ export const PublicLayout: React.FC = () => {
 
             {/* Column 3: Institutional */}
             <div>
-              <h3 className="font-serif font-bold text-stone-950 uppercase text-xs tracking-wider mb-3 border-b border-stone-200 pb-1">
-                Institucional
+              <h3 className="font-bold text-stone-950 uppercase text-[11px] tracking-wider mb-3">
+                Institucional & Ética
               </h3>
               <ul className="space-y-1.5 text-stone-600">
-                <li><Link to="/autor/carlos-mendoza" className="hover:text-red-700 hover:underline">Equipo de Redacción</Link></li>
-                <li><span className="text-stone-400">Código de Ética Periodística</span></li>
+                <li><Link to="/autor/carlos-mendoza" className="hover:text-rose-700">Mesa de Redacción</Link></li>
+                <li><span className="text-stone-400">Código de Ética y Verificación</span></li>
                 <li><span className="text-stone-400">Tarifario Publicitario</span></li>
-                <li><span className="text-stone-400">Contacto con la Dirección</span></li>
-                <li><Link to="/buscar" className="hover:text-red-700 hover:underline">Hemeroteca / Archivo Digital</Link></li>
+                <li><Link to="/buscar" className="hover:text-rose-700">Hemeroteca & Archivo</Link></li>
               </ul>
             </div>
 
-            {/* Column 4: Redacción & Plataforma */}
+            {/* Column 4: Redacción Digital */}
             <div className="space-y-3">
-              <h3 className="font-serif font-bold text-stone-950 uppercase text-xs tracking-wider mb-3 border-b border-stone-200 pb-1">
-                Redacción Digital
+              <h3 className="font-bold text-stone-950 uppercase text-[11px] tracking-wider mb-3">
+                Redacción Periodística
               </h3>
               <p className="text-stone-600 text-xs leading-relaxed">
-                Área reservada para periodistas, editores y administradores de contenido de la mesa editorial.
+                Plataforma editorial para redactores, fotoperiodistas y corresponsales.
               </p>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-1.5 bg-stone-900 text-white px-3 py-1.5 rounded text-xs font-semibold hover:bg-stone-800 transition-colors"
+                className="inline-flex items-center gap-1.5 glass-pill px-3.5 py-1.5 text-xs font-semibold text-stone-900 hover:bg-stone-900 hover:text-white transition-all shadow-sm"
               >
-                <span>Acceso Editorial</span>
+                <span>Acceso Redacción</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center justify-between text-stone-500 text-[11px] gap-2">
+          <div className="flex flex-col sm:flex-row items-center justify-between text-stone-500 text-[11px] gap-3">
             <div>
-              &copy; {new Date().getFullYear()} Contacto con la Noticia Media Group. Todos los derechos reservados.
+              &copy; {new Date().getFullYear()} {settings.identity.copyrightText}
             </div>
-            <div>
-              Plataforma desarrollada con arquitectura <span className="font-semibold text-stone-700">Lyberate</span>.
-            </div>
+            {settings.identity.showLyberateBadge && (
+              <div className="flex items-center gap-1.5 text-stone-400">
+                <Sparkles className="w-3.5 h-3.5 text-rose-500" />
+                <span>Experiencia Móvil iOS 27 Glass — Arquitectura Lyberate</span>
+              </div>
+            )}
           </div>
         </div>
       </footer>
+
+      {/* 7. MOBILE FLOATING iOS 27 GLASS DOCK (BOTTOM TAB BAR) */}
+      <nav
+        aria-label="Navegación Móvil"
+        className="fixed bottom-3 inset-x-3 sm:inset-x-6 z-40 md:hidden pointer-events-none flex justify-center"
+      >
+        <div className="pointer-events-auto glass-dock rounded-[28px] px-3 py-2 flex items-center justify-between w-full max-w-md shadow-2xl">
+          {/* 1. Portada */}
+          <Link
+            to="/"
+            className={`flex flex-col items-center justify-center w-12 py-1 transition-all ${
+              location.pathname === '/' ? 'text-rose-700 scale-105' : 'text-stone-500 active:scale-95'
+            }`}
+          >
+            <Home className="w-5 h-5" />
+            <span className="text-[10px] font-semibold mt-0.5">Portada</span>
+            {location.pathname === '/' && (
+              <span className="w-1 h-1 rounded-full bg-rose-600 mt-0.5"></span>
+            )}
+          </Link>
+
+          {/* 2. Secciones */}
+          <button
+            type="button"
+            onClick={() => setBottomSheetOpen(true)}
+            className={`flex flex-col items-center justify-center w-12 py-1 transition-all ${
+              bottomSheetOpen ? 'text-rose-700 scale-105' : 'text-stone-500 active:scale-95'
+            }`}
+          >
+            <Compass className="w-5 h-5" />
+            <span className="text-[10px] font-semibold mt-0.5">Secciones</span>
+            {bottomSheetOpen && (
+              <span className="w-1 h-1 rounded-full bg-rose-600 mt-0.5"></span>
+            )}
+          </button>
+
+          {/* 3. Action Center: Envíanos Noticia */}
+          <Link
+            to="/enviar-noticia"
+            className="flex flex-col items-center justify-center -mt-4 group"
+            title="Enviar noticia o denuncia"
+          >
+            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-rose-800 to-rose-600 text-white flex items-center justify-center shadow-lg shadow-rose-900/30 group-active:scale-90 transition-transform">
+              <Send className="w-5 h-5" />
+            </div>
+            <span className="text-[9px] font-bold text-stone-700 mt-0.5">Reportar</span>
+          </Link>
+
+          {/* 4. Buscar */}
+          <button
+            type="button"
+            onClick={() => setSearchModalOpen(true)}
+            className={`flex flex-col items-center justify-center w-12 py-1 transition-all ${
+              searchModalOpen || location.pathname.startsWith('/buscar')
+                ? 'text-rose-700 scale-105'
+                : 'text-stone-500 active:scale-95'
+            }`}
+          >
+            <Search className="w-5 h-5" />
+            <span className="text-[10px] font-semibold mt-0.5">Buscar</span>
+          </button>
+
+          {/* 5. Alertas */}
+          <button
+            type="button"
+            onClick={() => window.openPushPreferences?.()}
+            className="flex flex-col items-center justify-center w-12 py-1 text-stone-500 active:scale-95"
+          >
+            <Bell className="w-5 h-5" />
+            <span className="text-[10px] font-semibold mt-0.5">Alertas</span>
+          </button>
+        </div>
+      </nav>
+
+      {/* 8. iOS 27 FLUID BOTTOM SHEET (SECTIONS & DRAWER) */}
+      {bottomSheetOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center md:hidden">
+          {/* Backdrop Blur */}
+          <div
+            className="fixed inset-0 bg-stone-950/40 backdrop-blur-md transition-opacity"
+            onClick={() => setBottomSheetOpen(false)}
+          ></div>
+
+          {/* Sliding Sheet */}
+          <div className="relative w-full max-h-[88vh] glass-panel rounded-t-[32px] p-5 overflow-y-auto z-10 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            {/* Grab Handle */}
+            <div className="w-10 h-1 bg-stone-300 rounded-full mx-auto mb-4"></div>
+
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Compass className="w-5 h-5 text-rose-700" />
+                <h3 className="font-bold text-stone-900 text-base">Secciones del Diario</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setBottomSheetOpen(false)}
+                className="w-7 h-7 rounded-full glass-pill flex items-center justify-center text-stone-500"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick Search */}
+            <form onSubmit={handleSearchSubmit} className="mb-4">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Buscar artículos o temas..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full glass-pill py-2 pl-3.5 pr-10 text-xs text-stone-900 placeholder-stone-400 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-900"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+
+            {/* Grouped Category Buttons */}
+            <div className="grid grid-cols-2 gap-2 mb-6">
+              <Link
+                to="/"
+                onClick={() => setBottomSheetOpen(false)}
+                className="glass-card p-3 rounded-2xl flex items-center justify-between text-xs font-bold text-stone-800 hover:text-rose-700"
+              >
+                <span>Portada Principal</span>
+                <ChevronRight className="w-4 h-4 text-stone-400" />
+              </Link>
+              {categories.map((cat) => (
+                <Link
+                  key={cat.category_uuid}
+                  to={`/categoria/${cat.slug}`}
+                  onClick={() => setBottomSheetOpen(false)}
+                  className="glass-card p-3 rounded-2xl flex items-center justify-between text-xs font-semibold text-stone-800 hover:text-rose-700"
+                >
+                  <span>{cat.name}</span>
+                  <ChevronRight className="w-4 h-4 text-stone-400" />
+                </Link>
+              ))}
+            </div>
+
+            {/* Extra Shortcuts */}
+            <div className="space-y-2 pt-2 border-t border-stone-200/60">
+              <Link
+                to="/enviar-noticia"
+                onClick={() => setBottomSheetOpen(false)}
+                className="w-full glass-pill px-4 py-2.5 rounded-2xl flex items-center gap-2.5 text-xs font-semibold text-rose-700"
+              >
+                <Send className="w-4 h-4" />
+                <span>Buzón de Denuncias & Noticias Comunitarias</span>
+              </Link>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setBottomSheetOpen(false);
+                  window.openPushPreferences?.();
+                }}
+                className="w-full glass-pill px-4 py-2.5 rounded-2xl flex items-center gap-2.5 text-xs font-medium text-stone-700"
+              >
+                <Bell className="w-4 h-4 text-stone-500" />
+                <span>Configuración de Alertas & Notificaciones</span>
+              </button>
+
+              <Link
+                to="/login"
+                onClick={() => setBottomSheetOpen(false)}
+                className="w-full glass-pill px-4 py-2.5 rounded-2xl flex items-center gap-2.5 text-xs font-medium text-stone-500"
+              >
+                <Shield className="w-4 h-4" />
+                <span>Acceso a Mesa de Redacción Digital</span>
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 9. iOS SEARCH MODAL */}
+      {searchModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16">
+          <div
+            className="fixed inset-0 bg-stone-950/40 backdrop-blur-md transition-opacity"
+            onClick={() => setSearchModalOpen(false)}
+          ></div>
+
+          <div className="relative w-full max-w-lg glass-panel rounded-3xl p-5 shadow-2xl z-10">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-bold text-stone-900 text-sm">Buscar en el Diario</h4>
+              <button
+                type="button"
+                onClick={() => setSearchModalOpen(false)}
+                className="w-6 h-6 rounded-full glass-pill flex items-center justify-center text-stone-400"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSearchSubmit}>
+              <div className="relative">
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Escriba palabra clave o tema..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full glass-pill py-3 pl-4 pr-12 text-sm text-stone-900 placeholder-stone-400 focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 bg-rose-900 text-white p-1.5 rounded-full"
+                >
+                  <Search className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-4 pt-3 border-t border-stone-200/60">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400 block mb-2">
+                Sugerencias de búsqueda
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {['Guárico', 'San Juan de los Morros', 'Sucesos', 'Turismo', 'Comunidades'].map(tag => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={() => {
+                      navigate(`/buscar?q=${encodeURIComponent(tag)}`);
+                      setSearchModalOpen(false);
+                    }}
+                    className="glass-pill px-3 py-1 text-xs text-stone-700 hover:text-rose-700"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* PWA & Web Push Manager */}
       <PwaManager />
     </div>
   );
 };
-

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import { User, Newspaper, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { User, Newspaper, ArrowLeft, ChevronLeft, ChevronRight, PenTool } from 'lucide-react';
 import { publicApi, PublicAuthor, PublicArticleSummary, PaginationMeta } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { ArticleCard } from '../../components/articles';
@@ -48,12 +48,12 @@ export const AuthorPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="py-8 space-y-6 animate-pulse">
-        <div className="h-20 w-full bg-stone-200 rounded"></div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6">
-          <div className="h-64 bg-stone-200 rounded"></div>
-          <div className="h-64 bg-stone-200 rounded"></div>
-          <div className="h-64 bg-stone-200 rounded"></div>
+      <div className="py-6 space-y-6 animate-pulse">
+        <div className="h-32 glass-card rounded-[28px]"></div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+          <div className="h-64 glass-card rounded-[24px]"></div>
+          <div className="h-64 glass-card rounded-[24px]"></div>
+          <div className="h-64 glass-card rounded-[24px]"></div>
         </div>
       </div>
     );
@@ -61,19 +61,21 @@ export const AuthorPage: React.FC = () => {
 
   if (notFound || !author) {
     return (
-      <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
+      <div className="max-w-2xl mx-auto py-16 text-center space-y-5 glass-card p-8 rounded-[28px] shadow-xl">
         <SeoHead title="Autor no encontrado" noIndex={true} />
-        <User className="w-12 h-12 text-stone-400 mx-auto" />
+        <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-700 mx-auto flex items-center justify-center">
+          <User className="w-8 h-8" />
+        </div>
         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
           Autor no encontrado
         </h1>
-        <p className="text-stone-600 text-sm max-w-md mx-auto">
+        <p className="text-stone-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
           El periodista o autor editorial solicitado no se encuentra registrado en nuestro equipo.
         </p>
-        <div className="pt-4">
+        <div className="pt-2">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-stone-800"
+            className="inline-flex items-center gap-2 bg-stone-900 text-white px-5 py-2.5 rounded-full text-xs font-semibold hover:bg-rose-900 transition-colors shadow-md"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver a la portada</span>
@@ -134,7 +136,7 @@ export const AuthorPage: React.FC = () => {
   ];
 
   return (
-    <div className="py-4 space-y-8">
+    <div className="py-2 space-y-6">
       <SeoHead
         title={`Artículos de ${author.name}`}
         description={author.bio || `Perfil y noticias publicadas por el periodista ${author.name} en Contacto con la Noticia.`}
@@ -146,27 +148,32 @@ export const AuthorPage: React.FC = () => {
         jsonLd={authorSchema}
       />
 
-      {/* 1. AUTHOR PROFILE HEADER */}
-      <header className="bg-white border border-stone-200 p-6 sm:p-8 rounded flex flex-col sm:flex-row items-start sm:items-center gap-6">
+      {/* 1. iOS 27 AUTHOR PROFILE HERO */}
+      <header className="glass-card p-6 sm:p-8 rounded-[28px] flex flex-col sm:flex-row items-start sm:items-center gap-6 shadow-sm">
         {author.avatar_url ? (
           <img
             src={author.avatar_url}
             alt={author.name}
-            className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-stone-200 shrink-0"
+            className="w-18 h-18 sm:w-22 sm:h-22 rounded-2xl object-cover border-2 border-white/80 shadow-md shrink-0"
           />
         ) : (
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-stone-200 flex items-center justify-center font-serif font-bold text-2xl text-stone-800 shrink-0">
+          <div className="w-18 h-18 sm:w-22 sm:h-22 rounded-2xl bg-gradient-to-tr from-rose-900 to-rose-700 text-white flex items-center justify-center font-serif font-black text-3xl shadow-md shrink-0">
             {author.name.charAt(0)}
           </div>
         )}
 
-        <div className="space-y-1.5 flex-1">
-          <span className="text-xs font-bold uppercase tracking-wider text-red-700 block">
-            Mesa de Redacción
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold text-stone-950">
+        <div className="space-y-2 flex-1">
+          <div className="flex items-center gap-2">
+            <span className="glass-pill px-3 py-0.5 text-[11px] font-bold uppercase tracking-wider text-rose-700 inline-flex items-center gap-1.5">
+              <PenTool className="w-3 h-3" />
+              Mesa de Redacción
+            </span>
+          </div>
+
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-serif font-black text-stone-950 tracking-tight">
             {author.name}
           </h1>
+
           {author.bio && (
             <p className="text-xs sm:text-sm font-serif italic text-stone-600 max-w-2xl leading-relaxed">
               {author.bio}
@@ -177,21 +184,22 @@ export const AuthorPage: React.FC = () => {
 
       {/* 2. PUBLISHED ARTICLES */}
       <section className="space-y-4">
-        <div className="border-b-2 border-stone-900 pb-1">
-          <h2 className="font-serif text-base font-bold uppercase text-stone-950 tracking-wider">
+        <div className="flex items-center gap-2">
+          <span className="w-1.5 h-4 bg-rose-700 rounded-full"></span>
+          <h2 className="text-lg font-bold text-stone-950 tracking-tight">
             Artículos publicados por {author.name}
           </h2>
         </div>
 
         {articles.length === 0 ? (
-          <div className="bg-white border border-stone-200 p-8 text-center my-6 rounded">
+          <div className="glass-card p-10 text-center my-6 rounded-[28px] max-w-md mx-auto shadow-sm">
             <Newspaper className="w-8 h-8 text-stone-400 mx-auto mb-2" />
             <p className="text-xs text-stone-500">
               Este autor no cuenta actualmente con noticias publicadas.
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {articles.map((art) => (
               <ArticleCard
                 key={art.article_uuid}
@@ -206,31 +214,31 @@ export const AuthorPage: React.FC = () => {
         )}
       </section>
 
-      {/* 3. PAGINATION */}
+      {/* 3. iOS 27 GLASS PAGINATION */}
       {pagination && pagination.total_pages > 1 && (
-        <div className="pt-6 border-t border-stone-200 flex items-center justify-between">
+        <div className="pt-4 flex items-center justify-between">
           <button
             type="button"
             onClick={() => handlePageChange(page - 1)}
             disabled={page <= 1}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-stone-700 hover:text-stone-950 disabled:opacity-30 disabled:pointer-events-none px-3 py-1.5 border border-stone-300 rounded bg-white"
+            className="glass-pill px-4 py-2 text-xs font-semibold text-stone-800 hover:text-rose-700 disabled:opacity-30 disabled:pointer-events-none inline-flex items-center gap-1.5 shadow-sm active:scale-95"
           >
             <ChevronLeft className="w-4 h-4" />
-            <span>Página Anterior</span>
+            <span>Anterior</span>
           </button>
 
-          <span className="text-xs text-stone-500">
-            Página <span className="font-semibold text-stone-800">{page}</span> de{' '}
-            <span className="font-semibold text-stone-800">{pagination.total_pages}</span>
+          <span className="glass-pill px-3.5 py-1 text-xs text-stone-600">
+            Página <span className="font-bold text-stone-900">{page}</span> de{' '}
+            <span className="font-bold text-stone-900">{pagination.total_pages}</span>
           </span>
 
           <button
             type="button"
             onClick={() => handlePageChange(page + 1)}
             disabled={page >= pagination.total_pages}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-stone-700 hover:text-stone-950 disabled:opacity-30 disabled:pointer-events-none px-3 py-1.5 border border-stone-300 rounded bg-white"
+            className="glass-pill px-4 py-2 text-xs font-semibold text-stone-800 hover:text-rose-700 disabled:opacity-30 disabled:pointer-events-none inline-flex items-center gap-1.5 shadow-sm active:scale-95"
           >
-            <span>Página Siguiente</span>
+            <span>Siguiente</span>
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -238,4 +246,3 @@ export const AuthorPage: React.FC = () => {
     </div>
   );
 };
-

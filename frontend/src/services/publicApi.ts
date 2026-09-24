@@ -55,14 +55,21 @@ function toSummary(art: import('../types/article').ArticleDetail): PublicArticle
 export const publicApi = {
   getHomeFeed: async (): Promise<HomeFeedData> => {
     if (isMockMode()) {
-      const all = mockStorage.getArticles().filter((a) => a.status === 'PUBLISHED');
+      const all = mockStorage
+        .getArticles()
+        .filter((a) => a.status === 'PUBLISHED')
+        .sort((a, b) => {
+          const dateA = new Date(a.published_at || a.created_at).getTime();
+          const dateB = new Date(b.published_at || b.created_at).getTime();
+          return dateB - dateA;
+        });
       const summaries = all.map(toSummary);
 
       const lead = summaries[0] || null;
       const secondary = summaries.slice(1, 3);
-      const latest = summaries.slice(0, 6);
+      const latest = summaries.slice(0, 8);
       const trending = [...summaries].reverse().slice(0, 4);
-      const breaking = summaries.slice(0, 2);
+      const breaking = summaries.slice(0, 3);
 
       const categories = mockStorage.getCategories();
       const sections: Record<string, { category: PublicCategory; articles: PublicArticleSummary[] }> = {};
@@ -98,7 +105,14 @@ export const publicApi = {
     limit?: number;
   }): Promise<{ articles: PublicArticleSummary[]; pagination: PaginationMeta }> => {
     if (isMockMode()) {
-      let list = mockStorage.getArticles().filter((a) => a.status === 'PUBLISHED');
+      let list = mockStorage
+        .getArticles()
+        .filter((a) => a.status === 'PUBLISHED')
+        .sort((a, b) => {
+          const dateA = new Date(a.published_at || a.created_at).getTime();
+          const dateB = new Date(b.published_at || b.created_at).getTime();
+          return dateB - dateA;
+        });
 
       if (params?.category) {
         list = list.filter((a) => a.category_slug === params.category || a.category_uuid === params.category);

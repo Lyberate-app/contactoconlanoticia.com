@@ -9,6 +9,8 @@ import {
   Check,
   Newspaper,
   ChevronRight,
+  Type,
+  ArrowUp,
 } from 'lucide-react';
 import { publicApi, PublicArticleDetail } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
@@ -24,6 +26,14 @@ export const ArticlePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [fontSizeIndex, setFontSizeIndex] = useState(0); // 0: Normal, 1: Grande, 2: Muy Grande
+  const [readingProgress, setReadingProgress] = useState(0);
+
+  const fontSizes = [
+    'text-base sm:text-lg leading-relaxed',
+    'text-lg sm:text-xl leading-relaxed',
+    'text-xl sm:text-2xl leading-loose',
+  ];
 
   const canonicalUrl = article?.seo?.canonical_url || `${SITE_URL}/noticia/${article?.slug || slug}`;
 
@@ -101,7 +111,6 @@ export const ArticlePage: React.FC = () => {
     publicApi.getArticleBySlug(slug)
       .then(data => {
         setArticle(data);
-        // Set document title dynamically
         if (data.title) {
           document.title = `${data.title} | Contacto con la Noticia`;
         }
@@ -118,23 +127,62 @@ export const ArticlePage: React.FC = () => {
     };
   }, [slug]);
 
+  // Track scroll progress for reading bar
+  useEffect(() => {
+    const handleScroll = () => {
+      const totalScroll = document.documentElement.scrollTop;
+      const windowHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+      if (windowHeight > 0) {
+        const scroll = `${(totalScroll / windowHeight) * 100}`;
+        setReadingProgress(Math.min(100, Math.max(0, Number(scroll))));
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href);
     setCopied(true);
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleNativeShare = async () => {
+    if (navigator.share && article) {
+      try {
+        await navigator.share({
+          title: article.title,
+          text: article.excerpt || article.subtitle || article.title,
+          url: window.location.href,
+        });
+      } catch {
+        // User cancelled share
+      }
+    } else {
+      handleCopyLink();
+    }
+  };
+
+  const toggleFontSize = () => {
+    setFontSizeIndex((prev) => (prev + 1) % fontSizes.length);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (loading) {
     return (
       <div className="max-w-3xl mx-auto py-10 space-y-6 animate-pulse">
-        <div className="h-4 w-32 bg-stone-200 rounded"></div>
-        <div className="h-12 bg-stone-200 rounded"></div>
-        <div className="h-6 w-3/4 bg-stone-200 rounded"></div>
-        <div className="h-64 bg-stone-200 rounded"></div>
-        <div className="space-y-3">
-          <div className="h-4 bg-stone-200 rounded"></div>
-          <div className="h-4 bg-stone-200 rounded"></div>
-          <div className="h-4 w-5/6 bg-stone-200 rounded"></div>
+        <div className="h-6 w-36 glass-pill rounded-full"></div>
+        <div className="h-12 glass-card rounded-2xl"></div>
+        <div className="h-6 w-3/4 glass-pill rounded-full"></div>
+        <div className="h-72 glass-card rounded-[28px]"></div>
+        <div className="space-y-3 pt-4">
+          <div className="h-4 glass-pill rounded-full"></div>
+          <div className="h-4 glass-pill rounded-full"></div>
+          <div className="h-4 w-5/6 glass-pill rounded-full"></div>
         </div>
       </div>
     );
@@ -142,26 +190,28 @@ export const ArticlePage: React.FC = () => {
 
   if (notFound || !article) {
     return (
-      <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
+      <div className="max-w-2xl mx-auto py-16 text-center space-y-5 glass-card p-8 rounded-[28px] shadow-xl">
         <SeoHead title="Noticia no encontrada" noIndex={true} />
-        <Newspaper className="w-12 h-12 text-stone-400 mx-auto" />
+        <div className="w-16 h-16 rounded-full bg-rose-50 text-rose-700 mx-auto flex items-center justify-center">
+          <Newspaper className="w-8 h-8" />
+        </div>
         <h1 className="text-2xl sm:text-3xl font-serif font-bold text-stone-900">
           Noticia no encontrada
         </h1>
-        <p className="text-stone-600 text-sm max-w-md mx-auto">
-          El artículo que busca no existe, ha sido retirado o se encuentra en proceso de redacción y aún no ha sido publicado.
+        <p className="text-stone-600 text-xs sm:text-sm max-w-md mx-auto leading-relaxed">
+          El artículo que busca no existe, ha sido retirado o se encuentra en proceso de redacción.
         </p>
-        <div className="pt-4 flex items-center justify-center gap-3">
+        <div className="pt-2 flex items-center justify-center gap-3">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded text-xs font-semibold hover:bg-stone-800"
+            className="inline-flex items-center gap-2 bg-stone-900 text-white px-4 py-2 rounded-full text-xs font-semibold hover:bg-rose-900 transition-colors shadow-md"
           >
             <ArrowLeft className="w-4 h-4" />
             <span>Volver a la portada</span>
           </Link>
           <Link
             to="/buscar"
-            className="border border-stone-300 text-stone-800 px-4 py-2 rounded text-xs font-semibold hover:bg-stone-100"
+            className="glass-pill text-stone-800 px-4 py-2 rounded-full text-xs font-semibold hover:bg-stone-100"
           >
             Buscar en el archivo
           </Link>
@@ -174,7 +224,15 @@ export const ArticlePage: React.FC = () => {
   const shareTitle = encodeURIComponent(article.title);
 
   return (
-    <div className="max-w-4xl mx-auto py-4 space-y-8">
+    <div className="max-w-3xl mx-auto py-4 space-y-6 relative">
+      {/* 1. iOS READING PROGRESS BAR (FIXED TOP) */}
+      <div className="fixed top-0 left-0 right-0 h-1 bg-stone-200/40 z-50 pointer-events-none">
+        <div
+          className="h-full bg-gradient-to-r from-rose-700 to-rose-500 transition-all duration-150"
+          style={{ width: `${readingProgress}%` }}
+        ></div>
+      </div>
+
       <SeoHead
         title={article.seo?.meta_title || article.title}
         description={article.seo?.meta_description || article.excerpt || article.subtitle || undefined}
@@ -189,46 +247,47 @@ export const ArticlePage: React.FC = () => {
         jsonLd={jsonLdPayload}
       />
 
-      {/* 1. BREADCRUMB */}
-      <nav className="flex items-center gap-1.5 text-xs text-stone-500 flex-wrap">
-        <Link to="/" className="hover:text-stone-900">Inicio</Link>
-        <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-        <Link to={`/categoria/${article.category_slug}`} className="hover:text-stone-900 font-medium">
+      {/* 2. BREADCRUMB CAPSULE */}
+      <nav className="inline-flex items-center gap-1.5 text-xs text-stone-500 glass-pill px-3.5 py-1.5 rounded-full flex-wrap">
+        <Link to="/" className="hover:text-stone-900 font-medium">Inicio</Link>
+        <ChevronRight className="w-3 h-3 text-stone-400" />
+        <Link to={`/categoria/${article.category_slug}`} className="hover:text-stone-900 font-semibold text-rose-700">
           {article.category_name}
         </Link>
-        <ChevronRight className="w-3.5 h-3.5 text-stone-400" />
-        <span className="text-stone-700 truncate max-w-xs sm:max-w-md">{article.title}</span>
+        <ChevronRight className="w-3 h-3 text-stone-400" />
+        <span className="text-stone-500 truncate max-w-[160px] sm:max-w-xs">{article.title}</span>
       </nav>
 
-      {/* 2. ARTICLE HEADER */}
-      <header className="space-y-4 border-b border-stone-200 pb-6">
+      {/* 3. ARTICLE HEADER */}
+      <header className="space-y-4 pt-1">
         <Link
           to={`/categoria/${article.category_slug}`}
-          className="inline-block text-xs font-bold uppercase tracking-wider text-red-700 hover:underline"
+          className="glass-pill px-3 py-1 text-xs font-bold uppercase tracking-wider text-rose-700 hover:bg-rose-50/70 inline-flex items-center gap-1.5"
         >
-          {article.category_name}
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+          <span>{article.category_name}</span>
         </Link>
 
-        <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif font-bold text-stone-950 leading-tight">
+        <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif font-black text-stone-950 leading-[1.18] tracking-tight">
           {article.title}
         </h1>
 
         {article.subtitle && (
-          <p className="text-lg sm:text-xl font-serif italic text-stone-700 leading-snug">
+          <p className="text-base sm:text-lg lg:text-xl font-serif italic text-stone-600 leading-snug">
             {article.subtitle}
           </p>
         )}
 
-        {/* BYLINE & TIMESTAMPS */}
-        <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone-600 border-t border-stone-100">
+        {/* BYLINE & TIMESTAMPS IN GLASS TRAY */}
+        <div className="glass-panel p-3 sm:p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-stone-600">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-stone-200 flex items-center justify-center font-serif font-bold text-stone-700 text-xs">
+            <div className="w-9 h-9 rounded-full bg-rose-100 text-rose-900 flex items-center justify-center font-serif font-bold text-xs shadow-sm">
               {article.author_name.charAt(0)}
             </div>
             <div>
               <span className="font-semibold text-stone-900 block">
                 Por{' '}
-                <Link to={`/autor/${article.author_slug}`} className="hover:text-red-700 hover:underline">
+                <Link to={`/autor/${article.author_slug}`} className="hover:text-rose-700 hover:underline">
                   {article.author_name}
                 </Link>
               </span>
@@ -251,54 +310,59 @@ export const ArticlePage: React.FC = () => {
         </div>
       </header>
 
-      {/* 3. SOCIAL SHARING BAR */}
-      <div className="flex items-center justify-between py-2 border-y border-stone-200 text-xs text-stone-600">
-        <span className="flex items-center gap-1.5 font-medium text-stone-700">
-          <Share2 className="w-4 h-4 text-stone-500" />
-          <span>Compartir esta noticia:</span>
-        </span>
+      {/* 4. SOCIAL SHARING & READER TOOLBAR (iOS 27 Glass) */}
+      <div className="glass-card p-2 sm:p-3 rounded-2xl flex items-center justify-between text-xs text-stone-700">
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleNativeShare}
+            className="glass-pill px-3 py-1.5 text-stone-800 font-semibold flex items-center gap-1.5 hover:bg-stone-100/80 active:scale-95 transition-transform"
+          >
+            <Share2 className="w-3.5 h-3.5 text-rose-600" />
+            <span>Compartir</span>
+          </button>
 
-        <div className="flex items-center gap-2">
-          {/* WhatsApp */}
           <a
             href={`https://api.whatsapp.com/send?text=${shareTitle}%20${shareUrl}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-2.5 py-1 bg-emerald-50 text-emerald-800 rounded border border-emerald-200 hover:bg-emerald-100 font-medium transition-colors"
+            className="hidden sm:inline-flex px-2.5 py-1.5 glass-pill text-emerald-800 hover:bg-emerald-50 text-[11px] font-medium"
           >
             WhatsApp
           </a>
 
-          {/* X / Twitter */}
           <a
             href={`https://twitter.com/intent/tweet?text=${shareTitle}&url=${shareUrl}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-2.5 py-1 bg-stone-100 text-stone-800 rounded border border-stone-200 hover:bg-stone-200 font-medium transition-colors"
+            className="hidden sm:inline-flex px-2.5 py-1.5 glass-pill text-stone-800 hover:bg-stone-100 text-[11px] font-medium"
           >
-            X (Twitter)
+            X
           </a>
+        </div>
 
-          {/* Facebook */}
-          <a
-            href={`https://www.facebook.com/sharer/sharer.php?u=${shareUrl}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="px-2.5 py-1 bg-blue-50 text-blue-800 rounded border border-blue-200 hover:bg-blue-100 font-medium transition-colors"
+        <div className="flex items-center gap-1.5">
+          {/* Font Size Adjuster (Apple News / Safari style) */}
+          <button
+            type="button"
+            onClick={toggleFontSize}
+            className="glass-pill px-2.5 py-1.5 text-stone-700 hover:text-stone-950 flex items-center gap-1 text-[11px] font-medium"
+            title="Ajustar tamaño de letra"
           >
-            Facebook
-          </a>
+            <Type className="w-3.5 h-3.5" />
+            <span>A{fontSizeIndex === 1 ? '+' : fontSizeIndex === 2 ? '++' : ''}</span>
+          </button>
 
           {/* Copy Link Button */}
           <button
             type="button"
             onClick={handleCopyLink}
-            className="px-2.5 py-1 bg-stone-100 text-stone-700 rounded border border-stone-200 hover:bg-stone-200 transition-colors inline-flex items-center gap-1"
+            className="glass-pill px-2.5 py-1.5 text-stone-700 hover:text-stone-900 transition-colors inline-flex items-center gap-1 text-[11px]"
           >
             {copied ? (
               <>
                 <Check className="w-3.5 h-3.5 text-emerald-600" />
-                <span className="text-emerald-700 font-medium">¡Copiado!</span>
+                <span className="text-emerald-700 font-semibold">¡Copiado!</span>
               </>
             ) : (
               <span>Copiar enlace</span>
@@ -307,18 +371,21 @@ export const ArticlePage: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. FEATURED IMAGE */}
+      {/* 5. FEATURED IMAGE (SQUIRCLE CORNERS) */}
       {article.featured_media?.url ? (
-        <OptimizedImage
-          src={article.featured_media.url}
-          alt={article.featured_media.alt_text || article.title}
-          caption={article.featured_media.caption}
-          credit={article.featured_media.credit}
-          priority={true}
-          aspectRatio="16/9"
-        />
+        <div className="rounded-[28px] overflow-hidden shadow-sm glass-card p-1">
+          <OptimizedImage
+            src={article.featured_media.url}
+            alt={article.featured_media.alt_text || article.title}
+            caption={article.featured_media.caption}
+            credit={article.featured_media.credit}
+            priority={true}
+            aspectRatio="16/9"
+            className="rounded-[24px] object-cover"
+          />
+        </div>
       ) : (
-        <div className="aspect-[16/9] bg-stone-100 border border-stone-200 rounded-sm overflow-hidden flex items-center justify-center text-stone-400">
+        <div className="aspect-[16/9] glass-card rounded-[28px] overflow-hidden flex items-center justify-center text-stone-400">
           <div className="text-center p-6">
             <Newspaper className="w-10 h-10 mx-auto text-stone-300 mb-2" />
             <span className="text-xs font-serif italic text-stone-500">
@@ -331,16 +398,16 @@ export const ArticlePage: React.FC = () => {
       {/* ARTICLE_TOP AD SLOT */}
       <AdSlot placement="ARTICLE_TOP" />
 
-      {/* 5. EXCERPT & BODY PROSE */}
-      <div className="max-w-prose mx-auto space-y-6">
+      {/* 6. EXCERPT & BODY PROSE */}
+      <div className="space-y-6 pt-2">
         {article.excerpt && (
-          <div className="border-l-4 border-red-700 pl-4 py-1 text-base sm:text-lg font-serif italic text-stone-800 leading-relaxed bg-stone-100/50">
+          <div className="glass-panel border-l-4 border-rose-700 p-4 sm:p-5 rounded-r-2xl text-base sm:text-lg font-serif italic text-stone-800 leading-relaxed shadow-sm">
             {article.excerpt}
           </div>
         )}
 
         {/* Rich article paragraphs with drop cap on first letter */}
-        <div className="text-base sm:text-lg text-stone-900 font-serif leading-relaxed space-y-5">
+        <div className={`text-stone-900 font-serif space-y-5 ${fontSizes[fontSizeIndex]}`}>
           {(() => {
             const paragraphs = article.content.split('\n\n').filter(p => p.trim().length > 0);
             const middleIndex = Math.max(1, Math.floor(paragraphs.length / 2));
@@ -356,7 +423,7 @@ export const ArticlePage: React.FC = () => {
                 const rest = trimmed.slice(1);
                 contentEl = (
                   <p key={idx} className="leading-relaxed">
-                    <span className="float-left text-4xl sm:text-5xl font-black font-serif leading-none pr-2 pt-1 text-stone-950">
+                    <span className="float-left text-4xl sm:text-5xl font-black font-serif leading-none pr-2 pt-1 text-rose-950">
                       {firstLetter}
                     </span>
                     {rest}
@@ -380,18 +447,18 @@ export const ArticlePage: React.FC = () => {
           })()}
         </div>
 
-        {/* 6. TAGS CLOUD */}
+        {/* 7. TAGS CLOUD (GLASS PILLS) */}
         {article.tags && article.tags.length > 0 && (
-          <div className="pt-6 border-t border-stone-200">
-            <span className="text-xs font-bold uppercase tracking-wider text-stone-500 block mb-2">
+          <div className="pt-6 border-t border-stone-200/60">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400 block mb-2.5">
               Temas relacionados:
             </span>
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-2">
               {article.tags.map(tag => (
                 <Link
                   key={tag.tag_uuid}
                   to={`/buscar?q=${encodeURIComponent(tag.name)}`}
-                  className="inline-flex items-center gap-1 text-xs bg-stone-100 hover:bg-stone-200 text-stone-700 px-2.5 py-1 rounded transition-colors"
+                  className="glass-pill px-3 py-1 rounded-full text-xs text-stone-700 hover:text-rose-700 inline-flex items-center gap-1.5"
                 >
                   <Tag className="w-3 h-3 text-stone-400" />
                   <span>{tag.name}</span>
@@ -401,19 +468,19 @@ export const ArticlePage: React.FC = () => {
           </div>
         )}
 
-        {/* 7. AUTHOR BIO BOX */}
-        <div className="bg-stone-100 border border-stone-200 p-5 rounded space-y-3 mt-8">
+        {/* 8. AUTHOR BIO CARD (iOS 27 Glass) */}
+        <div className="glass-card p-5 rounded-[28px] space-y-3 mt-8 shadow-sm">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-stone-300 flex items-center justify-center font-serif font-bold text-stone-800 text-sm">
+            <div className="w-11 h-11 rounded-full bg-rose-900 text-white flex items-center justify-center font-serif font-bold text-sm shadow-md">
               {article.author_name.charAt(0)}
             </div>
             <div>
-              <h3 className="font-serif font-bold text-stone-900 text-sm">
-                <Link to={`/autor/${article.author_slug}`} className="hover:underline">
+              <h3 className="font-bold text-stone-900 text-sm">
+                <Link to={`/autor/${article.author_slug}`} className="hover:text-rose-700">
                   {article.author_name}
                 </Link>
               </h3>
-              <span className="text-xs text-stone-500">Periodista / Redactor</span>
+              <span className="text-xs text-stone-500">Periodista / Redactor Especializado</span>
             </div>
           </div>
           {article.author_bio && (
@@ -423,9 +490,10 @@ export const ArticlePage: React.FC = () => {
           )}
           <Link
             to={`/autor/${article.author_slug}`}
-            className="text-xs font-semibold text-red-700 hover:underline inline-block"
+            className="text-xs font-semibold text-rose-700 hover:underline inline-flex items-center gap-1"
           >
-            Ver más artículos de este autor &rarr;
+            <span>Ver más artículos de este autor</span>
+            <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>
@@ -433,11 +501,23 @@ export const ArticlePage: React.FC = () => {
       {/* ARTICLE_BOTTOM AD SLOT */}
       <AdSlot placement="ARTICLE_BOTTOM" />
 
-      {/* 8. RELATED ARTICLES */}
+      {/* 9. RELATED ARTICLES */}
       <RelatedArticles
         articles={article.related_articles}
         categoryName={article.category_name}
       />
+
+      {/* 10. FLOATING BACK TO TOP GLASS BUTTON (MOBILE ONLY) */}
+      <div className="fixed bottom-20 right-4 z-30 md:hidden">
+        <button
+          type="button"
+          onClick={scrollToTop}
+          className="w-10 h-10 rounded-full glass-dock flex items-center justify-center text-stone-700 shadow-xl active:scale-90"
+          aria-label="Volver arriba"
+        >
+          <ArrowUp className="w-4 h-4" />
+        </button>
+      </div>
     </div>
   );
 };

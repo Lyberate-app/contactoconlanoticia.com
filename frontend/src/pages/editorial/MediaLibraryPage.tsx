@@ -14,6 +14,7 @@ import {
   Check,
   RefreshCw,
   X,
+  Sparkles,
 } from 'lucide-react';
 
 export const MediaLibraryPage: React.FC = () => {
@@ -102,7 +103,7 @@ export const MediaLibraryPage: React.FC = () => {
       }
       loadMedia();
     } catch {
-      alert('Error al eliminar el elemento.');
+      alert('Error al eliminar recurso multimedia.');
     }
   };
 
@@ -160,12 +161,16 @@ export const MediaLibraryPage: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pb-6 border-b border-stone-200 gap-4">
+      <div className="glass-card rounded-[28px] p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border border-white/60 dark:border-white/10 shadow-sm">
         <div>
-          <h1 className="text-2xl font-serif font-bold text-stone-900 tracking-tight">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20 mb-2">
+            <Sparkles className="w-3 h-3 text-rose-600" />
+            <span>Archivo Gráfico &bull; {items.length} Recursos</span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-serif font-black text-stone-900 dark:text-white tracking-tight">
             Biblioteca Multimedia
           </h1>
-          <p className="text-xs text-stone-500 mt-1">
+          <p className="text-xs text-stone-500 dark:text-stone-400 mt-1">
             Gestión y archivo digital de fotografías periodísticas, infografías y material publicitario.
           </p>
         </div>
@@ -176,7 +181,7 @@ export const MediaLibraryPage: React.FC = () => {
             setUploadError(null);
             setIsUploadOpen(true);
           }}
-          className="inline-flex items-center justify-center gap-1.5 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold px-4 py-2.5 shadow-sm transition-colors"
+          className="inline-flex items-center justify-center gap-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold px-5 py-3 rounded-full shadow-lg shadow-black/10 active:scale-95 transition-all self-start sm:self-auto"
         >
           <Upload className="w-4 h-4" />
           <span>Subir Nuevo Recurso</span>
@@ -184,25 +189,25 @@ export const MediaLibraryPage: React.FC = () => {
       </div>
 
       {/* Filter and Control Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-white border border-stone-200 p-3 shadow-sm">
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Search */}
-          <div className="relative w-full sm:w-72">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 flex-1">
+          {/* Search Input */}
+          <div className="relative flex-1 min-w-[200px] max-w-md">
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Buscar por título, autor o pie..."
-              className="w-full text-xs border border-stone-300 pl-8 pr-3 py-1.5 text-stone-800 placeholder-stone-400 focus:outline-none focus:border-stone-800"
+              className="w-full text-xs border border-white/60 dark:border-white/10 bg-white/70 dark:bg-stone-800/70 backdrop-blur-md rounded-full pl-9 pr-4 py-2.5 text-stone-800 dark:text-stone-200 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-800 shadow-xs"
             />
-            <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2" />
+            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
           </div>
 
           {/* MIME Filter */}
           <select
             value={mimeFilter}
             onChange={(e) => setMimeFilter(e.target.value)}
-            className="text-xs border border-stone-300 bg-white px-2.5 py-1.5 text-stone-700 focus:outline-none focus:border-stone-800"
+            className="text-xs border border-white/60 dark:border-white/10 bg-white/70 dark:bg-stone-800/70 backdrop-blur-md px-4 py-2.5 rounded-full text-stone-700 dark:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-800 shadow-xs cursor-pointer"
           >
             <option value="">Todos los formatos</option>
             <option value="image/jpeg">JPEG / JPG</option>
@@ -212,14 +217,14 @@ export const MediaLibraryPage: React.FC = () => {
         </div>
 
         {/* View Toggle */}
-        <div className="flex items-center gap-1 self-end sm:self-center">
+        <div className="glass-panel p-1 rounded-full flex gap-1 self-end sm:self-center border border-white/60 dark:border-white/10">
           <button
             type="button"
             onClick={() => setViewMode('grid')}
-            className={`p-1.5 rounded transition-colors ${
+            className={`p-2 rounded-full transition-all active:scale-90 ${
               viewMode === 'grid'
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-500 hover:text-stone-900 bg-stone-100'
+                ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-xs font-bold'
+                : 'text-stone-500 hover:text-stone-900 dark:hover:text-white'
             }`}
             title="Vista de cuadrícula"
           >
@@ -228,10 +233,10 @@ export const MediaLibraryPage: React.FC = () => {
           <button
             type="button"
             onClick={() => setViewMode('list')}
-            className={`p-1.5 rounded transition-colors ${
+            className={`p-2 rounded-full transition-all active:scale-90 ${
               viewMode === 'list'
-                ? 'bg-stone-900 text-white'
-                : 'text-stone-500 hover:text-stone-900 bg-stone-100'
+                ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-xs font-bold'
+                : 'text-stone-500 hover:text-stone-900 dark:hover:text-white'
             }`}
             title="Vista de lista"
           >
@@ -242,13 +247,17 @@ export const MediaLibraryPage: React.FC = () => {
 
       {/* Main Content Area */}
       {loading ? (
-        <div className="py-24 flex flex-col items-center justify-center gap-2 text-stone-500 text-xs bg-white border border-stone-200">
-          <RefreshCw className="w-6 h-6 animate-spin text-stone-600" />
+        <div className="py-24 flex flex-col items-center justify-center gap-2 text-stone-500 text-xs font-mono glass-card rounded-[28px] border border-white/60 dark:border-white/10">
+          <RefreshCw className="w-6 h-6 animate-spin text-rose-600" />
           <span>Accediendo a los archivos de medios...</span>
         </div>
       ) : items.length === 0 ? (
-        <div className="py-20 text-center text-xs text-stone-500 bg-white border border-stone-200">
-          No se encontraron recursos multimedia con los criterios seleccionados.
+        <div className="py-20 text-center text-xs text-stone-500 glass-card rounded-[28px] border border-white/60 dark:border-white/10 space-y-2">
+          <ImageIcon className="w-8 h-8 text-stone-300 mx-auto" />
+          <p className="font-serif text-base font-bold text-stone-800 dark:text-stone-200">
+            No se encontraron recursos multimedia
+          </p>
+          <p className="text-xs text-stone-400">Pruebe a cambiar los filtros o suba una nueva imagen.</p>
         </div>
       ) : viewMode === 'grid' ? (
         /* GRID VIEW */
@@ -256,44 +265,44 @@ export const MediaLibraryPage: React.FC = () => {
           {items.map((item) => (
             <div
               key={item.media_uuid}
-              className="group bg-white border border-stone-200 overflow-hidden shadow-sm hover:border-stone-400 transition-all flex flex-col"
+              className="group glass-card rounded-[24px] overflow-hidden shadow-xs hover:shadow-lg transition-all duration-300 flex flex-col border border-white/60 dark:border-white/10"
             >
               <div
-                className="aspect-[4/3] bg-stone-200 relative overflow-hidden cursor-pointer"
+                className="aspect-[4/3] bg-stone-100 dark:bg-stone-800 relative overflow-hidden cursor-pointer"
                 onClick={() => handleOpenDetail(item)}
               >
                 <img
                   src={item.url}
                   alt={item.alt_text || item.title || item.filename}
                   loading="lazy"
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
-                <div className="absolute inset-0 bg-stone-900/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  <span className="text-[11px] font-semibold text-white bg-stone-900/80 px-2 py-1 rounded">
+                <div className="absolute inset-0 bg-stone-900/40 backdrop-blur-xs opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                  <span className="text-[11px] font-bold text-stone-900 bg-white/90 backdrop-blur-md px-3 py-1.5 rounded-full shadow-md">
                     Ver Detalles
                   </span>
                 </div>
               </div>
 
-              <div className="p-3 flex-1 flex flex-col justify-between">
+              <div className="p-3.5 flex-1 flex flex-col justify-between">
                 <div>
                   <h3
-                    className="text-xs font-semibold text-stone-900 truncate cursor-pointer hover:underline"
+                    className="text-xs font-bold text-stone-900 dark:text-white truncate cursor-pointer hover:underline"
                     onClick={() => handleOpenDetail(item)}
                     title={item.title || item.filename}
                   >
                     {item.title || item.filename}
                   </h3>
-                  <p className="text-[10px] text-stone-400 mt-0.5 truncate">
+                  <p className="text-[10px] text-stone-400 font-mono mt-0.5 truncate">
                     {item.width}&times;{item.height} px &bull; {formatFileSize(item.filesize_bytes)}
                   </p>
                 </div>
 
-                <div className="mt-2 pt-2 border-t border-stone-100 flex items-center justify-between text-stone-400">
+                <div className="mt-3 pt-2.5 border-t border-black/5 dark:border-white/5 flex items-center justify-between text-stone-400">
                   <button
                     type="button"
                     onClick={() => handleCopyUrl(item.url)}
-                    className="p-1 hover:text-stone-900 transition-colors"
+                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 hover:text-stone-900 dark:hover:text-white active:scale-90 transition-all"
                     title="Copiar URL directa"
                   >
                     <Copy className="w-3.5 h-3.5" />
@@ -301,7 +310,7 @@ export const MediaLibraryPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleOpenDetail(item)}
-                    className="p-1 hover:text-stone-900 transition-colors"
+                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-black/5 dark:hover:bg-white/10 hover:text-stone-900 dark:hover:text-white active:scale-90 transition-all"
                     title="Editar metadatos"
                   >
                     <Edit2 className="w-3.5 h-3.5" />
@@ -309,7 +318,7 @@ export const MediaLibraryPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleDelete(item.media_uuid)}
-                    className="p-1 hover:text-red-600 transition-colors"
+                    className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-red-500/10 text-red-500 hover:text-red-600 active:scale-90 transition-all"
                     title="Eliminar recurso"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -321,73 +330,73 @@ export const MediaLibraryPage: React.FC = () => {
         </div>
       ) : (
         /* LIST VIEW */
-        <div className="bg-white border border-stone-200 shadow-sm overflow-x-auto">
+        <div className="glass-card rounded-[28px] border border-white/60 dark:border-white/10 shadow-sm overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-stone-50 border-b border-stone-200 text-stone-600 font-semibold uppercase tracking-wider text-[11px]">
+            <thead className="bg-white/40 dark:bg-stone-900/40 border-b border-black/5 dark:border-white/5 text-stone-600 dark:text-stone-400 font-bold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="p-3">Recurso</th>
-                <th className="p-3">Título / Archivo</th>
-                <th className="p-3">Dimensiones</th>
-                <th className="p-3">Peso</th>
-                <th className="p-3">Créditos</th>
-                <th className="p-3">Fecha</th>
-                <th className="p-3 text-right">Acciones</th>
+                <th className="p-4">Recurso</th>
+                <th className="p-4">Título / Archivo</th>
+                <th className="p-4">Dimensiones</th>
+                <th className="p-4">Peso</th>
+                <th className="p-4">Créditos</th>
+                <th className="p-4">Fecha</th>
+                <th className="p-4 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-stone-100 text-stone-700">
+            <tbody className="divide-y divide-black/[0.04] dark:divide-white/[0.06] text-stone-700 dark:text-stone-300">
               {items.map((item) => (
-                <tr key={item.media_uuid} className="hover:bg-stone-50/80 transition-colors">
-                  <td className="p-3">
+                <tr key={item.media_uuid} className="hover:bg-white/40 dark:hover:bg-white/5 transition-colors">
+                  <td className="p-4">
                     <img
                       src={item.url}
                       alt={item.title || ''}
-                      className="w-12 h-9 object-cover border border-stone-200 cursor-pointer"
+                      className="w-14 h-10 object-cover rounded-xl border border-black/5 dark:border-white/5 cursor-pointer shadow-xs"
                       onClick={() => handleOpenDetail(item)}
                     />
                   </td>
-                  <td className="p-3 max-w-xs">
+                  <td className="p-4 max-w-xs">
                     <p
-                      className="font-semibold text-stone-900 truncate cursor-pointer hover:underline"
+                      className="font-bold text-stone-900 dark:text-white truncate cursor-pointer hover:underline"
                       onClick={() => handleOpenDetail(item)}
                     >
                       {item.title || item.filename}
                     </p>
                     <p className="font-mono text-[10px] text-stone-400 truncate">{item.filename}</p>
                   </td>
-                  <td className="p-3 whitespace-nowrap text-stone-500">
+                  <td className="p-4 whitespace-nowrap text-stone-500 font-mono">
                     {item.width}&times;{item.height} px
                   </td>
-                  <td className="p-3 whitespace-nowrap text-stone-500">
+                  <td className="p-4 whitespace-nowrap text-stone-500 font-mono">
                     {formatFileSize(item.filesize_bytes)}
                   </td>
-                  <td className="p-3 text-stone-500 truncate max-w-[150px]">
+                  <td className="p-4 text-stone-500 truncate max-w-[150px]">
                     {item.credit || '—'}
                   </td>
-                  <td className="p-3 whitespace-nowrap text-stone-500">
+                  <td className="p-4 whitespace-nowrap text-stone-500">
                     {new Date(item.created_at).toLocaleDateString('es-ES', {
                       day: '2-digit',
                       month: 'short',
                       year: 'numeric',
                     })}
                   </td>
-                  <td className="p-3 text-right whitespace-nowrap">
+                  <td className="p-4 text-right whitespace-nowrap">
                     <button
                       onClick={() => handleCopyUrl(item.url)}
-                      className="p-1.5 text-stone-400 hover:text-stone-900 transition-colors"
+                      className="p-2 text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors"
                       title="Copiar URL"
                     >
                       <Copy className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleOpenDetail(item)}
-                      className="p-1.5 text-stone-400 hover:text-stone-900 transition-colors"
+                      className="p-2 text-stone-400 hover:text-stone-900 dark:hover:text-white transition-colors"
                       title="Editar metadatos"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => handleDelete(item.media_uuid)}
-                      className="p-1.5 text-stone-400 hover:text-red-600 transition-colors"
+                      className="p-2 text-stone-400 hover:text-red-600 transition-colors"
                       title="Eliminar"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
@@ -403,30 +412,32 @@ export const MediaLibraryPage: React.FC = () => {
       {/* DETAIL / METADATA MODAL */}
       {selectedMedia && (
         <div
-          className="fixed inset-0 z-50 bg-stone-900/70 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white border border-stone-300 max-w-3xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden my-auto animate-in fade-in duration-150">
+          <div className="glass-card rounded-[32px] max-w-3xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden my-auto border border-white/50 dark:border-white/10">
             {/* Header */}
-            <div className="px-6 py-3.5 border-b border-stone-200 bg-stone-900 text-stone-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ImageIcon className="w-4 h-4 text-stone-300" />
-                <h2 className="font-serif font-bold text-sm text-white">Detalle y Metadatos del Recurso</h2>
+            <div className="px-6 py-4 border-b border-black/5 dark:border-white/5 bg-white/60 dark:bg-stone-900/60 backdrop-blur-md flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600">
+                  <ImageIcon className="w-4 h-4" />
+                </div>
+                <h2 className="font-serif font-black text-base text-stone-900 dark:text-white">Detalle y Metadatos del Recurso</h2>
               </div>
               <button
                 onClick={() => setSelectedMedia(null)}
-                className="text-stone-400 hover:text-white p-1 rounded"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Modal Body */}
-            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="flex-1 overflow-y-auto p-6 grid grid-cols-1 md:grid-cols-2 gap-6 bg-stone-50/50 dark:bg-stone-950/50">
               {/* Left Column: Image Preview and Tech Specs */}
               <div className="space-y-4">
-                <div className="aspect-[4/3] bg-stone-100 border border-stone-200 overflow-hidden flex items-center justify-center">
+                <div className="aspect-[4/3] bg-stone-100 dark:bg-stone-800 rounded-[22px] overflow-hidden flex items-center justify-center shadow-inner">
                   <img
                     src={selectedMedia.url}
                     alt={selectedMedia.title || ''}
@@ -434,30 +445,26 @@ export const MediaLibraryPage: React.FC = () => {
                   />
                 </div>
 
-                <div className="bg-stone-50 border border-stone-200 p-3 space-y-2 text-xs">
+                <div className="glass-panel rounded-2xl p-4 space-y-2 text-xs border border-black/5 dark:border-white/5">
                   <div className="flex justify-between">
                     <span className="text-stone-500 font-medium">Nombre de Archivo:</span>
-                    <span className="font-mono text-stone-800 text-[11px] truncate max-w-[180px]">
+                    <span className="font-mono text-stone-800 dark:text-stone-200 text-[11px] truncate max-w-[180px]">
                       {selectedMedia.filename}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-500 font-medium">Dimensiones:</span>
-                    <span className="text-stone-800 font-medium">
-                      {selectedMedia.width} &times; {selectedMedia.height} píxeles
+                    <span className="text-stone-800 dark:text-stone-200 font-semibold font-mono">
+                      {selectedMedia.width} &times; {selectedMedia.height} px
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-500 font-medium">Tipo MIME:</span>
-                    <span className="font-mono text-stone-800 text-[11px]">{selectedMedia.mime_type}</span>
+                    <span className="font-mono text-stone-800 dark:text-stone-200 text-[11px]">{selectedMedia.mime_type}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-stone-500 font-medium">Peso del Archivo:</span>
-                    <span className="text-stone-800">{formatFileSize(selectedMedia.filesize_bytes)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-stone-500 font-medium">Identificador UUID:</span>
-                    <span className="font-mono text-stone-700 text-[10px]">{selectedMedia.media_uuid}</span>
+                    <span className="text-stone-800 dark:text-stone-200 font-semibold">{formatFileSize(selectedMedia.filesize_bytes)}</span>
                   </div>
                 </div>
 
@@ -467,12 +474,12 @@ export const MediaLibraryPage: React.FC = () => {
                     type="text"
                     readOnly
                     value={selectedMedia.url}
-                    className="flex-1 text-[11px] font-mono border border-stone-200 bg-stone-50 p-2 text-stone-600 focus:outline-none"
+                    className="flex-1 text-[11px] font-mono border border-black/10 dark:border-white/10 bg-white/70 dark:bg-stone-800/70 rounded-full px-3 py-2 text-stone-600 dark:text-stone-300 focus:outline-none"
                   />
                   <button
                     type="button"
                     onClick={() => handleCopyUrl(selectedMedia.url)}
-                    className="px-3 py-2 bg-stone-800 hover:bg-stone-900 text-white text-xs font-semibold flex items-center gap-1 transition-colors"
+                    className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold rounded-full flex items-center gap-1.5 transition-all active:scale-95 shadow-xs"
                   >
                     {copiedUrl ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                     <span>{copiedUrl ? 'Copiado' : 'Copiar'}</span>
@@ -481,7 +488,7 @@ export const MediaLibraryPage: React.FC = () => {
                     href={selectedMedia.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="p-2 border border-stone-300 text-stone-600 hover:text-stone-900 hover:bg-stone-50 transition-colors"
+                    className="w-8 h-8 rounded-full border border-stone-200/80 dark:border-stone-700 text-stone-600 dark:text-stone-300 flex items-center justify-center hover:bg-white active:scale-90 transition-all"
                     title="Abrir imagen en nueva pestaña"
                   >
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -491,56 +498,56 @@ export const MediaLibraryPage: React.FC = () => {
 
               {/* Right Column: Editable Metadata */}
               <div className="space-y-4 text-xs">
-                <h3 className="font-serif font-bold text-stone-900 border-b border-stone-200 pb-2">
+                <h3 className="font-serif font-black text-stone-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">
                   Metadatos Editoriales
                 </h3>
 
                 <div>
-                  <label className="block text-stone-700 font-semibold mb-1">Título del Recurso</label>
+                  <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">Título del Recurso</label>
                   <input
                     type="text"
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
-                    className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                     placeholder="Título identificativo"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-700 font-semibold mb-1">
+                  <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                     Texto Alternativo (Alt Text para SEO y Accesibilidad)
                   </label>
                   <input
                     type="text"
                     value={editAlt}
                     onChange={(e) => setEditAlt(e.target.value)}
-                    className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                     placeholder="Describa el contenido visual de la foto"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-700 font-semibold mb-1">
+                  <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                     Pie de Foto (Epígrafe Informativo)
                   </label>
                   <textarea
                     rows={3}
                     value={editCaption}
                     onChange={(e) => setEditCaption(e.target.value)}
-                    className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                     placeholder="Explicación contextual que se imprimirá junto a la imagen"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-700 font-semibold mb-1">
+                  <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                     Crédito Fotográfico / Fuente
                   </label>
                   <input
                     type="text"
                     value={editCredit}
                     onChange={(e) => setEditCredit(e.target.value)}
-                    className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                     placeholder="Nombre del fotógrafo o agencia informativa"
                   />
                 </div>
@@ -549,7 +556,7 @@ export const MediaLibraryPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleDelete(selectedMedia.media_uuid)}
-                    className="text-red-600 hover:text-red-800 flex items-center gap-1 font-medium transition-colors"
+                    className="text-red-600 hover:text-red-700 flex items-center gap-1 font-semibold text-xs transition-colors"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Eliminar Recurso</span>
@@ -559,7 +566,7 @@ export const MediaLibraryPage: React.FC = () => {
                     type="button"
                     disabled={savingEdit}
                     onClick={handleSaveDetail}
-                    className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+                    className="px-5 py-2.5 bg-stone-900 hover:bg-stone-800 text-white font-bold rounded-full transition-all flex items-center gap-1.5 shadow-md active:scale-95"
                   >
                     {savingEdit && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                     <span>{savingEdit ? 'Guardando...' : 'Guardar Metadatos'}</span>
@@ -574,33 +581,35 @@ export const MediaLibraryPage: React.FC = () => {
       {/* UPLOAD MODAL */}
       {isUploadOpen && (
         <div
-          className="fixed inset-0 z-50 bg-stone-900/70 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
           role="dialog"
           aria-modal="true"
         >
-          <div className="bg-white border border-stone-300 max-w-lg w-full shadow-2xl overflow-hidden my-auto animate-in fade-in duration-150">
-            <div className="px-6 py-4 border-b border-stone-200 bg-stone-900 text-stone-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Upload className="w-4 h-4 text-stone-300" />
-                <h2 className="font-serif font-bold text-sm text-white">Subir a la Biblioteca Multimedia</h2>
+          <div className="glass-card rounded-[32px] max-w-lg w-full shadow-2xl overflow-hidden my-auto border border-white/50 dark:border-white/10">
+            <div className="px-6 py-4 border-b border-black/5 dark:border-white/5 bg-white/60 dark:bg-stone-900/60 backdrop-blur-md flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600">
+                  <Upload className="w-4 h-4" />
+                </div>
+                <h2 className="font-serif font-black text-base text-stone-900 dark:text-white">Subir a la Biblioteca Multimedia</h2>
               </div>
               <button
                 onClick={() => setIsUploadOpen(false)}
-                className="text-stone-400 hover:text-white p-1 rounded"
+                className="w-8 h-8 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleUploadSubmit} className="p-6 space-y-4 text-xs">
+            <form onSubmit={handleUploadSubmit} className="p-6 space-y-4 text-xs bg-stone-50/50 dark:bg-stone-950/50">
               {uploadError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-800">
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 text-xs rounded-xl">
                   {uploadError}
                 </div>
               )}
 
               <div>
-                <label className="block text-stone-700 font-semibold mb-1">
+                <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                   Archivo Local (JPEG, PNG, WebP)
                 </label>
                 <input
@@ -613,14 +622,14 @@ export const MediaLibraryPage: React.FC = () => {
                       setUploadTitle(f.name.replace(/\.[^/.]+$/, ''));
                     }
                   }}
-                  className="w-full text-stone-600 file:mr-3 file:py-1.5 file:px-3 file:border file:border-stone-300 file:text-xs file:font-medium file:bg-stone-100 hover:file:bg-stone-200 file:text-stone-800"
+                  className="w-full text-stone-600 dark:text-stone-400 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-900 file:text-white hover:file:bg-stone-800 cursor-pointer"
                 />
               </div>
 
               <div className="text-center text-stone-400 font-semibold">— O BIEN —</div>
 
               <div>
-                <label className="block text-stone-700 font-semibold mb-1">
+                <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                   URL Directa de Imagen Externa
                 </label>
                 <input
@@ -628,13 +637,13 @@ export const MediaLibraryPage: React.FC = () => {
                   value={uploadUrl}
                   onChange={(e) => setUploadUrl(e.target.value)}
                   placeholder="https://images.unsplash.com/..."
-                  className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                  className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                 />
               </div>
 
-              <div className="pt-2 border-t border-stone-100 space-y-3">
+              <div className="pt-2 border-t border-black/5 dark:border-white/5 space-y-3">
                 <div>
-                  <label className="block text-stone-700 font-semibold mb-1">
+                  <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                     Título del Recurso <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -643,25 +652,25 @@ export const MediaLibraryPage: React.FC = () => {
                     value={uploadTitle}
                     onChange={(e) => setUploadTitle(e.target.value)}
                     placeholder="Título de la imagen"
-                    className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-700 font-semibold mb-1">
+                  <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                     Texto Alternativo (Alt Text)
                   </label>
                   <input
                     type="text"
                     value={uploadAlt}
                     onChange={(e) => setUploadAlt(e.target.value)}
-                    placeholder="Descripción visual para lectores de pantalla y buscadores"
-                    className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    placeholder="Descripción visual para lectores de pantalla"
+                    className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-700 font-semibold mb-1">
+                  <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                     Pie de Foto (Epígrafe)
                   </label>
                   <input
@@ -669,12 +678,12 @@ export const MediaLibraryPage: React.FC = () => {
                     value={uploadCaption}
                     onChange={(e) => setUploadCaption(e.target.value)}
                     placeholder="Detalle periodístico adicional"
-                    className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-stone-700 font-semibold mb-1">
+                  <label className="block text-stone-700 dark:text-stone-300 font-semibold mb-1">
                     Crédito Fotográfico
                   </label>
                   <input
@@ -682,23 +691,23 @@ export const MediaLibraryPage: React.FC = () => {
                     value={uploadCredit}
                     onChange={(e) => setUploadCredit(e.target.value)}
                     placeholder="Autor o agencia proveedora"
-                    className="w-full border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                 </div>
               </div>
 
-              <div className="pt-4 flex justify-end gap-2 border-t border-stone-200">
+              <div className="pt-4 flex justify-end gap-2 border-t border-black/5 dark:border-white/5">
                 <button
                   type="button"
                   onClick={() => setIsUploadOpen(false)}
-                  className="px-3 py-2 border border-stone-300 text-stone-700 hover:bg-stone-50 font-medium"
+                  className="px-4 py-2 rounded-full border border-stone-300 dark:border-stone-700 text-stone-700 dark:text-stone-300 hover:bg-stone-100 font-semibold"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white font-semibold transition-colors flex items-center gap-1.5 shadow-sm"
+                  className="px-5 py-2 rounded-full bg-stone-900 hover:bg-stone-800 text-white font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
                 >
                   {uploading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                   <span>{uploading ? 'Procesando...' : 'Cargar en Biblioteca'}</span>

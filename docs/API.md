@@ -137,3 +137,10 @@
 | `POST` | `/api/v1/integrations/espocrm/webhook` | Fase 16 | `PLANNED` | Recepción de eventos con firma HMAC. |
 | `GET` | `/api/v1/integrations/espocrm/heartbeat` | Fase 16 | `PLANNED` | Verificación de estado de integración. |
 
+### Marca Blanca & Configuración del Sistema (Settings)
+| Método | Endpoint | Fase | Estado | Descripción |
+|---|---|---|---|---|
+| `GET` | `/api/v1/admin/settings` | Fase 5 | `IMPLEMENTED` | Obtiene la configuración de marca blanca, PWA, paleta de colores, tipografía y logos del tenant activo. |
+| `PUT` | `/api/v1/admin/settings` | Fase 5 | `IMPLEMENTED` | Actualiza parámetros de identidad visual, tokens CSS, fuentes y configuración PWA. |
+| `POST` | `/api/v1/admin/settings/reset` | Fase 5 | `IMPLEMENTED` | Restablece los parámetros de configuración a los valores por defecto del sistema. |
+

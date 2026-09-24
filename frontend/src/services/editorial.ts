@@ -41,7 +41,11 @@ export const editorialService = {
     pagination: PaginationMeta;
   }> {
     if (isMockMode()) {
-      let list = mockStorage.getArticles();
+      let list = mockStorage.getArticles().sort((a, b) => {
+        const dateA = new Date(a.updated_at || a.modified_at || a.created_at).getTime();
+        const dateB = new Date(b.updated_at || b.modified_at || b.created_at).getTime();
+        return dateB - dateA;
+      });
 
       if (params.status) {
         list = list.filter((a) => a.status === params.status);

@@ -16,7 +16,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
   onClose,
   onSelect,
   selectedMediaUuid,
-  title = 'Biblioteca de Medios — Seleccionar Imagen',
+  title = 'Biblioteca de Medios — Seleccionar Fotografía',
 }) => {
   const [tab, setTab] = useState<'browse' | 'upload'>('browse');
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -117,52 +117,57 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-stone-900/70 flex items-center justify-center p-3 sm:p-6 overflow-y-auto"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-2xl flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
       role="dialog"
       aria-modal="true"
     >
-      <div className="bg-white border border-stone-300 max-w-4xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden my-auto animate-in fade-in duration-150">
+      <div className="glass-card rounded-[32px] max-w-4xl w-full shadow-2xl flex flex-col max-h-[90vh] overflow-hidden my-auto border border-white/50 dark:border-white/10">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-stone-200 bg-stone-900 text-stone-100 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ImageIcon className="w-5 h-5 text-stone-300" />
-            <h2 className="font-serif font-bold text-base text-white tracking-tight">{title}</h2>
+        <div className="px-6 py-4 border-b border-black/5 dark:border-white/5 bg-white/60 dark:bg-stone-900/60 backdrop-blur-md flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-rose-500/10 flex items-center justify-center text-rose-600">
+              <ImageIcon className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="font-serif font-black text-base text-stone-900 dark:text-white tracking-tight">{title}</h2>
+              <p className="text-[11px] text-stone-400">Seleccione un archivo multimedia de alta resolución</p>
+            </div>
           </div>
           <button
             onClick={onClose}
-            className="text-stone-400 hover:text-white p-1 rounded transition-colors"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-stone-400 hover:text-stone-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all"
             title="Cerrar modal"
             aria-label="Cerrar"
           >
-            <X className="w-5 h-5" />
+            <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Tab Controls & Search */}
-        <div className="px-6 py-3 border-b border-stone-200 bg-stone-50 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-2">
+        <div className="px-6 py-3 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-stone-900/40 backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="glass-panel p-1 rounded-full flex gap-1 border border-white/60 dark:border-white/10">
             <button
               type="button"
               onClick={() => setTab('browse')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded transition-colors ${
+              className={`px-4 py-1.5 text-xs font-semibold rounded-full transition-all active:scale-95 ${
                 tab === 'browse'
-                  ? 'bg-stone-900 text-white'
-                  : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
+                  ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-xs font-bold'
+                  : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
               }`}
             >
-              Explorar Biblioteca ({items.length})
+              Explorar ({items.length})
             </button>
             <button
               type="button"
               onClick={() => setTab('upload')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded flex items-center gap-1.5 transition-colors ${
+              className={`px-4 py-1.5 text-xs font-semibold rounded-full flex items-center gap-1.5 transition-all active:scale-95 ${
                 tab === 'upload'
-                  ? 'bg-stone-900 text-white'
-                  : 'bg-white text-stone-700 border border-stone-300 hover:bg-stone-100'
+                  ? 'bg-white dark:bg-stone-800 text-stone-900 dark:text-white shadow-xs font-bold'
+                  : 'text-stone-600 dark:text-stone-300 hover:text-stone-900 dark:hover:text-white'
               }`}
             >
               <Upload className="w-3.5 h-3.5" />
-              <span>Subir / Agregar URL</span>
+              <span>Subir Archivo / URL</span>
             </button>
           </div>
 
@@ -173,7 +178,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por título o pie..."
-                className="w-full text-xs border border-stone-300 bg-white pl-8 pr-3 py-1.5 text-stone-900 placeholder-stone-400 focus:outline-none focus:border-stone-800"
+                className="w-full text-xs border border-white/60 dark:border-white/10 bg-white/70 dark:bg-stone-800/70 rounded-full pl-8 pr-3 py-1.5 text-stone-900 dark:text-white placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-800 shadow-xs"
               />
               <Search className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2" />
             </div>
@@ -181,17 +186,18 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
         </div>
 
         {/* Body Area */}
-        <div className="flex-1 overflow-y-auto p-6 bg-stone-100/50">
+        <div className="flex-1 overflow-y-auto p-6 bg-stone-50/50 dark:bg-stone-950/50">
           {tab === 'browse' ? (
             <div>
               {loading ? (
-                <div className="py-20 flex flex-col items-center justify-center gap-2 text-stone-500 text-xs">
-                  <RefreshCw className="w-5 h-5 animate-spin text-stone-600" />
-                  <span>Cargando archivos multimedia...</span>
+                <div className="py-20 flex flex-col items-center justify-center gap-2 text-stone-500 text-xs font-mono">
+                  <RefreshCw className="w-5 h-5 animate-spin text-rose-600" />
+                  <span>Cargando biblioteca fotográfica...</span>
                 </div>
               ) : items.length === 0 ? (
-                <div className="py-16 text-center text-xs text-stone-500">
-                  No se encontraron elementos en la biblioteca de medios.
+                <div className="py-16 text-center text-xs text-stone-500 space-y-2">
+                  <ImageIcon className="w-8 h-8 text-stone-300 mx-auto" />
+                  <p className="font-semibold text-stone-700 dark:text-stone-300">No se encontraron imágenes</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -201,30 +207,30 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                       <div
                         key={item.media_uuid}
                         onClick={() => setSelectedItem(item)}
-                        className={`group relative bg-white border cursor-pointer overflow-hidden transition-all ${
+                        className={`group relative rounded-[20px] bg-white dark:bg-stone-900 cursor-pointer overflow-hidden transition-all duration-200 ${
                           isSelected
-                            ? 'border-stone-900 ring-2 ring-stone-900 shadow-md'
-                            : 'border-stone-200 hover:border-stone-400'
+                            ? 'ring-3 ring-stone-950 dark:ring-white shadow-lg scale-102'
+                            : 'border border-black/5 dark:border-white/5 hover:border-black/20 shadow-xs hover:shadow-md'
                         }`}
                       >
-                        <div className="aspect-[4/3] bg-stone-200 overflow-hidden relative">
+                        <div className="aspect-[4/3] bg-stone-100 dark:bg-stone-800 overflow-hidden relative">
                           <img
                             src={item.url}
                             alt={item.alt_text || item.title || item.filename}
                             loading="lazy"
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                           />
                           {isSelected && (
-                            <div className="absolute top-2 right-2 bg-stone-900 text-white p-1 rounded-full shadow">
+                            <div className="absolute top-2.5 right-2.5 bg-stone-900 text-white p-1 rounded-full shadow-md">
                               <Check className="w-3.5 h-3.5" />
                             </div>
                           )}
                         </div>
-                        <div className="p-2 bg-white">
-                          <p className="text-[11px] font-medium text-stone-800 truncate" title={item.title || item.filename}>
+                        <div className="p-2.5 bg-white/80 dark:bg-stone-900/80 backdrop-blur-xs">
+                          <p className="text-[11px] font-bold text-stone-800 dark:text-stone-200 truncate" title={item.title || item.filename}>
                             {item.title || item.filename}
                           </p>
-                          <p className="text-[10px] text-stone-400">
+                          <p className="text-[10px] text-stone-400 font-mono">
                             {item.width}&times;{item.height} px
                           </p>
                         </div>
@@ -236,20 +242,20 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
             </div>
           ) : (
             /* Upload / URL Form */
-            <form onSubmit={handleUploadSubmit} className="max-w-xl mx-auto bg-white border border-stone-200 p-6 space-y-4 shadow-sm">
-              <h3 className="font-serif font-bold text-sm text-stone-900 border-b border-stone-200 pb-2">
+            <form onSubmit={handleUploadSubmit} className="max-w-xl mx-auto glass-card rounded-[28px] p-6 space-y-4 shadow-sm border border-white/60 dark:border-white/10">
+              <h3 className="font-serif font-black text-sm text-stone-900 dark:text-white border-b border-black/5 dark:border-white/5 pb-2">
                 Incorporar Imagen a la Noticia
               </h3>
 
               {uploadError && (
-                <div className="p-3 bg-red-50 border border-red-200 text-red-800 text-xs">
+                <div className="p-3 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-300 text-xs rounded-xl">
                   {uploadError}
                 </div>
               )}
 
               {/* Local File Selection */}
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                   Opción 1: Archivo Local (JPEG, PNG, WebP)
                 </label>
                 <input
@@ -262,7 +268,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                       setUploadTitle(f.name.replace(/\.[^/.]+$/, ''));
                     }
                   }}
-                  className="w-full text-xs text-stone-600 file:mr-3 file:py-1.5 file:px-3 file:border file:border-stone-300 file:text-xs file:font-medium file:bg-stone-100 hover:file:bg-stone-200 file:text-stone-800"
+                  className="w-full text-xs text-stone-600 dark:text-stone-400 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-900 file:text-white hover:file:bg-stone-800 cursor-pointer"
                 />
               </div>
 
@@ -270,7 +276,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
 
               {/* Direct Image URL */}
               <div>
-                <label className="block text-xs font-semibold text-stone-700 mb-1">
+                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                   Opción 2: URL Directa de Imagen (https://...)
                 </label>
                 <div className="relative">
@@ -279,16 +285,16 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                     value={uploadUrl}
                     onChange={(e) => setUploadUrl(e.target.value)}
                     placeholder="https://images.unsplash.com/photo-..."
-                    className="w-full text-xs border border-stone-300 pl-8 pr-3 py-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full text-xs border border-black/10 dark:border-white/10 rounded-xl pl-8 pr-3 py-2 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                   <LinkIcon className="w-3.5 h-3.5 text-stone-400 absolute left-2.5 top-2.5" />
                 </div>
               </div>
 
               {/* Metadata Fields */}
-              <div className="pt-2 border-t border-stone-100 space-y-3">
+              <div className="pt-2 border-t border-black/5 dark:border-white/5 space-y-3">
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                     Título de la Fotografía <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -297,12 +303,12 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                     value={uploadTitle}
                     onChange={(e) => setUploadTitle(e.target.value)}
                     placeholder="Ej: Obras en el viaducto sobre el Río Portuguesa"
-                    className="w-full text-xs border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full text-xs border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                     Texto Alternativo (Accesibilidad / SEO)
                   </label>
                   <input
@@ -310,12 +316,12 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                     value={uploadAlt}
                     onChange={(e) => setUploadAlt(e.target.value)}
                     placeholder="Descripción visual de lo que se observa en la fotografía"
-                    className="w-full text-xs border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full text-xs border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                     Pie de Foto (Epígrafe Informativo)
                   </label>
                   <input
@@ -323,12 +329,12 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                     value={uploadCaption}
                     onChange={(e) => setUploadCaption(e.target.value)}
                     placeholder="Detalle periodístico para publicar bajo la foto"
-                    className="w-full text-xs border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full text-xs border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-stone-700 mb-1">
+                  <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
                     Créditos Fotográficos / Fuente
                   </label>
                   <input
@@ -336,7 +342,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                     value={uploadCredit}
                     onChange={(e) => setUploadCredit(e.target.value)}
                     placeholder="Ej: Juan Colmenares / Contacto con la Noticia"
-                    className="w-full text-xs border border-stone-300 p-2 text-stone-800 focus:outline-none focus:border-stone-800"
+                    className="w-full text-xs border border-black/10 dark:border-white/10 rounded-xl p-2.5 text-stone-800 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 focus:outline-none focus:ring-2 focus:ring-stone-800"
                   />
                 </div>
               </div>
@@ -345,14 +351,14 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
                 <button
                   type="button"
                   onClick={() => setTab('browse')}
-                  className="px-3 py-2 border border-stone-300 text-xs font-medium text-stone-700 hover:bg-stone-50"
+                  className="px-4 py-2 rounded-full border border-stone-300 dark:border-stone-700 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-stone-100"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={uploading}
-                  className="px-4 py-2 bg-stone-900 hover:bg-stone-800 text-white text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5"
+                  className="px-5 py-2 rounded-full bg-stone-900 hover:bg-stone-800 text-white text-xs font-bold shadow-md transition-all active:scale-95 flex items-center gap-1.5"
                 >
                   {uploading && <RefreshCw className="w-3.5 h-3.5 animate-spin" />}
                   <span>{uploading ? 'Procesando...' : 'Guardar y Seleccionar'}</span>
@@ -363,20 +369,20 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
         </div>
 
         {/* Footer with Selected Details & Actions */}
-        <div className="px-6 py-3 border-t border-stone-200 bg-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div className="px-6 py-4 border-t border-black/5 dark:border-white/5 bg-white/60 dark:bg-stone-900/60 backdrop-blur-md flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div className="min-w-0">
             {selectedItem ? (
               <div className="flex items-center gap-3">
                 <img
                   src={selectedItem.url}
                   alt={selectedItem.title || ''}
-                  className="w-10 h-10 object-cover border border-stone-300"
+                  className="w-12 h-12 rounded-[14px] object-cover ring-1 ring-black/10 shadow-xs"
                 />
                 <div className="min-w-0">
-                  <p className="text-xs font-bold text-stone-900 truncate">
+                  <p className="text-xs font-bold text-stone-900 dark:text-white truncate">
                     {selectedItem.title || selectedItem.filename}
                   </p>
-                  <p className="text-[10px] text-stone-500 truncate">
+                  <p className="text-[11px] text-stone-500 font-mono truncate">
                     Crédito: {selectedItem.credit || 'Sin crédito'} &bull; {selectedItem.width}&times;{selectedItem.height} px
                   </p>
                 </div>
@@ -390,7 +396,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-3 py-2 border border-stone-300 text-xs font-medium text-stone-700 hover:bg-stone-50"
+              className="px-4 py-2 rounded-full border border-stone-200/80 dark:border-stone-700 bg-white/70 dark:bg-stone-800/70 text-xs font-semibold text-stone-700 dark:text-stone-300 hover:bg-white active:scale-95 transition-all"
             >
               Cerrar
             </button>
@@ -398,7 +404,7 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
               type="button"
               disabled={!selectedItem}
               onClick={handleConfirmSelection}
-              className="px-4 py-2 bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white text-xs font-semibold shadow-sm transition-colors flex items-center gap-1.5"
+              className="px-5 py-2 rounded-full bg-stone-900 hover:bg-stone-800 disabled:opacity-40 text-white text-xs font-bold shadow-md transition-all active:scale-95 flex items-center gap-1.5"
             >
               <Check className="w-3.5 h-3.5" />
               <span>Usar Esta Imagen</span>
@@ -409,4 +415,3 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
     </div>
   );
 };
-

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { getActiveAds, recordAdImpression, PublicAd } from '../../services/adsApi';
+import { getActiveAds, recordAdImpression, recordAdClick, PublicAd } from '../../services/adsApi';
 
 export type AdPlacement =
   | 'HEADER_BANNER'
@@ -93,9 +93,12 @@ export const AdSlot: React.FC<AdSlotProps> = ({ placement, className = '', fallb
       </div>
 
       <a
-        href={`/api/v1/public/ads/${encodeURIComponent(ad.campaign_uuid)}/click`}
+        href={ad.target_url || '#'}
         target="_blank"
         rel="noopener noreferrer sponsored"
+        onClick={() => {
+          recordAdClick(ad.campaign_uuid).catch(() => {});
+        }}
         className="block group overflow-hidden border border-stone-200 bg-stone-100 hover:border-stone-400 transition-colors shadow-xs"
         title={ad.company_name ? `Anuncio de ${ad.company_name}` : 'Publicidad'}
       >

@@ -43,7 +43,10 @@ export async function getActiveAds(location?: string): Promise<PublicAd[]> {
  * Record an impression for a displayed ad.
  */
 export async function recordAdImpression(campaignUuid: string): Promise<void> {
-  if (isMockMode()) return;
+  if (isMockMode()) {
+    mockStorage.recordAdImpression(campaignUuid);
+    return;
+  }
 
   try {
     await apiClient.post(`/public/ads/${encodeURIComponent(campaignUuid)}/impression`);
@@ -57,8 +60,7 @@ export async function recordAdImpression(campaignUuid: string): Promise<void> {
  */
 export async function recordAdClick(campaignUuid: string): Promise<string | null> {
   if (isMockMode()) {
-    const ad = mockStorage.getAds().find((a) => a.campaign_uuid === campaignUuid);
-    return ad?.target_url || null;
+    return mockStorage.recordAdClick(campaignUuid);
   }
 
   try {
@@ -84,9 +86,12 @@ export async function listAdminCampaigns(
       const isActive = String(filters.active) === '1' || String(filters.active) === 'true';
       list = list.filter((a) => a.active === isActive);
     }
+    const total = list.length;
+    const total_pages = Math.ceil(total / limit) || 1;
+    const offset = (page - 1) * limit;
     return {
-      items: list,
-      pagination: { total: list.length, page, limit, total_pages: 1 },
+      items: list.slice(offset, offset + limit),
+      pagination: { total, page, limit, total_pages },
     };
   }
 
@@ -109,7 +114,7 @@ export async function listAdminCampaigns(
  */
 export async function getAdminCampaign(uuid: string): Promise<AdCampaign> {
   if (isMockMode()) {
-    const ad = mockStorage.getAds().find((a) => a.campaign_uuid === uuid);
+    const ad = mockStorage.getAdById(uuid);
     if (!ad) throw new Error('Campaña no encontrada.');
     return ad;
   }
@@ -123,27 +128,7 @@ export async function getAdminCampaign(uuid: string): Promise<AdCampaign> {
  */
 export async function createAdminCampaign(data: Partial<AdCampaign>): Promise<AdCampaign> {
   if (isMockMode()) {
-    const newAd: AdCampaign = {
-      campaign_uuid: 'cmp-' + Math.random().toString(36).substring(2, 9),
-      tenant_uuid: 'ten-001',
-      site_uuid: 'ste-001',
-      company_name: data.company_name || 'Compañía',
-      campaign_name: data.campaign_name || 'Campaña',
-      ad_type: data.ad_type || 'BANNER',
-      location: data.location || 'HEADER_BANNER',
-      start_at: data.start_at || null,
-      end_at: data.end_at || null,
-      target_url: data.target_url || '#',
-      media_uuid: data.media_uuid || null,
-      media_url: data.media_url || null,
-      active: data.active ?? true,
-      impressions_count: 0,
-      clicks_count: 0,
-      ctr: 0,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    };
-    return newAd;
+    return mockStorage.saveAd(data);
   }
 
   const res = await apiClient.post<AdCampaign>('/admin/ads', data);
@@ -155,9 +140,9 @@ export async function createAdminCampaign(data: Partial<AdCampaign>): Promise<Ad
  */
 export async function updateAdminCampaign(uuid: string, data: Partial<AdCampaign>): Promise<AdCampaign> {
   if (isMockMode()) {
-    const ad = mockStorage.getAds().find((a) => a.campaign_uuid === uuid);
-    if (!ad) throw new Error('Campaña no encontrada.');
-    return { ...ad, ...data, updated_at: new Date().toISOString() };
+    const updated = mockStorage.updateAd(uuid, data);
+    if (!updated) throw new Error('Campaña no encontrada.');
+    return updated;
   }
 
   const res = await apiClient.put<AdCampaign>(`/admin/ads/${encodeURIComponent(uuid)}`, data);
@@ -168,6 +153,9 @@ export async function updateAdminCampaign(uuid: string, data: Partial<AdCampaign
  * Admin: Delete campaign.
  */
 export async function deleteAdminCampaign(uuid: string): Promise<void> {
-  if (isMockMode()) return;
+  if (isMockMode()) {
+    mockStorage.deleteAd(uuid);
+    return;
+  }
   await apiClient.delete(`/admin/ads/${encodeURIComponent(uuid)}`);
 }

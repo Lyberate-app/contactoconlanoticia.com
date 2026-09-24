@@ -19,4 +19,5 @@ export * from './ads';
 export * from './submission';
 export * from './push';
 export * from './media';
+export * from './settings';
 

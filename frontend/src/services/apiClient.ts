@@ -29,6 +29,7 @@ export class ApiError extends Error {
 }
 
 import type { ApiResponse, ApiErrorDetail } from '../types/api';
+import { isMockMode } from '../config/env';
 export type { ApiResponse, ApiErrorDetail };
 
 export interface RequestOptions {
@@ -76,6 +77,17 @@ async function request<T = unknown>(
   options: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
   const url = buildUrl(endpoint, options.params);
+
+  // If in mock mode, intercept and prevent network requests to backend
+  if (isMockMode()) {
+    console.warn(`[Lyberate Mock Engine] Interceptada llamada HTTP no mockeada: ${method} ${url}`);
+    return {
+      success: true,
+      data: undefined as unknown as T,
+      meta: {},
+    };
+  }
+
   const headers: Record<string, string> = {
     Accept: 'application/json',
     ...options.headers,

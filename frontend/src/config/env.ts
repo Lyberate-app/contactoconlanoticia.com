@@ -1,10 +1,15 @@
 /**
  * Application environment configuration
+ * Defaults strictly to local mock storage mode (standalone frontend)
  */
 
-export const DATA_MODE = import.meta.env.VITE_DATA_MODE || 'mock';
+export const DATA_MODE = (import.meta.env.VITE_DATA_MODE || 'mock').toLowerCase();
 
-export const isMockMode = (): boolean => DATA_MODE === 'mock';
+/**
+ * Returns true if running standalone with localStorage mock data.
+ * Safe default: runs in mock mode unless explicitly set to 'api'.
+ */
+export const isMockMode = (): boolean => DATA_MODE !== 'api';
 
 /**
  * Canonical base URL for production SEO, JSON-LD, sitemaps, and Open Graph.

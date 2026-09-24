@@ -91,7 +91,7 @@ export async function getAdminSubmissions(filters?: {
  */
 export async function getAdminSubmission(uuid: string): Promise<CitizenSubmission> {
   if (isMockMode()) {
-    const sub = mockStorage.getSubmissions().find((s) => s.submission_uuid === uuid);
+    const sub = mockStorage.getSubmissionById(uuid);
     if (!sub) throw new Error('Reporte no encontrado.');
     return sub;
   }
@@ -105,11 +105,8 @@ export async function getAdminSubmission(uuid: string): Promise<CitizenSubmissio
  */
 export async function rejectAdminSubmission(uuid: string, reason: string): Promise<CitizenSubmission> {
   if (isMockMode()) {
-    const sub = mockStorage.getSubmissions().find((s) => s.submission_uuid === uuid);
+    const sub = mockStorage.rejectSubmission(uuid, reason);
     if (!sub) throw new Error('Reporte no encontrado.');
-    sub.status = 'REJECTED';
-    sub.rejection_reason = reason;
-    sub.reviewed_at = new Date().toISOString();
     return sub;
   }
 
@@ -125,24 +122,7 @@ export async function convertAdminSubmission(
   overrides?: ConvertSubmissionPayload
 ): Promise<{ submission: CitizenSubmission; article: ArticleDetail }> {
   if (isMockMode()) {
-    const sub = mockStorage.getSubmissions().find((s) => s.submission_uuid === uuid);
-    if (!sub) throw new Error('Reporte no encontrado.');
-
-    const article = mockStorage.saveArticle({
-      title: overrides?.title || sub.title,
-      subtitle: overrides?.subtitle || null,
-      excerpt: overrides?.excerpt || sub.description.slice(0, 150),
-      content: sub.description,
-      author_uuid: overrides?.author_uuid,
-      category_uuid: overrides?.category_uuid,
-      status: 'DRAFT',
-    });
-
-    sub.status = 'CONVERTED';
-    sub.converted_article_uuid = article.article_uuid;
-    sub.reviewed_at = new Date().toISOString();
-
-    return { submission: sub, article };
+    return mockStorage.convertSubmission(uuid, overrides);
   }
 
   const res = await apiClient.post<{ submission: CitizenSubmission; article: ArticleDetail }>(

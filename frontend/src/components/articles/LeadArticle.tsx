@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, User } from 'lucide-react';
+import { Clock, ArrowUpRight } from 'lucide-react';
 import { OptimizedImage } from '../common/OptimizedImage';
 import { formatDate } from '../../utils/date';
 import type { PublicArticleSummary } from '../../types/article';
@@ -21,37 +21,42 @@ export const LeadArticle: React.FC<LeadArticleProps> = ({
   const authorUrl = `/autor/${article.author_slug || 'carlos-mendoza'}`;
 
   return (
-    <article className={`space-y-4 ${className}`}>
-      {/* 1. KICKER & CATEGORY BADGE */}
-      <div className="flex items-center gap-2">
+    <article className={`glass-card glass-card-interactive p-4 sm:p-6 rounded-[28px] space-y-4 relative ${className}`}>
+      {/* 1. KICKER & CATEGORY CHIPS */}
+      <div className="flex items-center gap-2 flex-wrap">
         <Link
           to={categoryUrl}
-          className="text-xs sm:text-sm font-bold uppercase tracking-wider text-red-700 hover:underline"
+          className="glass-pill px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-rose-700 hover:bg-rose-50/70 inline-flex items-center gap-1.5"
         >
-          {article.category_name}
+          <span className="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+          <span>{article.category_name}</span>
         </Link>
-        <span className="text-stone-300 text-xs">·</span>
-        <span className="text-xs text-stone-500 font-medium uppercase tracking-wider">
+        <span className="text-[11px] font-semibold text-stone-500 uppercase tracking-wider px-2 py-0.5 rounded-full bg-stone-100/60">
           {kicker}
         </span>
       </div>
 
       {/* 2. MAIN HEADLINE */}
       <Link to={articleUrl} className="block group">
-        <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-serif font-black text-stone-950 leading-[1.12] group-hover:text-red-900 transition-colors">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-stone-950 leading-[1.15] tracking-tight group-hover:text-rose-900 transition-colors">
           {article.title}
         </h2>
       </Link>
 
       {/* 3. SUBTITLE / DECK */}
       {article.subtitle && (
-        <p className="text-base sm:text-lg lg:text-xl font-serif italic text-stone-700 leading-snug">
+        <p className="text-sm sm:text-base lg:text-lg font-serif italic text-stone-600 leading-snug">
           {article.subtitle}
         </p>
       )}
 
-      {/* 4. HERO PHOTOGRAPHY */}
-      <Link to={articleUrl} className="block overflow-hidden rounded-sm" tabIndex={-1} aria-hidden="true">
+      {/* 4. HERO PHOTOGRAPHY (SQUIRCLE CORNERS) */}
+      <Link
+        to={articleUrl}
+        className="block overflow-hidden rounded-[20px] relative group aspect-[16/9] shadow-sm"
+        tabIndex={-1}
+        aria-hidden="true"
+      >
         <OptimizedImage
           src={article.featured_media?.url}
           alt={article.featured_media?.alt_text || article.title}
@@ -59,32 +64,44 @@ export const LeadArticle: React.FC<LeadArticleProps> = ({
           credit={article.featured_media?.credit}
           priority={true}
           aspectRatio="16/9"
-          className="w-full h-full object-cover hover:scale-[1.01] transition-transform duration-500"
+          className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-700 ease-out"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-stone-950/20 via-transparent to-transparent pointer-events-none opacity-60 group-hover:opacity-30 transition-opacity"></div>
       </Link>
 
       {/* 5. EXCERPT */}
       {article.excerpt && (
-        <p className="text-sm sm:text-base text-stone-800 leading-relaxed font-serif pt-1">
+        <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-serif pt-0.5 line-clamp-3">
           {article.excerpt}
         </p>
       )}
 
-      {/* 6. BYLINE & TIMESTAMP */}
-      <div className="flex items-center justify-between text-xs text-stone-500 pt-3 border-t border-stone-200">
-        <span className="flex items-center gap-1.5 font-medium text-stone-800">
-          <User className="w-3.5 h-3.5 text-stone-400" />
-          <Link to={authorUrl} className="hover:text-red-700 hover:underline">
-            {article.author_name}
+      {/* 6. GLASS BYLINE & TIMESTAMP TRAY */}
+      <div className="glass-panel p-2.5 sm:p-3 rounded-2xl flex items-center justify-between text-xs text-stone-600 mt-2">
+        <span className="flex items-center gap-2 font-medium text-stone-800">
+          <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-800 flex items-center justify-center font-bold text-[10px]">
+            {article.author_name ? article.author_name.charAt(0) : 'R'}
+          </div>
+          <Link to={authorUrl} className="hover:text-rose-700 font-semibold text-[11px] sm:text-xs">
+            {article.author_name || 'Redacción Contacto'}
           </Link>
         </span>
 
-        <span className="flex items-center gap-1 text-stone-500">
-          <Clock className="w-3.5 h-3.5 text-stone-400" />
-          {formatDate(article.published_at)}
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="flex items-center gap-1 text-stone-500 text-[11px]">
+            <Clock className="w-3.5 h-3.5 text-stone-400" />
+            {formatDate(article.published_at)}
+          </span>
+
+          <Link
+            to={articleUrl}
+            className="w-7 h-7 rounded-full bg-stone-900 text-white flex items-center justify-center hover:bg-rose-700 transition-colors shadow-sm"
+            aria-label="Leer noticia completa"
+          >
+            <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
       </div>
     </article>
   );
 };
-

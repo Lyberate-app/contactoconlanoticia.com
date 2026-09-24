@@ -59,4 +59,3 @@ export interface MediaListResponse {
   items: MediaItem[];
   pagination: MediaPaginationMeta;
 }
-

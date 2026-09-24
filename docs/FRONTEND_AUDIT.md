@@ -820,4 +820,71 @@ La **Fase FE-5: SEO y Descubrimiento Editorial** ha sido completada y verificada
 * Límites arquitectónicos respetados: Todo el trabajo se limitó a `frontend/` y `docs/FRONTEND_AUDIT.md`. No se modificaron `backend/`, `database/` ni `tools/`.
 
 ---
-*Fin del informe de auditoría técnica y fases implementadas (FE-1, FE-2, FE-3, FE-4 y FE-5).*
+
+## 27. Autonomía 100% Mock / LocalStorage y Blueprint de Base de Datos
+
+En atención al requerimiento de desacoplar totalmente el frontend para desarrollo y testing independiente en local, se completó la blindaje del motor de datos basado en `localStorage`.
+
+### 27.1 Acciones Implementadas
+
+1. **Desacoplamiento Total del Backend (`src/config/env.ts` y `src/services/apiClient.ts`):**
+   - El frontend corre por defecto en modo `mock` salvo que se especifique expresamente `VITE_DATA_MODE=api`.
+   - Se añadió un guardián en `apiClient.ts` que intercepta cualquier petición HTTP no mockeada para evitar errores de red o llamadas accidentales al backend PHP inexistente.
+
+2. **Completación del Motor Mock (`src/mocks/mockStorage.ts`):**
+   - **Publicidad:** Implementación de persistencia completa para creación (`saveAd`), edición (`updateAd`), borrado (`deleteAd`), registro de impresiones y clics con recálculo dinámico de CTR.
+   - **Reportes Ciudadanos:** Persistencia de moderación editorial (rechazo con motivo y conversión a borrador editorial asignado).
+   - **Web Push:** Soporte mock para consulta de configuración VAPID y registro de suscriptores y tópicos.
+   - **Reinicio de Datos:** Método `resetToDefaults()` para restaurar el dataset inicial en cualquier momento.
+   - **Herramientas de Consola:** Exposición en `window.__LYBERATE_MOCK__` de métodos de inspección (`getStats()`, `dump()`, `reset()`).
+
+3. **Huellas y Blueprint de Base de Datos (`docs/DATABASE_SCHEMA_BLUEPRINT.md`):**
+   - Se preservó íntegramente la estructura existente de `backend/` y `database/` para evitar pérdida irreversible de trabajo previo.
+   - Se documentó el blueprint relacional completo en MySQL 8.x con todas las tablas (`users`, `categories`, `authors`, `articles`, `tags`, `article_tags`, `media`, `media_variants`, `ads_campaigns`, `citizen_submissions`, `push_subscriptions`), tipos de datos, índices y claves foráneas.
+
+### 27.2 Verificación de Resultados
+
+* `npx tsc --noEmit`: **0 errores** (código de salida 0).
+* `npm run build`: **0 errores** (1645 módulos transformados, compilación limpia en 9.36s).
+* Frontend 100% operativo en navegador sin servicios externos.
+
+---
+
+## 28. Rediseño y Elevación Estilística del Panel Administrativo (Inspiración UI)
+
+En respuesta a la solicitud de modernizar la experiencia del panel editorial inspirándose en una interfaz de gestión contemporánea (referencia visual aportada):
+
+### 28.1 Componentes Rediseñados
+
+1. **`EditorialLayout.tsx` (Barra Lateral y Navegación Principal):**
+   - **Avatar e Identidad:** Monograma de marca "L" con gradiente rose-900 a rose-700, avatar de usuario activo, nombre ("Redacción Central" / "Silvio") y badge con indicador de estado `● ADMINISTRADOR`.
+   - **Selector de Sede / Edición:** Tarjeta integrada tipo chip con icono de edificio, etiqueta superior en miniatura ("SEDE / EDICIÓN"), nombre territorial ("Guárico (Central)") y control desplegable con micro-interacción.
+   - **Navegación Agrupada:** Categorías en mayúsculas micro-tracking (`PRINCIPAL`, `CONTENIDO EDITORIAL`, `COMERCIAL & ADS`, `CRECIMIENTO & COMUNIDAD`, `SISTEMA & SALIDA`).
+   - **Estado Activo Estilizado:** Píldoras con fondo sólido Berry/Rose (`bg-rose-900 text-white font-semibold shadow-sm rounded-xl`), iconos delineados nítidos y contraste accesible.
+   - **Salida y Acceso Rápido:** Acceso directo con icono exterior al Portal Público y botón de Cerrar Sesión con acento suave.
+   - **Versión Móvil:** Drawer deslizable adaptativo con botón hamburguesa accesible y backdrop difuminado.
+
+2. **`EditorialDashboardPage.tsx` (Mesa de Control Editorial):**
+   - **Banner Superior de Bienvenida:** Saludo dinámico según la hora local (*"Buenos días"*, *"Buenas tardes"*, *"Buenas noches"*), badge chips de estado (`LYBERATE CMS`, `Sede: GUÁRICO (CENTRAL)`, `Modo LocalStore Activo`), selector de período en píldoras con sombra sutil (`Hoy`, `7 Días`, `30 Días`), botón circular con giro animado para recarga en tiempo real y botón CTA prioritario (`+ Redactar Noticia`).
+   - **4 Tarjetas KPI de Rendimiento:**
+     1. *Noticias en Línea (Hoy)*: Icono en contenedor suave rose-50, badge de crecimiento porcentual (+18.5%), cifra grande con tipografía serif periodística, estimación de lecturas y métricas de tráfico (Web / Móvil).
+     2. *Borradores en Curso*: Icono amber-50, badge "Al Día", contador de borradores y notas en revisión editorial.
+     3. *Reportes Ciudadanos*: Icono blue-50, badge de alertas pendientes, contador de denuncias recibidas y enlace a moderación.
+     4. *Campañas de Anuncios*: Icono purple-50, badge de CTR (3.8%), banners activos e inventario DAM disponible.
+   - **Gráfico SVG de Curva Bézier Suave:**
+     - Curva continua con relleno de gradiente descendente en tonos Berry/Rose (`#881337`).
+     - Cuadrícula con líneas horizontales punteadas sutiles.
+     - Puntos interactivos con halo hover y etiquetas numéricas emergentes.
+     - Selector de métrica en píldora (`Lecturas (Vistas)` vs `Publicaciones (N)`).
+   - **Mesa de Trabajo Dividida en Dos Columnas:**
+     - Columna izquierda (7 cols): Listado de *Últimas Noticias Publicadas* con categoría, autor, titular enlazado, extracto periodístico y accesos directos de previsualización pública y edición.
+     - Columna derecha (5 cols): Tarjeta de *Borradores Pendientes* con acceso a edición rápida y cuadrícula de *Atajos de Redacción* (Nueva Nota, Subir Foto, Moderar Buzón, Banners Ads).
+
+### 28.2 Verificación de Resultados
+
+* `npx tsc --noEmit`: **0 errores** (código de salida 0).
+* `npm run build`: **0 errores** (código de salida 0, 1645 módulos transformados, `dist/` generado en 20.95s).
+* Servidor de desarrollo Vite activo en `http://localhost:5173/admin`.
+
+---
+*Fin del informe de auditoría técnica y fases implementadas (FE-1 a FE-5, Mock Engine y Panel Rediseñado).*

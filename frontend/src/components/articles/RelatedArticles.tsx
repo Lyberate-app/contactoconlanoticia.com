@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArticleCard } from './ArticleCard';
 import type { RelatedArticle } from '../../types/article';
+import { Sparkles } from 'lucide-react';
 
 export interface RelatedArticlesProps {
   articles: RelatedArticle[];
@@ -18,25 +19,30 @@ export const RelatedArticles: React.FC<RelatedArticlesProps> = ({
   }
 
   return (
-    <section className={`border-t-2 border-stone-900 pt-6 mt-10 ${className}`}>
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="font-serif text-lg sm:text-xl font-bold uppercase tracking-wider text-stone-950">
+    <section className={`pt-6 mt-8 ${className}`}>
+      <div className="flex items-center gap-2 mb-4">
+        <div className="w-6 h-6 rounded-full bg-rose-100 text-rose-700 flex items-center justify-center">
+          <Sparkles className="w-3.5 h-3.5" />
+        </div>
+        <h2 className="text-lg font-bold text-stone-950 tracking-tight">
           Noticias Relacionadas{categoryName ? ` en ${categoryName}` : ''}
         </h2>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+      {/* Mobile Horizontal Reel / Desktop 3-col Grid */}
+      <div className="flex overflow-x-auto gap-4 no-scrollbar pb-3 sm:grid sm:grid-cols-3 sm:pb-0">
         {articles.map((rel) => (
-          <ArticleCard
-            key={rel.article_uuid}
-            article={rel}
-            variant="vertical"
-            showAuthor={true}
-            showExcerpt={true}
-          />
+          <div key={rel.article_uuid} className="min-w-[260px] sm:min-w-0 flex-1">
+            <ArticleCard
+              article={rel}
+              variant="vertical"
+              showAuthor={true}
+              showExcerpt={true}
+              className="h-full"
+            />
+          </div>
         ))}
       </div>
     </section>
   );
 };
-

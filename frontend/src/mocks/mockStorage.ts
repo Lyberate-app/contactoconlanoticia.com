@@ -19,8 +19,11 @@ import type { PublicCategory } from '../types/category';
 import type { PublicAuthor } from '../types/author';
 import type { ArticleDetail, Tag, CreateArticlePayload, UpdateArticlePayload, DashboardStats } from '../types/article';
 import type { AdCampaign } from '../types/ads';
-import type { CitizenSubmission } from '../types/submission';
+import type { CitizenSubmission, ConvertSubmissionPayload } from '../types/submission';
 import type { MediaItem, MediaUploadPayload, MediaUpdatePayload, MediaListResponse } from '../types/media';
+import type { PushConfig, SubscribePushPayload } from '../types/push';
+import type { WhiteLabelConfig } from '../types/settings';
+import { DEFAULT_WHITE_LABEL_CONFIG } from '../config/whiteLabelDefaults';
 
 const KEYS = {
   AUTH_USER: 'lyberate_mock_auth_user',
@@ -31,6 +34,8 @@ const KEYS = {
   ADS: 'lyberate_mock_ads',
   SUBMISSIONS: 'lyberate_mock_submissions',
   MEDIA: 'lyberate_mock_media',
+  PUSH_SUBSCRIPTIONS: 'lyberate_mock_push_subs',
+  SETTINGS: 'lyberate_mock_settings',
 } as const;
 
 function isBrowser(): boolean {
@@ -113,10 +118,17 @@ export const mockStorage = {
   // ---------------------------------------------------------------------------
 
   getArticles(): ArticleDetail[] {
-    const stored = getItem<ArticleDetail[]>(KEYS.ARTICLES, []);
+    let stored = getItem<ArticleDetail[]>(KEYS.ARTICLES, []);
     if (!stored || stored.length === 0 || !stored.some((a) => a.featured_media?.url)) {
       setItem(KEYS.ARTICLES, MOCK_ARTICLES);
       return MOCK_ARTICLES;
+    }
+    // Auto-sync missing seed articles if new ones were added in code
+    const existingUuids = new Set(stored.map((a) => a.article_uuid));
+    const missing = MOCK_ARTICLES.filter((a) => !existingUuids.has(a.article_uuid));
+    if (missing.length > 0) {
+      stored = [...missing, ...stored];
+      setItem(KEYS.ARTICLES, stored);
     }
     return stored;
   },
@@ -239,6 +251,85 @@ export const mockStorage = {
     return stored;
   },
 
+  getAdById(uuid: string): AdCampaign | null {
+    const ads = this.getAds();
+    return ads.find((a) => a.campaign_uuid === uuid) || null;
+  },
+
+  saveAd(data: Partial<AdCampaign>): AdCampaign {
+    const list = this.getAds();
+    const newAd: AdCampaign = {
+      campaign_uuid: 'cmp-' + Math.random().toString(36).substring(2, 9),
+      tenant_uuid: 'ten-001',
+      site_uuid: 'ste-001',
+      company_name: data.company_name || 'Compañía Anunciante',
+      campaign_name: data.campaign_name || 'Campaña Comercial',
+      ad_type: data.ad_type || 'BANNER',
+      location: data.location || 'HEADER_BANNER',
+      start_at: data.start_at || null,
+      end_at: data.end_at || null,
+      target_url: data.target_url || '#',
+      media_uuid: data.media_uuid || null,
+      media_url: data.media_url || null,
+      media_alt: data.media_alt || data.company_name || 'Anuncio publicitario',
+      active: data.active ?? true,
+      impressions_count: 0,
+      clicks_count: 0,
+      ctr: 0,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+    list.unshift(newAd);
+    setItem(KEYS.ADS, list);
+    return newAd;
+  },
+
+  updateAd(uuid: string, data: Partial<AdCampaign>): AdCampaign | null {
+    const list = this.getAds();
+    const index = list.findIndex((a) => a.campaign_uuid === uuid);
+    if (index === -1) return null;
+    const existing = list[index];
+    const updated: AdCampaign = {
+      ...existing,
+      ...data,
+      updated_at: new Date().toISOString(),
+    };
+    list[index] = updated;
+    setItem(KEYS.ADS, list);
+    return updated;
+  },
+
+  deleteAd(uuid: string): boolean {
+    let list = this.getAds();
+    const initialLen = list.length;
+    list = list.filter((a) => a.campaign_uuid !== uuid);
+    if (list.length === initialLen) return false;
+    setItem(KEYS.ADS, list);
+    return true;
+  },
+
+  recordAdImpression(campaignUuid: string): void {
+    const list = this.getAds();
+    const ad = list.find((a) => a.campaign_uuid === campaignUuid);
+    if (ad) {
+      ad.impressions_count = (ad.impressions_count || 0) + 1;
+      ad.ctr = ad.impressions_count > 0 ? (ad.clicks_count / ad.impressions_count) * 100 : 0;
+      setItem(KEYS.ADS, list);
+    }
+  },
+
+  recordAdClick(campaignUuid: string): string | null {
+    const list = this.getAds();
+    const ad = list.find((a) => a.campaign_uuid === campaignUuid);
+    if (ad) {
+      ad.clicks_count = (ad.clicks_count || 0) + 1;
+      ad.ctr = ad.impressions_count > 0 ? (ad.clicks_count / ad.impressions_count) * 100 : 0;
+      setItem(KEYS.ADS, list);
+      return ad.target_url || null;
+    }
+    return null;
+  },
+
   // ---------------------------------------------------------------------------
   // Submissions Mock
   // ---------------------------------------------------------------------------
@@ -250,6 +341,11 @@ export const mockStorage = {
       return MOCK_SUBMISSIONS;
     }
     return stored;
+  },
+
+  getSubmissionById(uuid: string): CitizenSubmission | null {
+    const list = this.getSubmissions();
+    return list.find((s) => s.submission_uuid === uuid) || null;
   },
 
   addSubmission(submission: Partial<CitizenSubmission>): CitizenSubmission {
@@ -279,6 +375,45 @@ export const mockStorage = {
     list.unshift(newSub);
     setItem(KEYS.SUBMISSIONS, list);
     return newSub;
+  },
+
+  rejectSubmission(uuid: string, reason: string): CitizenSubmission | null {
+    const list = this.getSubmissions();
+    const sub = list.find((s) => s.submission_uuid === uuid);
+    if (!sub) return null;
+    sub.status = 'REJECTED';
+    sub.rejection_reason = reason;
+    sub.reviewed_at = new Date().toISOString();
+    sub.updated_at = new Date().toISOString();
+    setItem(KEYS.SUBMISSIONS, list);
+    return sub;
+  },
+
+  convertSubmission(
+    uuid: string,
+    overrides?: ConvertSubmissionPayload
+  ): { submission: CitizenSubmission; article: ArticleDetail } {
+    const list = this.getSubmissions();
+    const sub = list.find((s) => s.submission_uuid === uuid);
+    if (!sub) throw new Error('Reporte no encontrado.');
+
+    const article = this.saveArticle({
+      title: overrides?.title || sub.title,
+      subtitle: overrides?.subtitle || null,
+      excerpt: overrides?.excerpt || sub.description.slice(0, 150),
+      content: sub.description,
+      author_uuid: overrides?.author_uuid,
+      category_uuid: overrides?.category_uuid,
+      status: 'DRAFT',
+    });
+
+    sub.status = 'CONVERTED';
+    sub.converted_article_uuid = article.article_uuid;
+    sub.reviewed_at = new Date().toISOString();
+    sub.updated_at = new Date().toISOString();
+    setItem(KEYS.SUBMISSIONS, list);
+
+    return { submission: sub, article };
   },
 
   // ---------------------------------------------------------------------------
@@ -445,4 +580,130 @@ export const mockStorage = {
       pending_submissions: submissions.filter((s) => s.status === 'PENDING_REVIEW').length,
     };
   },
+
+  // ---------------------------------------------------------------------------
+  // Push Notification Mock
+  // ---------------------------------------------------------------------------
+
+  getPushConfig(): PushConfig {
+    return {
+      enabled: true,
+      public_key: 'BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxTuT1uvV22Bl5gBV5iG5OJel6Aep1302U10Kss8',
+      available_topics: [
+        { id: 'breaking', name: 'Última Hora' },
+        { id: 'regionales', name: 'Noticias Regionales' },
+        { id: 'sucesos', name: 'Sucesos' },
+        { id: 'comunidades', name: 'Comunidades' },
+      ],
+    };
+  },
+
+  subscribePush(payload: SubscribePushPayload): void {
+    const list = getItem<SubscribePushPayload[]>(KEYS.PUSH_SUBSCRIPTIONS, []);
+    const filtered = list.filter((s) => s.endpoint !== payload.endpoint);
+    filtered.push(payload);
+    setItem(KEYS.PUSH_SUBSCRIPTIONS, filtered);
+  },
+
+  unsubscribePush(endpoint: string): void {
+    const list = getItem<SubscribePushPayload[]>(KEYS.PUSH_SUBSCRIPTIONS, []);
+    const filtered = list.filter((s) => s.endpoint !== endpoint);
+    setItem(KEYS.PUSH_SUBSCRIPTIONS, filtered);
+  },
+
+  updatePushPreferences(endpoint: string, topics: string[]): void {
+    const list = getItem<SubscribePushPayload[]>(KEYS.PUSH_SUBSCRIPTIONS, []);
+    const sub = list.find((s) => s.endpoint === endpoint);
+    if (sub) {
+      sub.topics = topics;
+      setItem(KEYS.PUSH_SUBSCRIPTIONS, list);
+    }
+  },
+
+  // ---------------------------------------------------------------------------
+  // White-Label & System Branding Settings Mock
+  // ---------------------------------------------------------------------------
+
+  getSettings(): WhiteLabelConfig {
+    const stored = getItem<WhiteLabelConfig | null>(KEYS.SETTINGS, null);
+    if (!stored) {
+      setItem(KEYS.SETTINGS, DEFAULT_WHITE_LABEL_CONFIG);
+      return DEFAULT_WHITE_LABEL_CONFIG;
+    }
+    // Deep merge with defaults to ensure schema migrations don't break existing local storage
+    return {
+      ...DEFAULT_WHITE_LABEL_CONFIG,
+      ...stored,
+      identity: { ...DEFAULT_WHITE_LABEL_CONFIG.identity, ...stored.identity },
+      logos: { ...DEFAULT_WHITE_LABEL_CONFIG.logos, ...stored.logos },
+      colors: { ...DEFAULT_WHITE_LABEL_CONFIG.colors, ...stored.colors },
+      typography: { ...DEFAULT_WHITE_LABEL_CONFIG.typography, ...stored.typography },
+      pwa: { ...DEFAULT_WHITE_LABEL_CONFIG.pwa, ...stored.pwa },
+      social: { ...DEFAULT_WHITE_LABEL_CONFIG.social, ...stored.social },
+      features: { ...DEFAULT_WHITE_LABEL_CONFIG.features, ...stored.features },
+    };
+  },
+
+  updateSettings(partial: Partial<WhiteLabelConfig>): WhiteLabelConfig {
+    const current = this.getSettings();
+    const updated: WhiteLabelConfig = {
+      ...current,
+      ...partial,
+      updatedAt: new Date().toISOString(),
+      identity: partial.identity ? { ...current.identity, ...partial.identity } : current.identity,
+      logos: partial.logos ? { ...current.logos, ...partial.logos } : current.logos,
+      colors: partial.colors ? { ...current.colors, ...partial.colors } : current.colors,
+      typography: partial.typography ? { ...current.typography, ...partial.typography } : current.typography,
+      pwa: partial.pwa ? { ...current.pwa, ...partial.pwa } : current.pwa,
+      social: partial.social ? { ...current.social, ...partial.social } : current.social,
+      features: partial.features ? { ...current.features, ...partial.features } : current.features,
+    };
+    setItem(KEYS.SETTINGS, updated);
+    return updated;
+  },
+
+  resetSettings(): WhiteLabelConfig {
+    setItem(KEYS.SETTINGS, DEFAULT_WHITE_LABEL_CONFIG);
+    return DEFAULT_WHITE_LABEL_CONFIG;
+  },
+
+  // ---------------------------------------------------------------------------
+  // Maintenance & Developer Reset Utility
+  // ---------------------------------------------------------------------------
+
+  resetToDefaults(): void {
+    if (!isBrowser()) return;
+    Object.values(KEYS).forEach((k) => removeItem(k));
+    setItem(KEYS.ARTICLES, MOCK_ARTICLES);
+    setItem(KEYS.CATEGORIES, MOCK_CATEGORIES);
+    setItem(KEYS.AUTHOR, MOCK_AUTHOR);
+    setItem(KEYS.TAGS, MOCK_TAGS);
+    setItem(KEYS.ADS, MOCK_ADS);
+    setItem(KEYS.SUBMISSIONS, MOCK_SUBMISSIONS);
+    setItem(KEYS.MEDIA, MOCK_MEDIA);
+    setItem(KEYS.SETTINGS, DEFAULT_WHITE_LABEL_CONFIG);
+  },
 };
+
+// Expose dev helpers on window for interactive testing and cache refreshing
+if (typeof window !== 'undefined') {
+  (window as unknown as { __LYBERATE_MOCK__: unknown }).__LYBERATE_MOCK__ = {
+    reset: () => {
+      mockStorage.resetToDefaults();
+      window.location.reload();
+    },
+    getStats: () => mockStorage.getDashboardStats(),
+    dump: () => {
+      const dumpData: Record<string, unknown> = {};
+      Object.entries(KEYS).forEach(([name, key]) => {
+        try {
+          const raw = window.localStorage.getItem(key);
+          dumpData[name] = raw ? JSON.parse(raw) : null;
+        } catch {
+          dumpData[name] = null;
+        }
+      });
+      return dumpData;
+    },
+  };
+}
