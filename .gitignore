@@ -11,20 +11,13 @@
 
 # Node.js / Frontend dependencies & build
 node_modules/
-frontend/node_modules/
-frontend/dist/
-frontend/dist-ssr/
-frontend/.cache/
+dist/
+dist-ssr/
+.cache/
 *.tsbuildinfo
-
-# PHP / Backend dependencies
-vendor/
-backend/vendor/
-composer.phar
 
 # Uploads & Media (local user content)
 uploads/
-backend/public/uploads/
 tools/migration/downloads/
 tools/migration/temp/
 
@@ -56,4 +49,3 @@ desktop.ini
 *.sln
 *.swp
 *~
-
