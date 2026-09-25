@@ -21,7 +21,8 @@ import type { ArticleDetail, Tag, CreateArticlePayload, UpdateArticlePayload, Da
 import type { AdCampaign } from '../types/ads';
 import type { CitizenSubmission, ConvertSubmissionPayload } from '../types/submission';
 import type { MediaItem, MediaUploadPayload, MediaUpdatePayload, MediaListResponse } from '../types/media';
-import type { PushConfig, SubscribePushPayload } from '../types/push';
+import type { PushConfig, SubscribePushPayload, PushCandidate, PushCampaign, SendPushPayload, PushAnalyticsOverview } from '../types/push';
+import type { ArticleEvent, GlobalAnalyticsOverview, ArticleAnalytics, TrendingArticle, MostReadArticle } from '../types/analytics';
 import type { WhiteLabelConfig } from '../types/settings';
 import { DEFAULT_WHITE_LABEL_CONFIG } from '../config/whiteLabelDefaults';
 
@@ -36,6 +37,9 @@ const KEYS = {
   MEDIA: 'lyberate_mock_media',
   PUSH_SUBSCRIPTIONS: 'lyberate_mock_push_subs',
   SETTINGS: 'lyberate_mock_settings',
+  EVENTS: 'lyberate_mock_analytics_events',
+  PUSH_CAMPAIGNS: 'lyberate_mock_push_campaigns',
+  PUSH_CANDIDATES_DISMISSED: 'lyberate_mock_push_dismissed',
 } as const;
 
 function isBrowser(): boolean {
@@ -665,6 +669,298 @@ export const mockStorage = {
   resetSettings(): WhiteLabelConfig {
     setItem(KEYS.SETTINGS, DEFAULT_WHITE_LABEL_CONFIG);
     return DEFAULT_WHITE_LABEL_CONFIG;
+  },
+
+  // ---------------------------------------------------------------------------
+  // Analytics & Telemetry Methods
+  // ---------------------------------------------------------------------------
+
+  saveEvent(event: ArticleEvent): void {
+    const events = getItem<ArticleEvent[]>(KEYS.EVENTS, []);
+    events.push({
+      ...event,
+      event_uuid: event.event_uuid || `ev-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+    });
+    if (events.length > 1000) {
+      events.splice(0, events.length - 1000);
+    }
+    setItem(KEYS.EVENTS, events);
+
+    if (event.event_type === 'article_view' && event.article_uuid) {
+      const articles = this.getArticles();
+      const idx = articles.findIndex((a) => a.article_uuid === event.article_uuid);
+      if (idx !== -1) {
+        (articles[idx] as any).views_count = ((articles[idx] as any).views_count || 0) + 1;
+        setItem(KEYS.ARTICLES, articles);
+      }
+    }
+  },
+
+  getGlobalAnalyticsOverview(period: 'today' | '24h' | '7d' | '30d' = '24h'): GlobalAnalyticsOverview {
+    const articles = this.getArticles();
+    const categories = this.getCategories();
+    const totalViews = articles.reduce((acc, a) => acc + ((a as any).views_count || 120), 0);
+
+    return {
+      period,
+      views_today: Math.round(totalViews * 0.35) + 1420,
+      views_today_growth: 14.8,
+      views_24h: totalViews || 48392,
+      views_24h_growth: 18.2,
+      unique_visitors_today: Math.round(totalViews * 0.22) + 980,
+      reads_count: Math.round(totalViews * 0.68),
+      read_ratio: 68.4,
+      articles_viewed_count: articles.length,
+      published_articles_count: articles.filter((a) => a.status === 'PUBLISHED').length,
+      trending_articles_count: Math.min(articles.length, 5),
+      push_total_clicks: 1840,
+      push_avg_ctr: 8.6,
+      top_categories: categories.slice(0, 5).map((c, i) => ({
+        category_name: c.name,
+        slug: c.slug,
+        views_count: Math.round(totalViews * (0.35 / (i + 1))),
+        growth_percent: +(12.5 - i * 1.8).toFixed(1),
+        articles_count: articles.filter((a) => a.category_slug === c.slug).length || 3,
+      })),
+      top_authors: [
+        {
+          author_name: 'Carlos Mendoza',
+          slug: 'carlos-mendoza',
+          articles_count: 14,
+          total_views: 24500,
+          avg_views: 1750,
+        },
+        {
+          author_name: 'Elena Rodríguez',
+          slug: 'elena-rodriguez',
+          articles_count: 9,
+          total_views: 18200,
+          avg_views: 2022,
+        },
+      ],
+      recent_history: [
+        { label: '00:00', views: 320, reads: 210, push_clicks: 14 },
+        { label: '04:00', views: 180, reads: 110, push_clicks: 5 },
+        { label: '08:00', views: 1840, reads: 1250, push_clicks: 110 },
+        { label: '12:00', views: 3420, reads: 2410, push_clicks: 340 },
+        { label: '16:00', views: 2890, reads: 1980, push_clicks: 220 },
+        { label: '20:00', views: 4120, reads: 2950, push_clicks: 410 },
+      ],
+      hourly_traffic: [
+        { hour: '06h', views: 820 },
+        { hour: '08h', views: 2150 },
+        { hour: '10h', views: 3400 },
+        { hour: '12h', views: 4200 },
+        { hour: '14h', views: 3100 },
+        { hour: '16h', views: 3890 },
+        { hour: '18h', views: 4600 },
+        { hour: '20h', views: 5120 },
+        { hour: '22h', views: 2800 },
+      ],
+      device_breakdown: [
+        { device: 'mobile', count: Math.round(totalViews * 0.72), percentage: 72 },
+        { device: 'desktop', count: Math.round(totalViews * 0.22), percentage: 22 },
+        { device: 'tablet', count: Math.round(totalViews * 0.06), percentage: 6 },
+      ],
+    };
+  },
+
+  getArticleAnalytics(articleUuid: string): ArticleAnalytics {
+    const article = this.getArticleByUuid(articleUuid);
+    const views = (article as any)?.views_count || 1250;
+
+    return {
+      article_uuid: articleUuid,
+      title: article?.title || 'Artículo periodístico',
+      slug: article?.slug || 'articulo-periodistico',
+      views_total: views,
+      views_24h: Math.round(views * 0.45),
+      views_7d: Math.round(views * 0.85),
+      unique_visitors_24h: Math.round(views * 0.38),
+      reads_count: Math.round(views * 0.65),
+      read_ratio: 65,
+      avg_read_time_seconds: 142,
+      shares_count: Math.round(views * 0.08),
+      push_clicks_count: Math.round(views * 0.12),
+      trend_score: 87,
+      growth_rate_percent: 24.5,
+      top_sources: [
+        { source: 'Directo / Portada', count: Math.round(views * 0.42), percentage: 42 },
+        { source: 'Web Push', count: Math.round(views * 0.28), percentage: 28 },
+        { source: 'Redes Sociales', count: Math.round(views * 0.18), percentage: 18 },
+        { source: 'Búsqueda Orgánica', count: Math.round(views * 0.12), percentage: 12 },
+      ],
+      top_devices: [
+        { device: 'mobile', count: Math.round(views * 0.74), percentage: 74 },
+        { device: 'desktop', count: Math.round(views * 0.21), percentage: 21 },
+        { device: 'tablet', count: Math.round(views * 0.05), percentage: 5 },
+      ],
+      last_calculated_at: new Date().toISOString(),
+    };
+  },
+
+  getTrendingArticles(limit: number = 5): TrendingArticle[] {
+    const articles = this.getArticles().filter((a) => a.status === 'PUBLISHED');
+    const sorted = [...articles].sort((a, b) => ((b as any).views_count || 0) - ((a as any).views_count || 0));
+
+    return sorted.slice(0, limit).map((a, i) => ({
+      article_uuid: a.article_uuid,
+      title: a.title,
+      slug: a.slug,
+      category_name: a.category_name || 'General',
+      category_slug: a.category_slug || 'general',
+      author_name: a.author_name || 'Redacción',
+      views_count: (a as any).views_count || 1200 - i * 150,
+      views_recent_3h: 340 - i * 45,
+      trend_score: Math.max(95 - i * 8, 40),
+      published_at: a.published_at || new Date().toISOString(),
+      featured_media: a.featured_media ? {
+        url: a.featured_media.url,
+        alt_text: a.featured_media.alt_text,
+      } : undefined,
+    }));
+  },
+
+  getMostReadArticles(limit: number = 5): MostReadArticle[] {
+    const articles = this.getArticles().filter((a) => a.status === 'PUBLISHED');
+    const sorted = [...articles].sort((a, b) => ((b as any).views_count || 0) - ((a as any).views_count || 0));
+
+    return sorted.slice(0, limit).map((a, i) => ({
+      article_uuid: a.article_uuid,
+      title: a.title,
+      slug: a.slug,
+      category_name: a.category_name || 'General',
+      category_slug: a.category_slug || 'general',
+      author_name: a.author_name || 'Redacción',
+      views_count: (a as any).views_count || 3400 - i * 400,
+      published_at: a.published_at || new Date().toISOString(),
+      featured_media: a.featured_media ? {
+        url: a.featured_media.url,
+        alt_text: a.featured_media.alt_text,
+      } : undefined,
+    }));
+  },
+
+  // ---------------------------------------------------------------------------
+  // Smart Push & Engagement Methods
+  // ---------------------------------------------------------------------------
+
+  getPushCandidates(): PushCandidate[] {
+    const dismissed = getItem<string[]>(KEYS.PUSH_CANDIDATES_DISMISSED, []);
+    const articles = this.getArticles().filter((a) => a.status === 'PUBLISHED');
+
+    const defaultCandidates: PushCandidate[] = [
+      {
+        candidate_id: 'cand-1',
+        article_uuid: articles[0]?.article_uuid || 'art-001',
+        title: articles[0]?.title || 'Avanza el plan de infraestructura vial regional',
+        slug: articles[0]?.slug || 'infraestructura-vial',
+        category_name: articles[0]?.category_name || 'Región',
+        trend_score: 94,
+        views_total: 4820,
+        views_recent_3h: 890,
+        growth_rate_percent: 180,
+        reason: 'Aceleración inusual de lecturas en los últimos 45 minutos (+180%).',
+        suggested_title: '🔴 ÚLTIMA HORA: Novedades clave en vialidad regional',
+        suggested_message: 'Conoce los detalles de las obras anunciadas para este mes.',
+        topic_id: 'breaking',
+        created_at: new Date().toISOString(),
+      },
+      {
+        candidate_id: 'cand-2',
+        article_uuid: articles[1]?.article_uuid || 'art-002',
+        title: articles[1]?.title || 'Nuevas medidas para el sector comercial en el centro',
+        slug: articles[1]?.slug || 'medidas-comercio',
+        category_name: articles[1]?.category_name || 'Economía',
+        trend_score: 82,
+        views_total: 3120,
+        views_recent_3h: 540,
+        growth_rate_percent: 95,
+        reason: 'Alto ratio de lectura completa (>74%) y compartidos en WhatsApp.',
+        suggested_title: 'Comercio central: Nuevas pautas operativas confirmadas',
+        suggested_message: 'Entérate cómo afectará la nueva ordenanza a los comerciantes locales.',
+        topic_id: 'economy',
+        created_at: new Date().toISOString(),
+      },
+    ];
+
+    return defaultCandidates.filter((c) => !dismissed.includes(c.candidate_id));
+  },
+
+  dispatchPushCampaign(payload: SendPushPayload): { success: boolean; campaign?: PushCampaign; error?: string } {
+    const campaigns = getItem<PushCampaign[]>(KEYS.PUSH_CAMPAIGNS, []);
+
+    const newCampaign: PushCampaign = {
+      campaign_uuid: `camp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      article_uuid: payload.article_uuid,
+      title: payload.title,
+      message: payload.message,
+      topic_id: payload.topic_id,
+      mode: payload.mode,
+      status: 'sent',
+      recipients_count: 1420,
+      clicks_count: 0,
+      ctr: 0,
+      sent_at: new Date().toISOString(),
+      reason: 'Despacho manual/inteligente aprobado por redacción',
+    };
+
+    campaigns.unshift(newCampaign);
+    setItem(KEYS.PUSH_CAMPAIGNS, campaigns);
+
+    const candidates = this.getPushCandidates();
+    const match = candidates.find((c) => c.article_uuid === payload.article_uuid);
+    if (match) {
+      this.dismissPushCandidate(match.candidate_id);
+    }
+
+    return {
+      success: true,
+      campaign: newCampaign,
+    };
+  },
+
+  dismissPushCandidate(candidateId: string): boolean {
+    const dismissed = getItem<string[]>(KEYS.PUSH_CANDIDATES_DISMISSED, []);
+    if (!dismissed.includes(candidateId)) {
+      dismissed.push(candidateId);
+      setItem(KEYS.PUSH_CANDIDATES_DISMISSED, dismissed);
+    }
+    return true;
+  },
+
+  getPushAnalyticsOverview(): PushAnalyticsOverview {
+    const campaigns = getItem<PushCampaign[]>(KEYS.PUSH_CAMPAIGNS, []);
+
+    const defaultRecent: PushCampaign[] = campaigns.length > 0 ? campaigns : [
+      {
+        campaign_uuid: 'camp-demo-1',
+        article_uuid: 'art-demo-1',
+        title: 'Alerta informativa: Actualización de transporte público',
+        message: 'Conoce los nuevos horarios y frecuencias anunciados para hoy.',
+        topic_id: 'breaking',
+        mode: 'editorial_breaking',
+        status: 'sent',
+        recipients_count: 3240,
+        clicks_count: 382,
+        ctr: 11.8,
+        sent_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+      },
+    ];
+
+    const totalSent = defaultRecent.reduce((acc, c) => acc + c.recipients_count, 0);
+    const totalClicks = defaultRecent.reduce((acc, c) => acc + c.clicks_count, 0);
+    const avgCtr = totalSent > 0 ? +((totalClicks / totalSent) * 100).toFixed(1) : 9.4;
+
+    return {
+      total_sent: totalSent || 8420,
+      total_delivered: totalSent ? Math.round(totalSent * 0.96) : 8080,
+      total_clicks: totalClicks || 790,
+      avg_ctr: avgCtr,
+      last_campaign_at: defaultRecent[0]?.sent_at || null,
+      global_cooldown_remaining_minutes: 0,
+      recent_campaigns: defaultRecent,
+    };
   },
 
   // ---------------------------------------------------------------------------

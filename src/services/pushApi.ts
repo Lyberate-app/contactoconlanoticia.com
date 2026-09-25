@@ -40,38 +40,45 @@ export async function getPushConfig(): Promise<PushConfig> {
   return res.data;
 }
 
+export interface PushApiResponse {
+  success: boolean;
+  message?: string;
+  error?: { message?: string };
+}
+
 /**
  * Register push subscription in backend.
  */
-export async function subscribeToPush(payload: SubscribePushPayload): Promise<unknown> {
+export async function subscribeToPush(payload: SubscribePushPayload): Promise<PushApiResponse> {
   if (isMockMode()) {
     mockStorage.subscribePush(payload);
     return { success: true, message: 'Suscripción Web Push registrada localmente.' };
   }
-  const res = await apiClient.post('/public/push/subscribe', payload);
+  const res = await apiClient.post<PushApiResponse>('/public/push/subscribe', payload);
   return res.data;
 }
 
 /**
  * Unsubscribe push endpoint in backend.
  */
-export async function unsubscribeFromPush(endpoint: string): Promise<unknown> {
+export async function unsubscribeFromPush(endpoint: string): Promise<PushApiResponse> {
   if (isMockMode()) {
     mockStorage.unsubscribePush(endpoint);
     return { success: true, message: 'Suscripción revocada localmente.' };
   }
-  const res = await apiClient.post('/public/push/unsubscribe', { endpoint });
+  const res = await apiClient.post<PushApiResponse>('/public/push/unsubscribe', { endpoint });
   return res.data;
 }
 
 /**
  * Update topic preferences for existing push subscription.
  */
-export async function updatePushPreferences(endpoint: string, topics: string[]): Promise<unknown> {
+export async function updatePushPreferences(endpoint: string, topics: string[]): Promise<PushApiResponse> {
   if (isMockMode()) {
     mockStorage.updatePushPreferences(endpoint, topics);
     return { success: true, message: 'Preferencias actualizadas localmente.' };
   }
-  const res = await apiClient.put('/public/push/preferences', { endpoint, topics });
+  const res = await apiClient.put<PushApiResponse>('/public/push/preferences', { endpoint, topics });
   return res.data;
 }
+

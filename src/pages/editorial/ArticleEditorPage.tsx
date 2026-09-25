@@ -7,6 +7,7 @@ import { MediaPickerModal } from '../../components/media/MediaPickerModal';
 import { EditorialToolbar } from '../../components/editorial/EditorialToolbar';
 import { ArticleLivePreviewModal } from '../../components/editorial/ArticleLivePreviewModal';
 import { OptimizedImage } from '../../components/common/OptimizedImage';
+import { compressAndResizeImage } from '../../utils/imageCompressor';
 import {
   Save,
   ArrowLeft,
@@ -21,6 +22,8 @@ import {
   Calendar,
   Check,
   Sparkles,
+  UploadCloud,
+  RefreshCw,
 } from 'lucide-react';
 
 export const ArticleEditorPage: React.FC = () => {
@@ -61,8 +64,78 @@ export const ArticleEditorPage: React.FC = () => {
 
   // UI State
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [isInlineMediaPickerOpen, setIsInlineMediaPickerOpen] = useState(false);
+  const [editorViewMode, setEditorViewMode] = useState<'write' | 'split' | 'preview'>('write');
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [compressingImage, setCompressingImage] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.startsWith('image/')) {
+        e.preventDefault();
+        const file = items[i].getAsFile();
+        if (!file) continue;
+
+        setCompressingImage(true);
+        try {
+          const res = await compressAndResizeImage(file, 1200, 0.82);
+          const caption = prompt('Pie de foto informativo para la imagen pegada:', 'Fotografía de la cobertura periodística') || 'Fotografía editorial';
+          const imageMarkdown = `\n\n![${caption}](${res.dataUrl})\n*${caption}*\n\n`;
+
+          const textarea = textareaRef.current;
+          if (textarea) {
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+            const updated = content.substring(0, start) + imageMarkdown + content.substring(end);
+            setContent(updated);
+            setTimeout(() => {
+              textarea.focus();
+              textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
+            }, 20);
+          } else {
+            setContent((prev) => prev + imageMarkdown);
+          }
+        } catch (err) {
+          console.error('Error al procesar imagen pegada:', err);
+        } finally {
+          setCompressingImage(false);
+        }
+        break;
+      }
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setIsDraggingOver(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0 && files[0].type.startsWith('image/')) {
+      const file = files[0];
+      setCompressingImage(true);
+      try {
+        const res = await compressAndResizeImage(file, 1200, 0.82);
+        const caption = prompt('Pie de foto opcional:', file.name.replace(/\.[^/.]+$/, '')) || 'Fotografía periodística';
+        const imageMarkdown = `\n\n![${caption}](${res.dataUrl})\n*${caption}*\n\n`;
+        setContent((prev) => prev + imageMarkdown);
+      } catch (err) {
+        console.error('Error al procesar imagen arrastrada:', err);
+      } finally {
+        setCompressingImage(false);
+      }
+    }
+  };
+
+  const handleInlineMediaSelected = (media: MediaItem) => {
+    const caption = media.caption || media.title || 'Fotografía editorial';
+    const imageMarkdown = `\n\n![${caption}](${media.url})\n*${caption}${media.credit ? ` • Foto: ${media.credit}` : ''}*\n\n`;
+    setContent((prev) => prev + imageMarkdown);
+    setIsInlineMediaPickerOpen(false);
+  };
 
   useEffect(() => {
     // Load taxonomy
@@ -432,35 +505,238 @@ export const ArticleEditorPage: React.FC = () => {
             />
           </div>
 
-          {/* Body Content with Toolbar */}
+          {/* Body Content with Toolbar and Live Visual Preview */}
           <div className="glass-card rounded-[28px] border border-white/60 dark:border-white/10 shadow-sm overflow-hidden">
-            <div className="px-6 py-3 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-stone-800/40 flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
-                Cuerpo del Artículo
-              </span>
-              <span className="text-[11px] text-stone-500 font-mono flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-stone-400" />
-                {wordCount} palabras &bull; ~{readingTimeMinutes} min de lectura
-              </span>
+            <div className="px-6 py-3 border-b border-black/5 dark:border-white/5 bg-white/40 dark:bg-stone-800/40 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-bold uppercase tracking-wider text-stone-700 dark:text-stone-300">
+                  Cuerpo del Artículo
+                </span>
+
+                {/* View Mode Selector Tabs */}
+                <div className="flex items-center bg-stone-100 dark:bg-stone-800 p-0.5 rounded-full text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setEditorViewMode('write')}
+                    className={`px-3 py-1 rounded-full font-semibold transition ${
+                      editorViewMode === 'write'
+                        ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-xs'
+                        : 'text-stone-500 hover:text-stone-900 dark:hover:text-stone-300'
+                    }`}
+                  >
+                    ✏️ Redactar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditorViewMode('split')}
+                    className={`px-3 py-1 rounded-full font-semibold transition hidden sm:inline-flex ${
+                      editorViewMode === 'split'
+                        ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-xs'
+                        : 'text-stone-500 hover:text-stone-900 dark:hover:text-stone-300'
+                    }`}
+                  >
+                    ⬛ Dividida
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditorViewMode('preview')}
+                    className={`px-3 py-1 rounded-full font-semibold transition ${
+                      editorViewMode === 'preview'
+                        ? 'bg-white dark:bg-stone-700 text-stone-900 dark:text-white shadow-xs'
+                        : 'text-stone-500 hover:text-stone-900 dark:hover:text-stone-300'
+                    }`}
+                  >
+                    👁️ Vista Final
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {compressingImage && (
+                  <span className="text-[11px] text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1 animate-pulse">
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    Comprimiendo imagen pegada...
+                  </span>
+                )}
+                <span className="text-[11px] text-stone-500 font-mono flex items-center gap-1">
+                  <Clock className="w-3.5 h-3.5 text-stone-400" />
+                  {wordCount} palabras &bull; ~{readingTimeMinutes} min
+                </span>
+              </div>
             </div>
 
             {/* Editorial Formatting Toolbar */}
-            <EditorialToolbar textareaRef={textareaRef} onContentChange={setContent} />
+            <EditorialToolbar
+              textareaRef={textareaRef}
+              onContentChange={setContent}
+              onOpenMediaPicker={() => setIsInlineMediaPickerOpen(true)}
+            />
 
-            <div className="p-4 sm:p-6 bg-white/30 dark:bg-stone-900/30">
-              <textarea
-                ref={textareaRef}
-                rows={16}
-                required
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="Desarrollo completo de la cobertura periodística..."
-                className="w-full text-base font-sans leading-relaxed text-stone-900 dark:text-stone-100 border border-black/10 dark:border-white/10 rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-stone-800 bg-white/70 dark:bg-stone-900/70"
-              />
-              <div className="mt-2 flex items-center justify-between text-[11px] text-stone-400">
-                <span>Soporta formato Markdown estructurado</span>
-                <span>{content.length} caracteres</span>
-              </div>
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDraggingOver(true);
+              }}
+              onDragLeave={() => setIsDraggingOver(false)}
+              onDrop={handleDrop}
+              className={`p-4 sm:p-6 bg-white/30 dark:bg-stone-900/30 relative transition-all ${
+                isDraggingOver ? 'ring-2 ring-rose-500 bg-rose-500/5' : ''
+              }`}
+            >
+              {isDraggingOver && (
+                <div className="absolute inset-0 z-30 bg-rose-900/10 backdrop-blur-xs border-2 border-dashed border-rose-600 rounded-2xl flex flex-col items-center justify-center pointer-events-none">
+                  <UploadCloud className="w-12 h-12 text-rose-600 animate-bounce" />
+                  <p className="font-bold text-sm text-rose-900 mt-2">Suelte la imagen aquí</p>
+                  <p className="text-xs text-rose-700">Se optimizará a máx 1200px y se insertará en el texto</p>
+                </div>
+              )}
+
+              {/* WRITE MODE */}
+              {editorViewMode === 'write' && (
+                <div>
+                  <textarea
+                    ref={textareaRef}
+                    rows={16}
+                    required
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    onPaste={handlePaste}
+                    placeholder="Desarrollo completo de la cobertura periodística... (Tip: Puede presionar Ctrl+V para pegar fotografías directamente o arrastrar imágenes aquí)."
+                    className="w-full text-base font-sans leading-relaxed text-stone-900 dark:text-stone-100 border border-black/10 dark:border-white/10 rounded-2xl p-4 focus:outline-none focus:ring-2 focus:ring-stone-800 bg-white/70 dark:bg-stone-900/70"
+                  />
+                  <div className="mt-2 flex items-center justify-between text-[11px] text-stone-400">
+                    <span>💡 Puede pegar imágenes con Ctrl+V o arrastrarlas al editor</span>
+                    <span>{content.length} caracteres</span>
+                  </div>
+                </div>
+              )}
+
+              {/* SPLIT VIEW MODE (DESKTOP) */}
+              {editorViewMode === 'split' && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block mb-1">
+                      Editor Markdown
+                    </span>
+                    <textarea
+                      ref={textareaRef}
+                      rows={18}
+                      required
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      onPaste={handlePaste}
+                      className="w-full h-full min-h-[400px] text-sm font-mono leading-relaxed text-stone-900 dark:text-stone-100 border border-black/10 dark:border-white/10 rounded-2xl p-3.5 focus:outline-none focus:ring-2 focus:ring-stone-800 bg-white/70 dark:bg-stone-900/70"
+                    />
+                  </div>
+                  <div className="border border-stone-200 dark:border-stone-800 rounded-2xl p-4 bg-white/90 dark:bg-stone-900/90 overflow-y-auto max-h-[500px]">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block mb-2">
+                      Resultado en Maqueta Final
+                    </span>
+                    <div className="prose prose-stone max-w-none text-stone-900 dark:text-stone-100 font-sans leading-relaxed text-sm space-y-3">
+                      {content.split('\n').map((line, idx) => {
+                        const imgMatch = line.match(/^!\[(.*?)\]\((.*?)\)$/);
+                        if (imgMatch) {
+                          return (
+                            <figure key={idx} className="my-4 rounded-xl overflow-hidden border border-stone-200 dark:border-stone-800 bg-stone-100 dark:bg-stone-800/40">
+                              <img src={imgMatch[2]} alt={imgMatch[1]} className="w-full max-h-[320px] object-cover" />
+                              {imgMatch[1] && (
+                                <figcaption className="p-2 text-xs text-stone-500 font-sans italic text-center">
+                                  {imgMatch[1]}
+                                </figcaption>
+                              )}
+                            </figure>
+                          );
+                        }
+                        if (line.startsWith('## ')) {
+                          return <h2 key={idx} className="text-lg font-bold font-serif text-stone-950 dark:text-white mt-4">{line.replace('## ', '')}</h2>;
+                        }
+                        if (line.startsWith('### ')) {
+                          return <h3 key={idx} className="text-base font-bold font-serif text-stone-900 dark:text-white mt-3">{line.replace('### ', '')}</h3>;
+                        }
+                        if (line.startsWith('> ')) {
+                          return (
+                            <blockquote key={idx} className="border-l-4 border-rose-700 pl-3 py-1 italic font-serif text-stone-800 dark:text-stone-200 bg-rose-500/5 rounded-r-lg text-xs">
+                              {line.replace('> ', '')}
+                            </blockquote>
+                          );
+                        }
+                        if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
+                          return <p key={idx} className="text-xs text-stone-500 italic -mt-1">{line.replace(/^\*|\*$/g, '')}</p>;
+                        }
+                        if (!line.trim()) return <div key={idx} className="h-1" />;
+                        return <p key={idx} className="text-stone-800 dark:text-stone-200 leading-relaxed text-xs">{line}</p>;
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* PREVIEW ONLY MODE */}
+              {editorViewMode === 'preview' && (
+                <div className="border border-stone-200 dark:border-stone-800 rounded-2xl p-6 bg-white dark:bg-stone-900">
+                  <div className="max-w-2xl mx-auto space-y-4">
+                    <h1 className="font-serif font-black text-2xl sm:text-3xl text-stone-950 dark:text-white leading-tight">
+                      {title || 'Titular de la Noticia'}
+                    </h1>
+                    {subtitle && (
+                      <p className="text-sm sm:text-base font-medium text-stone-600 dark:text-stone-300">
+                        {subtitle}
+                      </p>
+                    )}
+                    {featuredMedia?.url && (
+                      <figure className="rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800">
+                        <img src={featuredMedia.url} alt={featuredMedia.alt_text || title} className="w-full h-auto object-cover" />
+                        {featuredMedia.caption && (
+                          <figcaption className="p-3 text-xs text-stone-500 font-sans italic text-center bg-stone-50 dark:bg-stone-800">
+                            {featuredMedia.caption}
+                          </figcaption>
+                        )}
+                      </figure>
+                    )}
+                    {excerpt && (
+                      <p className="text-sm font-semibold text-stone-800 dark:text-stone-200 leading-relaxed border-l-2 border-stone-300 dark:border-stone-700 pl-3 italic">
+                        {excerpt}
+                      </p>
+                    )}
+                    <hr className="border-stone-200 dark:border-stone-800 my-4" />
+                    <div className="space-y-4">
+                      {content.split('\n').map((line, idx) => {
+                        const imgMatch = line.match(/^!\[(.*?)\]\((.*?)\)$/);
+                        if (imgMatch) {
+                          return (
+                            <figure key={idx} className="my-5 rounded-2xl overflow-hidden border border-stone-200 dark:border-stone-800">
+                              <img src={imgMatch[2]} alt={imgMatch[1]} className="w-full max-h-[460px] object-cover" />
+                              {imgMatch[1] && (
+                                <figcaption className="p-2.5 text-xs text-stone-500 font-sans italic text-center bg-stone-50 dark:bg-stone-800">
+                                  {imgMatch[1]}
+                                </figcaption>
+                              )}
+                            </figure>
+                          );
+                        }
+                        if (line.startsWith('## ')) {
+                          return <h2 key={idx} className="text-xl font-bold font-serif text-stone-950 dark:text-white mt-6">{line.replace('## ', '')}</h2>;
+                        }
+                        if (line.startsWith('### ')) {
+                          return <h3 key={idx} className="text-lg font-bold font-serif text-stone-900 dark:text-white mt-4">{line.replace('### ', '')}</h3>;
+                        }
+                        if (line.startsWith('> ')) {
+                          return (
+                            <blockquote key={idx} className="border-l-4 border-rose-700 pl-4 py-2 italic font-serif text-stone-800 dark:text-stone-200 bg-rose-500/5 rounded-r-xl">
+                              {line.replace('> ', '')}
+                            </blockquote>
+                          );
+                        }
+                        if (line.startsWith('*') && line.endsWith('*') && !line.startsWith('**')) {
+                          return <p key={idx} className="text-xs text-stone-500 italic -mt-2">{line.replace(/^\*|\*$/g, '')}</p>;
+                        }
+                        if (!line.trim()) return <div key={idx} className="h-2" />;
+                        return <p key={idx} className="text-stone-800 dark:text-stone-200 leading-relaxed font-sans text-sm">{line}</p>;
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -714,12 +990,20 @@ export const ArticleEditorPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Media Picker Modal */}
+      {/* Media Picker Modal for Featured Image */}
       <MediaPickerModal
         isOpen={isMediaPickerOpen}
         onClose={() => setIsMediaPickerOpen(false)}
         onSelect={handleMediaSelected}
         selectedMediaUuid={featuredMediaUuid}
+      />
+
+      {/* Inline Body Media Picker Modal */}
+      <MediaPickerModal
+        isOpen={isInlineMediaPickerOpen}
+        onClose={() => setIsInlineMediaPickerOpen(false)}
+        onSelect={handleInlineMediaSelected}
+        title="Insertar Fotografía en el Cuerpo del Artículo"
       />
 
       {/* Live Preview Modal */}

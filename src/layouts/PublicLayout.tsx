@@ -13,6 +13,8 @@ import {
   Compass,
   Sparkles,
   ChevronRight,
+  Zap,
+  Clock,
 } from 'lucide-react';
 import { publicApi, PublicCategory, PublicArticleSummary } from '../services/publicApi';
 import { PwaManager } from '../components/common/PwaManager';
@@ -30,6 +32,8 @@ export const PublicLayout: React.FC = () => {
   const { settings } = useSettings();
   const [categories, setCategories] = useState<PublicCategory[]>([]);
   const [breakingNews, setBreakingNews] = useState<PublicArticleSummary[]>([]);
+  const [recentFeed, setRecentFeed] = useState<PublicArticleSummary[]>([]);
+  const [latestNewsOpen, setLatestNewsOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,6 +61,9 @@ export const PublicLayout: React.FC = () => {
       .then(feed => {
         if (feed.breaking_news && feed.breaking_news.length > 0) {
           setBreakingNews(feed.breaking_news);
+        }
+        if (feed.latest_articles && feed.latest_articles.length > 0) {
+          setRecentFeed(feed.latest_articles);
         }
       })
       .catch(() => {});
@@ -90,33 +97,6 @@ export const PublicLayout: React.FC = () => {
 
   return (
     <div className="min-h-screen text-stone-900 font-sans flex flex-col antialiased selection:bg-rose-500/20 selection:text-rose-950 ambient-glow-mesh relative">
-      {/* 1. iOS DYNAMIC ISLAND BREAKING NEWS CAPSULE (TOP FLOATING) */}
-      {settings.features.showBreakingNewsTicker && breakingNews.length > 0 && (
-        <div className="sticky top-2 z-50 px-3 sm:px-6 pointer-events-none flex justify-center">
-          <div className="pointer-events-auto max-w-xl w-full glass-pill-dark text-white text-xs px-3.5 py-1.5 rounded-full flex items-center gap-2.5 shadow-2xl transition-all duration-300 hover:scale-[1.01]">
-            <span className="flex items-center gap-1.5 shrink-0 bg-rose-600/90 text-white font-bold text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full shadow-inner">
-              <span className="w-1.5 h-1.5 rounded-full bg-white radar-pulse"></span>
-              En Vivo
-            </span>
-
-            <div className="truncate flex-1 min-w-0">
-              <Link
-                to={`/noticia/${breakingNews[0].slug}`}
-                className="text-stone-200 hover:text-white transition-colors truncate block text-[11px] sm:text-xs"
-              >
-                {breakingNews[0].title}
-              </Link>
-            </div>
-
-            {breakingNews.length > 1 && (
-              <span className="text-[10px] text-stone-400 font-medium shrink-0 hidden sm:inline">
-                +{breakingNews.length - 1} más
-              </span>
-            )}
-          </div>
-        </div>
-      )}
-
       {/* 2. STICKY FROSTED GLASS HEADER (iOS 27 Glass) */}
       <header
         className={`sticky top-0 z-40 transition-all duration-300 ${
@@ -379,7 +359,7 @@ export const PublicLayout: React.FC = () => {
         aria-label="Navegación Móvil"
         className="fixed bottom-3 inset-x-3 sm:inset-x-6 z-40 md:hidden pointer-events-none flex justify-center"
       >
-        <div className="pointer-events-auto glass-dock rounded-[28px] px-3 py-2 flex items-center justify-between w-full max-w-md shadow-2xl">
+        <div className="pointer-events-auto bg-white/98 border border-stone-200/90 rounded-[28px] px-3 py-2 flex items-center justify-between w-full max-w-md shadow-2xl">
           {/* 1. Portada */}
           <Link
             to="/"
@@ -409,17 +389,18 @@ export const PublicLayout: React.FC = () => {
             )}
           </button>
 
-          {/* 3. Action Center: Envíanos Noticia */}
-          <Link
-            to="/enviar-noticia"
-            className="flex flex-col items-center justify-center -mt-4 group"
-            title="Enviar noticia o denuncia"
+          {/* 3. Action Center: Rayo ⚡ Últimas Noticias al Minuto */}
+          <button
+            type="button"
+            onClick={() => setLatestNewsOpen(true)}
+            className="flex flex-col items-center justify-center -mt-4 group cursor-pointer"
+            title="Ver últimas noticias al minuto"
           >
-            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-rose-800 to-rose-600 text-white flex items-center justify-center shadow-lg shadow-rose-900/30 group-active:scale-90 transition-transform">
-              <Send className="w-5 h-5" />
+            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-500 via-rose-600 to-rose-700 text-white flex items-center justify-center shadow-lg shadow-rose-900/30 group-active:scale-90 transition-transform">
+              <Zap className="w-6 h-6 fill-white text-white" />
             </div>
-            <span className="text-[9px] font-bold text-stone-700 mt-0.5">Reportar</span>
-          </Link>
+            <span className="text-[10px] font-bold text-rose-800 mt-0.5">Al Minuto</span>
+          </button>
 
           {/* 4. Buscar */}
           <button
@@ -611,6 +592,86 @@ export const PublicLayout: React.FC = () => {
                   </button>
                 ))}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 10. ÚLTIMAS NOTICIAS AL MINUTO (DRAWER DESDE EL RAYO ⚡) */}
+      {latestNewsOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setLatestNewsOpen(false)}
+          ></div>
+
+          <div className="relative w-full max-w-xl max-h-[85vh] bg-white border-t border-stone-200 text-stone-900 rounded-t-[32px] p-5 overflow-y-auto z-10 shadow-2xl animate-in slide-in-from-bottom duration-300">
+            {/* Grab Handle */}
+            <div className="w-12 h-1.5 bg-stone-300 rounded-full mx-auto mb-4"></div>
+
+            <div className="flex items-center justify-between pb-3 border-b border-stone-100 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-rose-600 flex items-center justify-center text-white shadow-md">
+                  <Zap className="w-4 h-4 fill-white text-white" />
+                </span>
+                <div>
+                  <h3 className="font-serif font-black text-stone-950 text-base leading-tight">
+                    Últimas Noticias al Minuto
+                  </h3>
+                  <p className="text-[11px] text-rose-700 font-medium flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600 animate-pulse"></span>
+                    Transmisión y cobertura informativa continua
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLatestNewsOpen(false)}
+                className="w-8 h-8 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-600 hover:text-stone-900 flex items-center justify-center transition cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* News Chronological List */}
+            <div className="space-y-3">
+              {(recentFeed.length > 0 ? recentFeed : breakingNews).map((art, idx) => (
+                <Link
+                  key={art.article_uuid || idx}
+                  to={`/noticia/${art.slug}`}
+                  onClick={() => setLatestNewsOpen(false)}
+                  className="block p-3.5 rounded-2xl bg-stone-50 hover:bg-rose-50/50 border border-stone-200/70 hover:border-rose-300 transition group"
+                >
+                  <div className="flex items-center justify-between gap-2 mb-1.5">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-rose-800 bg-rose-100 px-2 py-0.5 rounded-full">
+                      {art.category_name}
+                    </span>
+                    <span className="text-[10px] text-stone-500 font-mono flex items-center gap-1">
+                      <Clock className="w-3 h-3 text-stone-400" />
+                      {art.published_at ? new Date(art.published_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }) : 'Reciente'}
+                    </span>
+                  </div>
+                  <h4 className="font-serif font-bold text-sm text-stone-900 group-hover:text-rose-900 transition-colors line-clamp-2 leading-snug">
+                    {art.title}
+                  </h4>
+                  {art.excerpt && (
+                    <p className="text-xs text-stone-600 line-clamp-1 mt-1 font-sans">
+                      {art.excerpt}
+                    </p>
+                  )}
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-stone-100 text-center">
+              <Link
+                to="/"
+                onClick={() => setLatestNewsOpen(false)}
+                className="inline-flex items-center gap-1 text-xs font-bold text-rose-700 hover:text-rose-900 transition"
+              >
+                <span>Ver toda la portada del periódico</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
           </div>
         </div>

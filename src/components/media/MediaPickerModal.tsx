@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { mediaService } from '../../services/mediaApi';
 import { MediaItem } from '../../types/media';
-import { Search, Upload, Check, X, Image as ImageIcon, Link as LinkIcon, RefreshCw } from 'lucide-react';
+import { compressAndResizeImage } from '../../utils/imageCompressor';
+import { Search, Upload, Check, X, Image as ImageIcon, Link as LinkIcon, RefreshCw, Sparkles } from 'lucide-react';
 
 interface MediaPickerModalProps {
   isOpen: boolean;
@@ -32,6 +33,8 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
   const [uploadCredit, setUploadCredit] = useState('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [compressing, setCompressing] = useState(false);
+  const [compressionStats, setCompressionStats] = useState<string | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
   const loadMedia = async () => {
@@ -255,21 +258,58 @@ export const MediaPickerModal: React.FC<MediaPickerModalProps> = ({
 
               {/* Local File Selection */}
               <div>
-                <label className="block text-xs font-semibold text-stone-700 dark:text-stone-300 mb-1">
-                  Opción 1: Archivo Local (JPEG, PNG, WebP)
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-stone-700 dark:text-stone-300">
+                    Opción 1: Archivo Local (JPEG, PNG, WebP)
+                  </label>
+                  <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    Auto-optimización máx 1200px
+                  </span>
+                </div>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp,image/avif"
-                  onChange={(e) => {
+                  onChange={async (e) => {
                     const f = e.target.files?.[0] || null;
-                    setSelectedFile(f);
-                    if (f && !uploadTitle) {
-                      setUploadTitle(f.name.replace(/\.[^/.]+$/, ''));
+                    if (!f) {
+                      setSelectedFile(null);
+                      setCompressionStats(null);
+                      return;
+                    }
+                    setCompressing(true);
+                    try {
+                      const res = await compressAndResizeImage(f, 1200, 0.82);
+                      setSelectedFile(res.file);
+                      const origKb = Math.round(res.originalSizeBytes / 1024);
+                      const compKb = Math.round(res.compressedSizeBytes / 1024);
+                      setCompressionStats(`Imagen optimizada a ${res.width}×${res.height}px: ${origKb} KB → ${compKb} KB (Ahorro del ${res.savingsPercent}%)`);
+                      if (!uploadTitle) {
+                        setUploadTitle(f.name.replace(/\.[^/.]+$/, ''));
+                      }
+                    } catch (err) {
+                      console.error('Error al comprimir:', err);
+                      setSelectedFile(f);
+                    } finally {
+                      setCompressing(false);
                     }
                   }}
                   className="w-full text-xs text-stone-600 dark:text-stone-400 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-stone-900 file:text-white hover:file:bg-stone-800 cursor-pointer"
                 />
+
+                {compressing && (
+                  <p className="mt-1.5 text-xs text-stone-400 animate-pulse flex items-center gap-1.5">
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    Optimizando dimensiones y comprimiendo en WebP...
+                  </p>
+                )}
+
+                {compressionStats && !compressing && (
+                  <div className="mt-2 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-2">
+                    <Check className="w-4 h-4 text-emerald-600 shrink-0" />
+                    <span>{compressionStats}</span>
+                  </div>
+                )}
               </div>
 
               <div className="text-center text-xs text-stone-400 font-semibold">— O BIEN —</div>
