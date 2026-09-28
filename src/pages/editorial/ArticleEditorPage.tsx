@@ -7,7 +7,7 @@ import { MediaPickerModal } from '../../components/media/MediaPickerModal';
 import { EditorialToolbar } from '../../components/editorial/EditorialToolbar';
 import { ArticleLivePreviewModal } from '../../components/editorial/ArticleLivePreviewModal';
 import { OptimizedImage } from '../../components/common/OptimizedImage';
-import { compressAndResizeImage } from '../../utils/imageCompressor';
+import { mediaService } from '../../services/mediaApi';
 import {
   Save,
   ArrowLeft,
@@ -71,6 +71,20 @@ export const ArticleEditorPage: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
+  const uploadInlineImage = async (file: File, caption: string) => {
+    const result = await mediaService.uploadMedia({
+      file,
+      title: caption,
+      alt_text: caption,
+      caption,
+      credit: 'Contacto con la Noticia',
+    });
+    if (!result.success || !result.data?.media) {
+      throw new Error(result.error?.message || 'No se pudo guardar la imagen en la biblioteca.');
+    }
+    return result.data.media;
+  };
+
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const items = e.clipboardData?.items;
     if (!items) return;
@@ -83,9 +97,9 @@ export const ArticleEditorPage: React.FC = () => {
 
         setCompressingImage(true);
         try {
-          const res = await compressAndResizeImage(file, 1200, 0.82);
           const caption = prompt('Pie de foto informativo para la imagen pegada:', 'Fotografía de la cobertura periodística') || 'Fotografía editorial';
-          const imageMarkdown = `\n\n![${caption}](${res.dataUrl})\n*${caption}*\n\n`;
+          const media = await uploadInlineImage(file, caption);
+          const imageMarkdown = `\n\n![${media.alt_text || caption}](${media.url})\n*${caption}*\n\n`;
 
           const textarea = textareaRef.current;
           if (textarea) {
@@ -102,6 +116,7 @@ export const ArticleEditorPage: React.FC = () => {
           }
         } catch (err) {
           console.error('Error al procesar imagen pegada:', err);
+          setMessage({ type: 'error', text: err instanceof Error ? err.message : 'No se pudo insertar la imagen.' });
         } finally {
           setCompressingImage(false);
         }
@@ -118,12 +133,20 @@ export const ArticleEditorPage: React.FC = () => {
       const file = files[0];
       setCompressingImage(true);
       try {
-        const res = await compressAndResizeImage(file, 1200, 0.82);
         const caption = prompt('Pie de foto opcional:', file.name.replace(/\.[^/.]+$/, '')) || 'Fotografía periodística';
-        const imageMarkdown = `\n\n![${caption}](${res.dataUrl})\n*${caption}*\n\n`;
-        setContent((prev) => prev + imageMarkdown);
+        const media = await uploadInlineImage(file, caption);
+        const imageMarkdown = `\n\n![${media.alt_text || caption}](${media.url})\n*${caption}*\n\n`;
+        const textarea = textareaRef.current;
+        if (textarea) {
+          const start = textarea.selectionStart;
+          const end = textarea.selectionEnd;
+          setContent((prev) => prev.slice(0, start) + imageMarkdown + prev.slice(end));
+        } else {
+          setContent((prev) => prev + imageMarkdown);
+        }
       } catch (err) {
         console.error('Error al procesar imagen arrastrada:', err);
+        setMessage({ type: 'error', text: err instanceof Error ? err.message : 'No se pudo insertar la imagen.' });
       } finally {
         setCompressingImage(false);
       }
@@ -133,7 +156,18 @@ export const ArticleEditorPage: React.FC = () => {
   const handleInlineMediaSelected = (media: MediaItem) => {
     const caption = media.caption || media.title || 'Fotografía editorial';
     const imageMarkdown = `\n\n![${caption}](${media.url})\n*${caption}${media.credit ? ` • Foto: ${media.credit}` : ''}*\n\n`;
-    setContent((prev) => prev + imageMarkdown);
+    const textarea = textareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      setContent((prev) => prev.slice(0, start) + imageMarkdown + prev.slice(end));
+      window.setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
+      }, 0);
+    } else {
+      setContent((prev) => prev + imageMarkdown);
+    }
     setIsInlineMediaPickerOpen(false);
   };
 

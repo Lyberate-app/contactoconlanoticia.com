@@ -17,13 +17,17 @@ import {
   ExternalLink,
   Menu,
   X,
+  Users,
+  TrendingUp,
+  BarChart3,
+  Share2,
 } from 'lucide-react';
 import { authService, AuthUser } from '../services/auth';
 import { useSettings } from '../context/SettingsContext';
 
 interface EditorialLayoutProps {
   children?: React.ReactNode;
-  activeTab?: 'dashboard' | 'articles' | 'new' | 'media' | 'ads' | 'submissions' | 'settings';
+  activeTab?: 'dashboard' | 'articles' | 'new' | 'media' | 'ads' | 'submissions' | 'settings' | 'users' | 'marketing' | 'analytics' | 'integrations';
 }
 
 interface NavItemDef {
@@ -153,11 +157,35 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
           label: 'Buzón Ciudadano',
           isActiveOverride: activeTab ? activeTab === 'submissions' : undefined,
         },
+            {
+              to: '/admin/marketing',
+              icon: TrendingUp,
+              label: 'Marketing y SEO',
+              isActiveOverride: activeTab ? activeTab === 'marketing' : undefined,
+            },
+            {
+              to: '/admin/analytics',
+              icon: BarChart3,
+              label: 'Estadísticas',
+              isActiveOverride: activeTab ? activeTab === 'analytics' : undefined,
+            },
+            {
+              to: '/admin/integrations',
+              icon: Share2,
+              label: 'Integraciones',
+              isActiveOverride: activeTab ? activeTab === 'integrations' : undefined,
+            },
       ],
     },
     {
       title: 'Sistema',
       items: [
+            {
+              to: '/admin/users',
+              icon: Users,
+              label: 'Usuarios y Roles',
+              isActiveOverride: activeTab ? activeTab === 'users' : undefined,
+            },
         {
           to: '/admin/settings',
           icon: Settings,
@@ -334,7 +362,7 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
           DESKTOP FLOATING STICKY SIDEBAR (COLLAPSIBLE / EXPANDABLE)
           ========================================================================= */}
       <aside
-        className={`hidden lg:flex flex-col shrink-0 sticky top-4 left-4 h-[calc(100dvh-2rem)] my-4 ml-4 z-30 bg-white/95 backdrop-blur-xl border border-stone-200/90 shadow-xl shadow-stone-900/5 rounded-[32px] transition-[width,padding] duration-300 ease-in-out select-none ${
+        className={`editorial-sidebar hidden lg:flex flex-col shrink-0 sticky top-4 left-4 h-[calc(100dvh-2rem)] my-4 ml-4 z-30 bg-white border border-stone-200/90 shadow-xl shadow-stone-900/5 rounded-[32px] transition-[width,padding] duration-300 ease-in-out select-none ${
           isCollapsed ? 'w-[78px] px-2.5 py-4' : 'w-[272px] p-4'
         }`}
       >

@@ -247,10 +247,16 @@ export const mockStorage = {
   // ---------------------------------------------------------------------------
 
   getAds(): AdCampaign[] {
-    const stored = getItem<AdCampaign[]>(KEYS.ADS, []);
+    let stored = getItem<AdCampaign[]>(KEYS.ADS, []);
     if (!stored || stored.length === 0) {
       setItem(KEYS.ADS, MOCK_ADS);
       return MOCK_ADS;
+    }
+    const existingIds = new Set(stored.map((ad) => ad.campaign_uuid));
+    const missing = MOCK_ADS.filter((ad) => !existingIds.has(ad.campaign_uuid));
+    if (missing.length > 0) {
+      stored = [...missing, ...stored];
+      setItem(KEYS.ADS, stored);
     }
     return stored;
   },
@@ -500,10 +506,12 @@ export const mockStorage = {
       filename = payload.file.name;
       mime_type = payload.file.type || 'image/jpeg';
       filesize_bytes = payload.file.size || 350000;
-      try {
-        url = URL.createObjectURL(payload.file);
-      } catch {
-        url = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80';
+      if (!url?.startsWith('data:')) {
+        try {
+          url = URL.createObjectURL(payload.file);
+        } catch {
+          url = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80';
+        }
       }
     } else if (!url) {
       url = 'https://images.unsplash.com/photo-1585829365295-ab7cd400c167?auto=format&fit=crop&w=1200&q=80';

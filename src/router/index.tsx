@@ -22,6 +22,10 @@ const MediaLibraryPage = React.lazy(() => import('../pages/editorial/MediaLibrar
 const AdCampaignsPage = React.lazy(() => import('../pages/editorial/AdCampaignsPage').then(m => ({ default: m.AdCampaignsPage })));
 const SubmissionsModerationPage = React.lazy(() => import('../pages/editorial/SubmissionsModerationPage').then(m => ({ default: m.SubmissionsModerationPage })));
 const SettingsPage = React.lazy(() => import('../pages/editorial/SettingsPage').then(m => ({ default: m.SettingsPage })));
+const MarketingHubPage = React.lazy(() => import('../pages/editorial/MarketingHubPage').then(m => ({ default: m.MarketingHubPage })));
+const UsersManagementPage = React.lazy(() => import('../pages/editorial/UsersManagementPage').then(m => ({ default: m.UsersManagementPage })));
+const IntegrationsPage = React.lazy(() => import('../pages/editorial/IntegrationsPage').then(m => ({ default: m.IntegrationsPage })));
+const AnalyticsPage = React.lazy(() => import('../pages/editorial/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 
 const LoadingFallback: React.FC = () => (
   <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center">
@@ -242,6 +246,38 @@ export const router = createBrowserRouter([
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <SettingsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'marketing',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <MarketingHubPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'users',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <UsersManagementPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'integrations',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <IntegrationsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'analytics',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <AnalyticsPage />
           </Suspense>
         ),
       },

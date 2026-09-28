@@ -112,6 +112,9 @@
 | `GET` | `/api/v1/admin/media/{uuid}` | Fase 7 | `IMPLEMENTED` | Detalle de imagen con sus variantes generadas, dimensiones y metadatos. |
 | `PUT` | `/api/v1/admin/media/{uuid}` | Fase 7 | `IMPLEMENTED` | Actualización de metadatos editoriales (alt_text, caption, credit). |
 | `DELETE` | `/api/v1/admin/media/{uuid}` | Fase 7 | `IMPLEMENTED` | Eliminación de imagen, borrado físico de archivos en disco y cascada en base de datos. |
+| `GET` | `/api/v1/admin/users` | Pendiente | `PLANNED` | Listado paginado de usuarios y roles RBAC del tenant activo. |
+| `POST` | `/api/v1/admin/users` | Pendiente | `PLANNED` | Creación de usuario editorial con asignación de rol y estado. |
+| `PUT` | `/api/v1/admin/users/{uuid}` | Pendiente | `PLANNED` | Actualización de nombre, correo, rol y estado; autorización validada en servidor. |
 | `GET` | `/api/v1/admin/ads` | Fase 11 | `IMPLEMENTED` | Listado administrativo de campañas con métricas de impresiones, clics y CTR (`ads.manage`). |
 | `POST` | `/api/v1/admin/ads` | Fase 11 | `IMPLEMENTED` | Creación y validación de nueva campaña publicitaria (`ads.manage`). |
 | `GET` | `/api/v1/admin/ads/{uuid}` | Fase 11 | `IMPLEMENTED` | Detalle administrativo de campaña con imagen vinculada y CTR (`ads.manage`). |
@@ -136,6 +139,14 @@
 |---|---|---|---|---|
 | `POST` | `/api/v1/integrations/espocrm/webhook` | Fase 16 | `PLANNED` | Recepción de eventos con firma HMAC. |
 | `GET` | `/api/v1/integrations/espocrm/heartbeat` | Fase 16 | `PLANNED` | Verificación de estado de integración. |
+
+### Publicación Automática en Redes Sociales
+| Método | Endpoint | Estado | Descripción |
+|---|---|---|---|
+| `GET` | `/api/v1/admin/integrations/publications` | `PLANNED` | Estado de las cuentas sociales conectadas; nunca devuelve tokens. |
+| `POST` | `/api/v1/admin/integrations/publications/{provider}/connect` | `PLANNED` | Inicia OAuth en servidor y devuelve una URL de autorización de corta duración. |
+| `PUT` | `/api/v1/admin/integrations/publications/{provider}/settings` | `PLANNED` | Configura la publicación automática para una cuenta autorizada. |
+| `DELETE` | `/api/v1/admin/integrations/publications/{provider}` | `PLANNED` | Revoca la conexión social y elimina credenciales almacenadas en servidor. |
 
 ### Marca Blanca & Configuración del Sistema (Settings)
 | Método | Endpoint | Fase | Estado | Descripción |

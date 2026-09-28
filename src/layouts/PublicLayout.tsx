@@ -359,7 +359,7 @@ export const PublicLayout: React.FC = () => {
         aria-label="Navegación Móvil"
         className="fixed bottom-3 inset-x-3 sm:inset-x-6 z-40 md:hidden pointer-events-none flex justify-center"
       >
-        <div className="pointer-events-auto bg-white/98 border border-stone-200/90 rounded-[28px] px-3 py-2 flex items-center justify-between w-full max-w-md shadow-2xl">
+        <div className="pointer-events-auto bg-white border border-stone-200 rounded-[28px] px-3 py-2 flex items-center justify-between w-full max-w-md shadow-xl">
           {/* 1. Portada */}
           <Link
             to="/"

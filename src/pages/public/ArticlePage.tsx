@@ -45,6 +45,67 @@ interface CommentItem {
   likes: number;
 }
 
+function renderInlineMarkup(text: string): React.ReactNode[] {
+  return text.split(/(\*\*[^*]+\*\*|~~[^~]+~~|\*[^*]+\*)/g).map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return <strong key={index}>{part.slice(2, -2)}</strong>;
+    }
+    if (part.startsWith('~~') && part.endsWith('~~')) {
+      return <del key={index}>{part.slice(2, -2)}</del>;
+    }
+    if (part.startsWith('*') && part.endsWith('*')) {
+      return <em key={index}>{part.slice(1, -1)}</em>;
+    }
+    return part;
+  });
+}
+
+function renderArticleContent(content: string): React.ReactNode[] {
+  const normalizedContent = content.replace(/(!\[[^\]]*\]\([^)]+\))\n(\*[^*\n]+\*)/g, '$1\n\n$2');
+  const blocks = normalizedContent.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
+  const middleIndex = Math.max(1, Math.floor(blocks.length / 2));
+  const rendered: React.ReactNode[] = [];
+
+  for (let index = 0; index < blocks.length; index += 1) {
+    const block = blocks[index];
+    const imageMatch = block.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+|\/[^\s)]*)\)$/);
+
+    if (imageMatch) {
+      const captionMatch = blocks[index + 1]?.match(/^\*([^*]+)\*$/);
+      rendered.push(
+        <OptimizedImage
+          key={`image-${index}`}
+          src={imageMatch[2]}
+          alt={imageMatch[1] || 'Fotografía de la noticia'}
+          caption={captionMatch?.[1] || null}
+          aspectRatio="16/9"
+          className="w-full rounded-lg"
+        />
+      );
+      if (captionMatch) index += 1;
+    } else if (block.startsWith('### ')) {
+      rendered.push(<h3 key={index} className="text-lg font-bold text-stone-900">{renderInlineMarkup(block.slice(4))}</h3>);
+    } else if (block.startsWith('## ')) {
+      rendered.push(<h2 key={index} className="pt-2 text-xl font-bold text-stone-950">{renderInlineMarkup(block.slice(3))}</h2>);
+    } else if (block.startsWith('> ')) {
+      rendered.push(<blockquote key={index} className="border-l-4 border-rose-700 pl-4 font-serif italic text-stone-700">{renderInlineMarkup(block.slice(2))}</blockquote>);
+    } else {
+      const isDropCap = index === 0;
+      rendered.push(
+        <p key={index} className="leading-relaxed">
+          {isDropCap && block.length > 0 ? <><span className="float-left pr-2 pt-1 text-4xl font-black leading-none text-rose-950 sm:text-5xl">{block.charAt(0)}</span>{renderInlineMarkup(block.slice(1))}</> : renderInlineMarkup(block)}
+        </p>
+      );
+    }
+
+    if (index === middleIndex && blocks.length > 2) {
+      rendered.push(<AdSlot key={`ad-${index}`} placement="ARTICLE_MIDDLE" />);
+    }
+  }
+
+  return rendered;
+}
+
 export const ArticlePage: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
   const [article, setArticle] = useState<PublicArticleDetail | null>(null);
@@ -505,43 +566,7 @@ export const ArticlePage: React.FC = () => {
 
         {/* Rich article paragraphs with drop cap on first letter */}
         <div className={`text-stone-900 font-serif space-y-5 ${fontSizes[fontSizeIndex]}`}>
-          {(() => {
-            const paragraphs = article.content.split('\n\n').filter(p => p.trim().length > 0);
-            const middleIndex = Math.max(1, Math.floor(paragraphs.length / 2));
-
-            return paragraphs.map((paragraph, idx) => {
-              const trimmed = paragraph.trim();
-              const isDropCap = idx === 0;
-              const isMiddle = idx === middleIndex && paragraphs.length > 2;
-
-              let contentEl: React.ReactNode = null;
-              if (isDropCap) {
-                const firstLetter = trimmed.charAt(0);
-                const rest = trimmed.slice(1);
-                contentEl = (
-                  <p key={idx} className="leading-relaxed">
-                    <span className="float-left text-4xl sm:text-5xl font-black font-serif leading-none pr-2 pt-1 text-rose-950">
-                      {firstLetter}
-                    </span>
-                    {rest}
-                  </p>
-                );
-              } else {
-                contentEl = <p key={idx}>{trimmed}</p>;
-              }
-
-              if (isMiddle) {
-                return (
-                  <React.Fragment key={idx}>
-                    {contentEl}
-                    <AdSlot placement="ARTICLE_MIDDLE" />
-                  </React.Fragment>
-                );
-              }
-
-              return contentEl;
-            });
-          })()}
+          {renderArticleContent(article.content)}
         </div>
 
         {/* 7. TAGS CLOUD (GLASS PILLS) */}

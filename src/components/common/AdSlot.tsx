@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getActiveAds, recordAdImpression, recordAdClick, PublicAd } from '../../services/adsApi';
+import { isMockMode } from '../../config/env';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 export type AdPlacement =
@@ -131,8 +132,9 @@ export const AdSlot: React.FC<AdSlotProps> = ({
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className="flex items-center justify-between px-1 mb-1">
-        <span className="text-[9px] font-mono tracking-widest text-stone-400 dark:text-stone-500 uppercase flex items-center gap-1">
+        <span className="text-[9px] font-mono tracking-widest text-stone-500 uppercase flex items-center gap-1">
           <span>Publicidad</span>
+          {isMockMode() && <span className="rounded-sm bg-amber-100 px-1.5 py-0.5 font-sans font-bold tracking-normal text-amber-900">Demo</span>}
           {ads.length > 1 && (
             <span className="text-stone-300 dark:text-stone-600 font-sans">
               &bull; Anuncio {currentIndex + 1} de {ads.length}
@@ -177,7 +179,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
                 src={currentAd.media_url}
                 alt={currentAd.media_alt || currentAd.campaign_name || 'Anuncio publicitario'}
                 loading="lazy"
-                className="w-full h-auto object-cover group-hover:scale-[1.01] transition-transform duration-500"
+                className={`w-full object-cover group-hover:scale-[1.01] transition-transform duration-500 ${placement === 'HEADER_BANNER' ? 'h-24 sm:h-28' : 'h-auto'}`}
               />
             </div>
           ) : (

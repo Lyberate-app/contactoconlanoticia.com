@@ -32,6 +32,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
   const [compressing, setCompressing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectionRef = useRef<{ start: number; end: number } | null>(null);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -54,8 +55,9 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
     const textarea = textareaRef.current;
     if (!textarea) return;
 
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
+    const start = selectionRef.current?.start ?? textarea.selectionStart;
+    const end = selectionRef.current?.end ?? textarea.selectionEnd;
+    selectionRef.current = null;
     const currentVal = textarea.value;
 
     const selectedText = currentVal.substring(start, end) || defaultText;
@@ -123,7 +125,21 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
     'w-8 h-8 rounded-xl text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all flex items-center justify-center cursor-pointer';
 
   return (
-    <div className="flex flex-wrap items-center gap-1 p-2 bg-white/80 dark:bg-stone-800/80 backdrop-blur-md border border-white/60 dark:border-white/10 rounded-t-[22px] border-b-0 text-xs relative">
+    <div
+      onPointerDown={(event) => {
+        if ((event.target as HTMLElement).closest('button')) {
+          const textarea = textareaRef.current;
+          if (textarea) {
+            selectionRef.current = {
+              start: textarea.selectionStart,
+              end: textarea.selectionEnd,
+            };
+          }
+          event.preventDefault();
+        }
+      }}
+      className="relative z-30 flex flex-wrap items-center gap-1 p-2 bg-white/80 dark:bg-stone-800/80 backdrop-blur-md border border-white/60 dark:border-white/10 rounded-t-[22px] border-b-0 text-xs"
+    >
       {/* Hidden file input for fast toolbar image compression */}
       <input
         ref={fileInputRef}

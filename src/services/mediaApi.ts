@@ -9,6 +9,7 @@
 import { apiClient, ApiError } from './apiClient';
 import { isMockMode } from '../config/env';
 import { mockStorage } from '../mocks/mockStorage';
+import { compressAndResizeImage } from '../utils/imageCompressor';
 import type {
   MediaItem,
   MediaUploadPayload,
@@ -71,16 +72,20 @@ export const mediaService = {
     data?: { media: MediaItem };
     error?: { code: string; message: string };
   }> {
+    const uploadPayload = payload.file && payload.file.type.startsWith('image/')
+      ? { ...payload, file: (await compressAndResizeImage(payload.file, 1200, 0.82)).file }
+      : payload;
+
     if (isMockMode()) {
-      const resolvedPayload = { ...payload };
-      if (payload.file && !payload.url) {
-        if (typeof window !== 'undefined' && typeof FileReader !== 'undefined' && payload.file.size < 2 * 1024 * 1024) {
+      const resolvedPayload = { ...uploadPayload };
+      if (uploadPayload.file && !uploadPayload.url) {
+        if (typeof window !== 'undefined' && typeof FileReader !== 'undefined' && uploadPayload.file.size < 2 * 1024 * 1024) {
           try {
             const dataUrl = await new Promise<string>((resolve, reject) => {
               const reader = new FileReader();
               reader.onload = () => resolve(reader.result as string);
               reader.onerror = reject;
-              reader.readAsDataURL(payload.file!);
+              reader.readAsDataURL(uploadPayload.file!);
             });
             resolvedPayload.url = dataUrl;
           } catch {
@@ -94,16 +99,16 @@ export const mediaService = {
 
     try {
       let body: FormData | MediaUploadPayload;
-      if (payload.file) {
+      if (uploadPayload.file) {
         const formData = new FormData();
-        formData.append('file', payload.file);
-        if (payload.title) formData.append('title', payload.title);
-        if (payload.alt_text) formData.append('alt_text', payload.alt_text);
-        if (payload.caption) formData.append('caption', payload.caption);
-        if (payload.credit) formData.append('credit', payload.credit);
+        formData.append('file', uploadPayload.file);
+        if (uploadPayload.title) formData.append('title', uploadPayload.title);
+        if (uploadPayload.alt_text) formData.append('alt_text', uploadPayload.alt_text);
+        if (uploadPayload.caption) formData.append('caption', uploadPayload.caption);
+        if (uploadPayload.credit) formData.append('credit', uploadPayload.credit);
         body = formData;
       } else {
-        body = payload;
+        body = uploadPayload;
       }
 
       const res = await apiClient.post<{ media: MediaItem }>('/admin/media/upload', body);
