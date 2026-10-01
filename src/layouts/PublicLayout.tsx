@@ -99,10 +99,10 @@ export const PublicLayout: React.FC = () => {
     <div className="min-h-screen text-stone-900 font-sans flex flex-col antialiased selection:bg-rose-500/20 selection:text-rose-950 ambient-glow-mesh relative">
       {/* 2. STICKY FROSTED GLASS HEADER (iOS 27 Glass) */}
       <header
-        className={`sticky top-0 z-40 transition-all duration-300 ${
+        className={`sticky top-0 z-40 transition-all duration-200 ${
           isScrolled
-            ? 'glass-panel shadow-sm border-b border-white/60 py-2 sm:py-2.5'
-            : 'bg-white/80 backdrop-blur-xl border-b border-stone-200/60 py-2.5 sm:py-3.5'
+            ? 'bg-white shadow-sm border-b border-stone-200 py-2 sm:py-2.5'
+            : 'bg-white border-b border-stone-200 py-2.5 sm:py-3.5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -129,7 +129,7 @@ export const PublicLayout: React.FC = () => {
               <button
                 type="button"
                 onClick={() => window.openPushPreferences?.()}
-                className="glass-pill px-2.5 py-1 text-[11px] font-medium text-stone-700 hover:text-rose-700 flex items-center gap-1.5"
+                className="border border-stone-200 bg-white px-2.5 py-1 text-[11px] font-medium text-stone-700 hover:text-rose-700 flex items-center gap-1.5"
                 title="Alertas y Notificaciones"
               >
                 <Bell className="w-3 h-3 text-rose-600" />
@@ -139,7 +139,7 @@ export const PublicLayout: React.FC = () => {
               {settings.features.showCitizenSubmissionButton && (
                 <Link
                   to="/enviar-noticia"
-                  className="hidden md:inline-flex items-center gap-1.5 glass-pill px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-50/70"
+                  className="hidden md:inline-flex items-center gap-1.5 border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100"
                 >
                   <Send className="w-3 h-3" />
                   <span>Envíanos tu noticia</span>
@@ -191,7 +191,7 @@ export const PublicLayout: React.FC = () => {
                   placeholder="Buscar noticias..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-48 lg:w-64 glass-pill px-3.5 py-1.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
+                  className="w-48 lg:w-64 border border-stone-200 bg-white px-3.5 py-1.5 text-xs text-stone-900 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-rose-500/30"
                 />
                 <button
                   type="submit"
@@ -208,7 +208,7 @@ export const PublicLayout: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setSearchModalOpen(true)}
-                className="w-8 h-8 rounded-full glass-pill flex items-center justify-center text-stone-700"
+                className="w-8 h-8 rounded-full border border-stone-200 bg-white flex items-center justify-center text-stone-700"
                 aria-label="Buscar"
               >
                 <Search className="w-4 h-4" />
@@ -216,7 +216,7 @@ export const PublicLayout: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setBottomSheetOpen(true)}
-                className="w-8 h-8 rounded-full glass-pill flex items-center justify-center text-stone-800"
+                className="w-8 h-8 rounded-full border border-stone-200 bg-white flex items-center justify-center text-stone-800"
                 aria-label="Secciones"
               >
                 <Menu className="w-4 h-4" />
@@ -354,76 +354,70 @@ export const PublicLayout: React.FC = () => {
         </div>
       </footer>
 
-      {/* 7. MOBILE FLOATING iOS 27 GLASS DOCK (BOTTOM TAB BAR) */}
+      {/* 7. SOLID MOBILE DOCK (BOTTOM TAB BAR) */}
       <nav
         aria-label="Navegación Móvil"
-        className="fixed bottom-3 inset-x-3 sm:inset-x-6 z-40 md:hidden pointer-events-none flex justify-center"
+        className="fixed bottom-0 inset-x-0 z-40 md:hidden bg-stone-900 border-t border-stone-800 shadow-2xl px-3 py-2 pb-safe"
       >
-        <div className="pointer-events-auto bg-white border border-stone-200 rounded-[28px] px-3 py-2 flex items-center justify-between w-full max-w-md shadow-xl">
-          {/* 1. Portada */}
+        <div className="flex items-center justify-between w-full max-w-md mx-auto">
+          {/* 1. Inicio */}
           <Link
             to="/"
-            className={`flex flex-col items-center justify-center w-12 py-1 transition-all ${
-              location.pathname === '/' ? 'text-rose-700 scale-105' : 'text-stone-500 active:scale-95'
+            className={`flex flex-col items-center justify-center w-14 py-1 transition-all ${
+              location.pathname === '/' ? 'text-amber-400 font-bold scale-105' : 'text-stone-300 hover:text-white'
             }`}
           >
             <Home className="w-5 h-5" />
-            <span className="text-[10px] font-semibold mt-0.5">Portada</span>
-            {location.pathname === '/' && (
-              <span className="w-1 h-1 rounded-full bg-rose-600 mt-0.5"></span>
-            )}
+            <span className="text-[10px] tracking-tight mt-0.5">Inicio</span>
           </Link>
 
           {/* 2. Secciones */}
           <button
             type="button"
             onClick={() => setBottomSheetOpen(true)}
-            className={`flex flex-col items-center justify-center w-12 py-1 transition-all ${
-              bottomSheetOpen ? 'text-rose-700 scale-105' : 'text-stone-500 active:scale-95'
+            className={`flex flex-col items-center justify-center w-14 py-1 transition-all cursor-pointer ${
+              bottomSheetOpen ? 'text-amber-400 font-bold scale-105' : 'text-stone-300 hover:text-white'
             }`}
           >
             <Compass className="w-5 h-5" />
-            <span className="text-[10px] font-semibold mt-0.5">Secciones</span>
-            {bottomSheetOpen && (
-              <span className="w-1 h-1 rounded-full bg-rose-600 mt-0.5"></span>
-            )}
+            <span className="text-[10px] tracking-tight mt-0.5">Secciones</span>
           </button>
 
-          {/* 3. Action Center: Rayo ⚡ Últimas Noticias al Minuto */}
+          {/* 3. Action Center: Rayo ⚡ Al Minuto */}
           <button
             type="button"
             onClick={() => setLatestNewsOpen(true)}
-            className="flex flex-col items-center justify-center -mt-4 group cursor-pointer"
+            className="flex flex-col items-center justify-center -mt-3.5 group cursor-pointer"
             title="Ver últimas noticias al minuto"
           >
-            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-500 via-rose-600 to-rose-700 text-white flex items-center justify-center shadow-lg shadow-rose-900/30 group-active:scale-90 transition-transform">
-              <Zap className="w-6 h-6 fill-white text-white" />
+            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-amber-500 to-rose-600 text-white flex items-center justify-center shadow-lg ring-2 ring-stone-900 group-active:scale-95 transition-transform">
+              <Zap className="w-5 h-5 fill-white text-white" />
             </div>
-            <span className="text-[10px] font-bold text-rose-800 mt-0.5">Al Minuto</span>
+            <span className="text-[10px] font-bold text-amber-400 mt-0.5">Al Minuto</span>
           </button>
 
           {/* 4. Buscar */}
           <button
             type="button"
             onClick={() => setSearchModalOpen(true)}
-            className={`flex flex-col items-center justify-center w-12 py-1 transition-all ${
+            className={`flex flex-col items-center justify-center w-14 py-1 transition-all cursor-pointer ${
               searchModalOpen || location.pathname.startsWith('/buscar')
-                ? 'text-rose-700 scale-105'
-                : 'text-stone-500 active:scale-95'
+                ? 'text-amber-400 font-bold scale-105'
+                : 'text-stone-300 hover:text-white'
             }`}
           >
             <Search className="w-5 h-5" />
-            <span className="text-[10px] font-semibold mt-0.5">Buscar</span>
+            <span className="text-[10px] tracking-tight mt-0.5">Buscar</span>
           </button>
 
           {/* 5. Alertas */}
           <button
             type="button"
             onClick={() => window.openPushPreferences?.()}
-            className="flex flex-col items-center justify-center w-12 py-1 text-stone-500 active:scale-95"
+            className="flex flex-col items-center justify-center w-14 py-1 text-stone-300 hover:text-white cursor-pointer"
           >
             <Bell className="w-5 h-5" />
-            <span className="text-[10px] font-semibold mt-0.5">Alertas</span>
+            <span className="text-[10px] tracking-tight mt-0.5">Alertas</span>
           </button>
         </div>
       </nav>
@@ -464,7 +458,7 @@ export const PublicLayout: React.FC = () => {
                   placeholder="Buscar artículos o temas..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full glass-pill py-2 pl-3.5 pr-10 text-xs text-stone-900 placeholder-stone-400 focus:outline-none"
+                  className="w-full border border-stone-200 bg-white py-2 pl-3.5 pr-10 text-xs text-stone-900 placeholder-stone-400 focus:outline-none"
                 />
                 <button
                   type="submit"
@@ -562,7 +556,7 @@ export const PublicLayout: React.FC = () => {
                   placeholder="Escriba palabra clave o tema..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full glass-pill py-3 pl-4 pr-12 text-sm text-stone-900 placeholder-stone-400 focus:outline-none"
+                  className="w-full border border-stone-200 bg-white py-3 pl-4 pr-12 text-sm text-stone-900 placeholder-stone-400 focus:outline-none"
                 />
                 <button
                   type="submit"

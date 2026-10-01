@@ -22,6 +22,7 @@ import {
   SubmissionStatus,
 } from '../../services/submissionApi';
 import { formatDate } from '../../utils/date';
+import { confirmAction, notify } from '../../utils/notice';
 
 export const SubmissionsModerationPage: React.FC = () => {
   const [submissions, setSubmissions] = useState<CitizenSubmission[]>([]);
@@ -87,27 +88,29 @@ export const SubmissionsModerationPage: React.FC = () => {
       setRejectingUuid(null);
       setRejectionReason('');
     } catch (err: any) {
-      alert(err.message || 'Error al rechazar el reporte.');
+      notify(err.message || 'Error al rechazar el reporte.', 'error', 'Revisión fallida');
     } finally {
       setActionLoading(false);
     }
   };
 
   const handleConvert = async (submission: CitizenSubmission) => {
-    if (!window.confirm(`¿Desea convertir este reporte en un artículo borrador asignado a la redacción?`)) {
+    const confirmed = await confirmAction('¿Desea convertir este reporte en un artículo borrador asignado a la redacción?', 'Convertir a borrador');
+    if (!confirmed) {
       return;
     }
     setActionLoading(true);
     try {
       const result = await convertAdminSubmission(submission.submission_uuid);
       if (result?.article?.article_uuid) {
+        notify('Reporte convertido en borrador correctamente.', 'success', 'Borrador creado');
         navigate(`/admin/articles/edit/${result.article.article_uuid}`);
       } else {
-        alert('Reporte ciudadano convertido en borrador con éxito.');
+        notify('Reporte ciudadano convertido en borrador con éxito.', 'success', 'Reporte procesado');
         loadSubmissions();
       }
     } catch (err: any) {
-      alert(err.message || 'Error al convertir el reporte.');
+      notify(err.message || 'Error al convertir el reporte.', 'error', 'No se pudo completar');
     } finally {
       setActionLoading(false);
     }

@@ -1,13 +1,7 @@
 /**
  * LYBERATE — CENTRAL TYPES BARREL
  *
- * Core contracts and shared domain models for Contacto con la Noticia.
- *
- * UNCONTRACTED CONTRACTS (Marked as API CONTRACT REQUIRED per FE-0 audit):
- * - Media Library (MediaItem, MediaFolder, MediaUploadResponse) -> API CONTRACT REQUIRED
- * - Users & Roles Management (UserDetail, RoleDefinition, Permission) -> API CONTRACT REQUIRED
- * - Settings (SiteSettings, TenantSettings, SEOConfig) -> API CONTRACT REQUIRED
- * - Audit Logs (AuditEntry, ActivityLog) -> API CONTRACT REQUIRED
+ * Core contracts and shared domain models for Contacto con la Noticia & Lyberate.
  */
 
 export * from './api';
@@ -20,4 +14,10 @@ export * from './submission';
 export * from './push';
 export * from './media';
 export * from './settings';
-
+export * from './user';
+export * from './wordpress';
+export * from './audit';
+export * from './version';
+export * from './calendar';
+export * from './gallery';
+export * from './notification';

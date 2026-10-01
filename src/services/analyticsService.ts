@@ -161,7 +161,7 @@ export const analyticsService = {
     sendTelemetryBeacon(event);
   },
 
-  async getOverview(period: 'today' | '24h' | '7d' | '30d' = '24h'): Promise<GlobalAnalyticsOverview> {
+  async getOverview(period: 'today' | '24h' | '7d' | '30d' | '90d' = '24h'): Promise<GlobalAnalyticsOverview> {
     if (isMockMode()) {
       return mockStorage.getGlobalAnalyticsOverview(period);
     }

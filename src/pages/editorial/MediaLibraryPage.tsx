@@ -16,6 +16,7 @@ import {
   X,
   Sparkles,
 } from 'lucide-react';
+import { confirmAction, notify } from '../../utils/notice';
 
 export const MediaLibraryPage: React.FC = () => {
   const [items, setItems] = useState<MediaItem[]>([]);
@@ -88,22 +89,24 @@ export const MediaLibraryPage: React.FC = () => {
         loadMedia();
       }
     } catch {
-      alert('Error al guardar metadatos.');
+      notify('Error al guardar metadatos.', 'error', 'No se pudo actualizar');
     } finally {
       setSavingEdit(false);
     }
   };
 
   const handleDelete = async (uuid: string) => {
-    if (!window.confirm('¿Está seguro de eliminar este recurso multimedia definitivamente?')) return;
+    const confirmed = await confirmAction('¿Está seguro de eliminar este recurso multimedia definitivamente?', 'Eliminar archivo');
+    if (!confirmed) return;
     try {
       await mediaService.deleteMedia(uuid);
       if (selectedMedia?.media_uuid === uuid) {
         setSelectedMedia(null);
       }
+      notify('El recurso se eliminó correctamente.', 'success', 'Multimedia actualizado');
       loadMedia();
     } catch {
-      alert('Error al eliminar recurso multimedia.');
+      notify('Error al eliminar recurso multimedia.', 'error', 'No se pudo completar');
     }
   };
 

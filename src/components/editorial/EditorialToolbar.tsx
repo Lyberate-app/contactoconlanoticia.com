@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   Bold,
   Italic,
+  Underline,
   Heading2,
   Heading3,
   Quote,
@@ -14,38 +15,52 @@ import {
   Type,
   Highlighter,
   Strikethrough,
+  Images,
+  Video,
+  Megaphone,
+  Share2,
+  Eraser,
+  Sparkles,
 } from 'lucide-react';
 import { compressAndResizeImage } from '../../utils/imageCompressor';
+import { notify } from '../../utils/notice';
 
 interface EditorialToolbarProps {
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
   onContentChange: (newContent: string) => void;
   onOpenMediaPicker?: () => void;
+  onOpenGalleryModal?: () => void;
 }
 
 export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
   textareaRef,
   onContentChange,
   onOpenMediaPicker,
+  onOpenGalleryModal,
 }) => {
   const [formatMenuOpen, setFormatMenuOpen] = useState(false);
+  const [blocksMenuOpen, setBlocksMenuOpen] = useState(false);
   const [compressing, setCompressing] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const blocksMenuRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const selectionRef = useRef<{ start: number; end: number } | null>(null);
 
-  // Close menu when clicking outside
+  // Close menus when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setFormatMenuOpen(false);
       }
+      if (blocksMenuRef.current && !blocksMenuRef.current.contains(e.target as Node)) {
+        setBlocksMenuOpen(false);
+      }
     };
-    if (formatMenuOpen) {
+    if (formatMenuOpen || blocksMenuOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [formatMenuOpen]);
+  }, [formatMenuOpen, blocksMenuOpen]);
 
   const insertSyntax = (
     prefix: string,
@@ -70,6 +85,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
 
     onContentChange(updated);
     setFormatMenuOpen(false);
+    setBlocksMenuOpen(false);
 
     // Reposition cursor after DOM update
     setTimeout(() => {
@@ -83,6 +99,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
 
   const handleBold = () => insertSyntax('**', '**', 'texto en negrita');
   const handleItalic = () => insertSyntax('*', '*', 'texto en cursiva');
+  const handleUnderline = () => insertSyntax('<u>', '</u>', 'texto subrayado');
   const handleStrikethrough = () => insertSyntax('~~', '~~', 'texto tachado');
   const handleHighlight = () => insertSyntax('==', '==', 'texto destacado');
   const handleH2 = () => insertSyntax('\n\n## ', '\n', 'Subtítulo de sección');
@@ -101,7 +118,54 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
   };
   const handleDivider = () => insertSyntax('\n\n---\n\n', '', '');
 
-  // Handle direct image insertion from local file
+  const handleClearFormat = () => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    if (start === end) return;
+
+    const selected = textarea.value.substring(start, end);
+    const cleaned = selected
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/<u>(.*?)<\/u>/g, '$1')
+      .replace(/~~(.*?)~~/g, '$1')
+      .replace(/==(.*? bureaucracy)==/g, '$1')
+      .replace(/^#{1,6}\s+/gm, '')
+      .replace(/^>\s+/gm, '');
+
+    const updated =
+      textarea.value.substring(0, start) +
+      cleaned +
+      textarea.value.substring(end);
+
+    onContentChange(updated);
+    setFormatMenuOpen(false);
+  };
+
+  // Embed Insertion
+  const handleInsertEmbed = () => {
+    const url = prompt('Pegue el enlace del video o recurso multimedia (YouTube, X, Vimeo):', 'https://www.youtube.com/watch?v=');
+    if (url && url.trim()) {
+      insertSyntax(`\n\n:::embed url="${url.trim()}" :::\n\n`, '', '');
+    }
+  };
+
+  // In-article Ad slot
+  const handleInsertAdSlot = () => {
+    insertSyntax('\n\n:::ad slot="ARTICLE_MIDDLE" :::\n\n', '', '');
+  };
+
+  // In-article Related Story
+  const handleInsertRelated = () => {
+    const slug = prompt('Ingrese el slug o titular del artículo relacionado:', 'noticia-relevante');
+    if (slug && slug.trim()) {
+      insertSyntax(`\n\n:::related slug="${slug.trim()}" :::\n\n`, '', '');
+    }
+  };
+
+  // Image upload handler
   const handleToolbarImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -114,7 +178,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
       insertSyntax(imageMarkdown, '', '');
     } catch (err) {
       console.error('Error insertando imagen:', err);
-      alert('No se pudo procesar la imagen seleccionada.');
+      notify('No se pudo procesar la imagen seleccionada.', 'error', 'Imagen no disponible');
     } finally {
       setCompressing(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -122,7 +186,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
   };
 
   const btnClass =
-    'w-8 h-8 rounded-xl text-stone-600 dark:text-stone-300 hover:text-stone-950 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 active:scale-90 transition-all flex items-center justify-center cursor-pointer';
+    'h-8 px-2 rounded-lg text-stone-700 hover:text-stone-950 hover:bg-stone-200 active:scale-95 transition flex items-center justify-center cursor-pointer border border-transparent';
 
   return (
     <div
@@ -138,9 +202,8 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
           event.preventDefault();
         }
       }}
-      className="relative z-30 flex flex-wrap items-center gap-1 p-2 bg-white/80 dark:bg-stone-800/80 backdrop-blur-md border border-white/60 dark:border-white/10 rounded-t-[22px] border-b-0 text-xs"
+      className="relative z-30 flex flex-wrap items-center gap-1 p-2 bg-stone-100 border border-stone-200 rounded-t-xl text-xs"
     >
-      {/* Hidden file input for fast toolbar image compression */}
       <input
         ref={fileInputRef}
         type="file"
@@ -149,23 +212,43 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         className="hidden"
       />
 
-      {/* 1. Botón Negrita Directo */}
+      {/* 1. Negrita Directa */}
       <button
         type="button"
         onClick={handleBold}
-        className={btnClass}
-        title="Negrita rápida (**texto**)"
+        className={`${btnClass} w-8 px-0`}
+        title="Negrita (**texto**)"
       >
         <Bold className="w-4 h-4" />
       </button>
 
-      {/* 2. SEGUNDO BOTÓN: Menú Desplegable con Formato Ergonómico Móvil */}
+      {/* 2. Cursiva Directa */}
+      <button
+        type="button"
+        onClick={handleItalic}
+        className={`${btnClass} w-8 px-0`}
+        title="Cursiva (*texto*)"
+      >
+        <Italic className="w-4 h-4" />
+      </button>
+
+      {/* 3. Subrayado Directo */}
+      <button
+        type="button"
+        onClick={handleUnderline}
+        className={`${btnClass} w-8 px-0`}
+        title="Subrayado (<u>texto</u>)"
+      >
+        <Underline className="w-4 h-4" />
+      </button>
+
+      {/* 4. Menú de Formato Ergonómico para Móvil / Touch */}
       <div className="relative" ref={menuRef}>
         <button
           type="button"
           onClick={() => setFormatMenuOpen(!formatMenuOpen)}
-          className={`${btnClass} flex items-center gap-0.5 px-2 w-auto bg-stone-100 dark:bg-stone-700/60 font-semibold text-[11px]`}
-          title="Menú de formato y negrita para selección en móvil"
+          className={`${btnClass} bg-white border-stone-300 font-semibold text-[11px] flex items-center gap-1`}
+          title="Menú de formato adicional y selección táctil"
         >
           <Type className="w-3.5 h-3.5" />
           <span>Formato</span>
@@ -173,181 +256,231 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
         </button>
 
         {formatMenuOpen && (
-          <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-1.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
-            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100 dark:border-stone-800">
-              Formato de selección móvil
+          <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-white border border-stone-200 rounded-xl p-1.5 shadow-xl animate-in fade-in duration-100">
+            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100">
+              Opciones de Selección
             </div>
 
-            <div className="space-y-0.5 mt-1">
+            <div className="space-y-0.5 mt-1 text-xs">
               <button
                 type="button"
                 onClick={handleBold}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 text-left text-xs font-bold text-stone-900 dark:text-stone-100 cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left font-bold text-stone-900"
               >
-                <Bold className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />
-                <span>Colocar en Negrita</span>
+                <Bold className="w-3.5 h-3.5 text-stone-600" />
+                <span>Negrita</span>
               </button>
-
               <button
                 type="button"
                 onClick={handleItalic}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 text-left text-xs italic text-stone-800 dark:text-stone-200 cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left italic text-stone-800"
               >
-                <Italic className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />
-                <span>Colocar en Cursiva</span>
+                <Italic className="w-3.5 h-3.5 text-stone-600" />
+                <span>Cursiva</span>
               </button>
-
+              <button
+                type="button"
+                onClick={handleUnderline}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left underline text-stone-800"
+              >
+                <Underline className="w-3.5 h-3.5 text-stone-600" />
+                <span>Subrayado</span>
+              </button>
               <button
                 type="button"
                 onClick={handleHighlight}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 text-left text-xs text-stone-800 dark:text-stone-200 cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left text-amber-800"
               >
                 <Highlighter className="w-3.5 h-3.5 text-amber-600" />
-                <span>Resaltar Texto Seleccionado</span>
+                <span>Resaltar Texto</span>
               </button>
-
               <button
                 type="button"
                 onClick={handleStrikethrough}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 text-left text-xs line-through text-stone-600 dark:text-stone-400 cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left line-through text-stone-600"
               >
                 <Strikethrough className="w-3.5 h-3.5 text-stone-500" />
-                <span>Texto Tachado</span>
+                <span>Tachado</span>
               </button>
-
-              <div className="my-1 border-t border-stone-100 dark:border-stone-800" />
-
+              <div className="my-1 border-t border-stone-100" />
               <button
                 type="button"
                 onClick={handleH2}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 text-left text-xs font-semibold text-stone-800 dark:text-stone-200 cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left font-semibold text-stone-800"
               >
-                <Heading2 className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />
+                <Heading2 className="w-3.5 h-3.5 text-stone-600" />
                 <span>Subtítulo H2</span>
               </button>
-
               <button
                 type="button"
                 onClick={handleH3}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 text-left text-xs font-semibold text-stone-800 dark:text-stone-200 cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left font-semibold text-stone-800"
               >
-                <Heading3 className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />
+                <Heading3 className="w-3.5 h-3.5 text-stone-600" />
                 <span>Subsección H3</span>
               </button>
-
               <button
                 type="button"
                 onClick={handleQuote}
-                className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-xl hover:bg-stone-100 dark:hover:bg-stone-800 text-left text-xs text-stone-800 dark:text-stone-200 cursor-pointer"
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left text-stone-800"
               >
-                <Quote className="w-3.5 h-3.5 text-stone-600 dark:text-stone-300" />
+                <Quote className="w-3.5 h-3.5 text-stone-600" />
                 <span>Cita Periodística</span>
+              </button>
+              <div className="my-1 border-t border-stone-100" />
+              <button
+                type="button"
+                onClick={handleClearFormat}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-red-50 text-left text-red-700"
+              >
+                <Eraser className="w-3.5 h-3.5 text-red-600" />
+                <span>Limpiar Formato</span>
               </button>
             </div>
           </div>
         )}
       </div>
 
-      <button
-        type="button"
-        onClick={handleItalic}
-        className={btnClass}
-        title="Cursiva (*texto*)"
-      >
-        <Italic className="w-4 h-4" />
-      </button>
-
-      <span className="w-px h-4 bg-stone-300/80 dark:bg-stone-700 mx-1" />
+      <span className="w-px h-4 bg-stone-300 mx-0.5" />
 
       {/* Headings */}
       <button
         type="button"
         onClick={handleH2}
-        className={btnClass}
-        title="Subtítulo Principal H2"
+        className={`${btnClass} w-8 px-0`}
+        title="Subtítulo H2"
       >
         <Heading2 className="w-4 h-4" />
       </button>
       <button
         type="button"
         onClick={handleH3}
-        className={btnClass}
-        title="Subtítulo Secundario H3"
+        className={`${btnClass} w-8 px-0`}
+        title="Subsección H3"
       >
         <Heading3 className="w-4 h-4" />
       </button>
-
-      <span className="w-px h-4 bg-stone-300/80 dark:bg-stone-700 mx-1" />
 
       {/* Quotes & Lists */}
       <button
         type="button"
         onClick={handleQuote}
-        className={btnClass}
+        className={`${btnClass} w-8 px-0`}
         title="Cita Periodística (> cita)"
       >
         <Quote className="w-4 h-4" />
       </button>
-
       <button
         type="button"
         onClick={handleList}
-        className={btnClass}
-        title="Lista con Viñetas (- item)"
+        className={`${btnClass} w-8 px-0`}
+        title="Lista de puntos"
       >
         <List className="w-4 h-4" />
       </button>
-
       <button
         type="button"
         onClick={handleNumbered}
-        className={btnClass}
-        title="Lista Numerada (1. item)"
+        className={`${btnClass} w-8 px-0`}
+        title="Lista numerada"
       >
         <ListOrdered className="w-4 h-4" />
       </button>
-
-      <span className="w-px h-4 bg-stone-300/80 dark:bg-stone-700 mx-1" />
 
       {/* Link & Divider */}
       <button
         type="button"
         onClick={handleLink}
-        className={btnClass}
-        title="Insertar Enlace ([texto](url))"
+        className={`${btnClass} w-8 px-0`}
+        title="Insertar enlace"
       >
         <LinkIcon className="w-4 h-4" />
       </button>
-
       <button
         type="button"
         onClick={handleDivider}
-        className={btnClass}
-        title="Separador de Sección (---)"
+        className={`${btnClass} w-8 px-0`}
+        title="Separador horizontal (---)"
       >
         <Minus className="w-4 h-4" />
       </button>
 
-      <span className="w-px h-4 bg-stone-300/80 dark:bg-stone-700 mx-1" />
+      <span className="w-px h-4 bg-stone-300 mx-0.5" />
 
-      {/* 3. BOTÓN: INSERTAR IMAGEN EN EL CUERPO (CON COMPRESIÓN Y PREVIEW) */}
-      <div className="flex items-center gap-1">
+      {/* Image Insertion */}
+      <button
+        type="button"
+        onClick={() => {
+          if (onOpenMediaPicker) onOpenMediaPicker();
+          else fileInputRef.current?.click();
+        }}
+        disabled={compressing}
+        className={`${btnClass} bg-white border-stone-300 font-semibold gap-1 text-[11px] text-rose-900`}
+        title="Insertar fotografía con compresión automática a 1200px"
+      >
+        <ImageIcon className="w-3.5 h-3.5 text-rose-800" />
+        <span>{compressing ? 'Optimizando...' : 'Foto'}</span>
+      </button>
+
+      {/* Gallery Button */}
+      {onOpenGalleryModal && (
         <button
           type="button"
-          onClick={() => {
-            if (onOpenMediaPicker) {
-              onOpenMediaPicker();
-            } else {
-              fileInputRef.current?.click();
-            }
-          }}
-          disabled={compressing}
-          className={`${btnClass} px-2.5 w-auto bg-rose-500/10 text-rose-700 dark:text-rose-400 font-semibold gap-1 text-[11px] hover:bg-rose-500/20`}
-          title="Insertar fotografía en el texto (con compresión automática máx 1200px)"
+          onClick={onOpenGalleryModal}
+          className={`${btnClass} bg-white border-stone-300 font-semibold gap-1 text-[11px] text-stone-800`}
+          title="Crear o insertar galería fotográfica ordenada"
         >
-          <ImageIcon className="w-3.5 h-3.5" />
-          <span>{compressing ? 'Optimizando...' : 'Insertar Foto'}</span>
+          <Images className="w-3.5 h-3.5 text-stone-700" />
+          <span>Galería</span>
         </button>
+      )}
+
+      {/* Editorial Content Blocks Dropdown */}
+      <div className="relative" ref={blocksMenuRef}>
+        <button
+          type="button"
+          onClick={() => setBlocksMenuOpen(!blocksMenuOpen)}
+          className={`${btnClass} bg-white border-stone-300 font-semibold gap-1 text-[11px] text-stone-800`}
+          title="Insertar bloques editoriales (Embeds, Publicidad, Relacionadas)"
+        >
+          <Sparkles className="w-3.5 h-3.5 text-stone-600" />
+          <span>Bloques</span>
+          <ChevronDown className="w-3 h-3 text-stone-400" />
+        </button>
+
+        {blocksMenuOpen && (
+          <div className="absolute top-full left-0 mt-1 z-50 w-52 bg-white border border-stone-200 rounded-xl p-1.5 shadow-xl animate-in fade-in duration-100">
+            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-stone-400 border-b border-stone-100">
+              Bloques Especiales
+            </div>
+            <div className="space-y-0.5 mt-1 text-xs">
+              <button
+                type="button"
+                onClick={handleInsertEmbed}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left text-stone-800"
+              >
+                <Video className="w-3.5 h-3.5 text-stone-600" />
+                <span>Video / Embed</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertAdSlot}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left text-stone-800"
+              >
+                <Megaphone className="w-3.5 h-3.5 text-stone-600" />
+                <span>Bloque Publicitario</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleInsertRelated}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-stone-100 text-left text-stone-800"
+              >
+                <Share2 className="w-3.5 h-3.5 text-stone-600" />
+                <span>Noticia Relacionada</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

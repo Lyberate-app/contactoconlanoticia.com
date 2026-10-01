@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Check, ExternalLink, Link2, RefreshCw, ShieldCheck, Unplug } from 'lucide-react';
 import { integrationsApi, type PublicationIntegration, type PublicationProvider } from '../../services/integrationsApi';
 import { useSettings } from '../../context/SettingsContext';
+import { confirmAction } from '../../utils/notice';
 
 const CHANNELS: { provider: PublicationProvider; label: string; description: string; settingsKey: 'facebookUrl' | 'instagramUrl' | 'telegramChannelUrl' | 'twitterUrl' }[] = [
 	{ provider: 'facebook', label: 'Facebook Pages', description: 'Comparte noticias en la página institucional.', settingsKey: 'facebookUrl' },
@@ -61,7 +62,8 @@ export const IntegrationsPage: React.FC = () => {
 	};
 
 	const disconnect = async (provider: PublicationProvider) => {
-		if (!window.confirm('¿Desconectar esta cuenta de publicación?')) return;
+		const confirmed = await confirmAction('¿Desconectar esta cuenta de publicación?', 'Desconectar integración');
+		if (!confirmed) return;
 		setBusyProvider(provider);
 		setError('');
 		try {

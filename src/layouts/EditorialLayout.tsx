@@ -21,9 +21,13 @@ import {
   TrendingUp,
   BarChart3,
   Share2,
+  Calendar,
+  ShieldCheck,
+  Sparkles,
 } from 'lucide-react';
 import { authService, AuthUser } from '../services/auth';
 import { useSettings } from '../context/SettingsContext';
+import { NotificationCenterDropdown } from '../components/editorial/NotificationCenterDropdown';
 
 interface EditorialLayoutProps {
   children?: React.ReactNode;
@@ -130,10 +134,20 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
               (location.pathname.startsWith('/admin/articles/') && location.pathname !== '/admin/articles/new'),
         },
         {
+          to: '/admin/calendar',
+          icon: Calendar,
+          label: 'Calendario Editorial',
+        },
+        {
           to: '/admin/media',
           icon: ImageIcon,
           label: 'Biblioteca Multimedia',
           isActiveOverride: activeTab ? activeTab === 'media' : undefined,
+        },
+        {
+          to: '/admin/journalists',
+          icon: Users,
+          label: 'Equipo Periodístico',
         },
       ],
     },
@@ -157,35 +171,45 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
           label: 'Buzón Ciudadano',
           isActiveOverride: activeTab ? activeTab === 'submissions' : undefined,
         },
-            {
-              to: '/admin/marketing',
-              icon: TrendingUp,
-              label: 'Marketing y SEO',
-              isActiveOverride: activeTab ? activeTab === 'marketing' : undefined,
-            },
-            {
-              to: '/admin/analytics',
-              icon: BarChart3,
-              label: 'Estadísticas',
-              isActiveOverride: activeTab ? activeTab === 'analytics' : undefined,
-            },
-            {
-              to: '/admin/integrations',
-              icon: Share2,
-              label: 'Integraciones',
-              isActiveOverride: activeTab ? activeTab === 'integrations' : undefined,
-            },
+        {
+          to: '/admin/marketing',
+          icon: TrendingUp,
+          label: 'Marketing y SEO',
+          isActiveOverride: activeTab ? activeTab === 'marketing' : undefined,
+        },
+        {
+          to: '/admin/analytics',
+          icon: BarChart3,
+          label: 'Estadísticas & Reportes',
+          isActiveOverride: activeTab ? activeTab === 'analytics' : undefined,
+        },
+        {
+          to: '/admin/integrations',
+          icon: Share2,
+          label: 'Integraciones & WP',
+          isActiveOverride: activeTab ? activeTab === 'integrations' : undefined,
+        },
       ],
     },
     {
       title: 'Sistema',
       items: [
-            {
-              to: '/admin/users',
-              icon: Users,
-              label: 'Usuarios y Roles',
-              isActiveOverride: activeTab ? activeTab === 'users' : undefined,
-            },
+        {
+          to: '/admin/audit',
+          icon: ShieldCheck,
+          label: 'Registro de Auditoría',
+        },
+        {
+          to: '/admin/showcase',
+          icon: Sparkles,
+          label: 'Showcase de Mejoras',
+        },
+        {
+          to: '/admin/users',
+          icon: Users,
+          label: 'Usuarios y Roles',
+          isActiveOverride: activeTab ? activeTab === 'users' : undefined,
+        },
         {
           to: '/admin/settings',
           icon: Settings,
@@ -197,7 +221,7 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] ambient-glow-mesh flex flex-col lg:flex-row font-sans text-stone-900 relative">
+    <div className="min-h-screen bg-[#f8fafc] flex flex-col lg:flex-row font-sans text-stone-900 relative">
       {/* Mobile Top Bar */}
       <header className="lg:hidden glass-panel border-b border-white/60 sticky top-0 z-40 px-4 h-16 flex items-center justify-between shadow-xs">
         <Link to="/admin" className="flex items-center gap-2.5">
@@ -217,7 +241,7 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
           )}
           <div>
             <span className="font-serif font-bold text-sm text-stone-950 block leading-tight truncate max-w-[170px]">
-              {settings.identity.siteName || 'ccmustore'}
+              {settings.identity.siteName || 'Contacto con la Noticia'}
             </span>
             <span className="text-[10px] text-rose-700 font-semibold uppercase tracking-wider">
               Panel Editorial
@@ -225,13 +249,16 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
           </div>
         </Link>
 
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="w-9 h-9 rounded-full glass-pill flex items-center justify-center text-stone-600 focus:outline-none"
-          aria-label="Abrir menú"
-        >
-          {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        <div className="flex items-center gap-2">
+          <NotificationCenterDropdown />
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="w-9 h-9 rounded-full bg-stone-100 hover:bg-stone-200 border border-stone-200 flex items-center justify-center text-stone-600 focus:outline-none cursor-pointer"
+            aria-label="Abrir menú"
+          >
+            {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </header>
 
       {/* Mobile Drawer Backdrop */}
@@ -266,7 +293,7 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
             )}
             <div>
               <span className="font-serif font-bold text-sm text-stone-950 block truncate max-w-[150px]">
-                {settings.identity.siteName || 'ccmustore'}
+                {settings.identity.siteName || 'Contacto con la Noticia'}
               </span>
               <span className="text-[10px] text-stone-500">Redacción Central</span>
             </div>
@@ -374,7 +401,7 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
             <Link
               to="/admin"
               className="flex items-center justify-center p-1 group"
-              title={settings.identity.siteName || 'ccmustore'}
+              title={settings.identity.siteName || 'Contacto con la Noticia'}
             >
               {settings.logos?.headerLogoUrl ? (
                 <img
@@ -435,7 +462,7 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
                 )}
                 <div className="min-w-0">
                   <h2 className="font-bold text-sm text-stone-950 leading-tight truncate">
-                    {settings.identity.siteName || 'ccmustore'}
+                    {settings.identity.siteName || 'Contacto con la Noticia'}
                   </h2>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <span className="w-2 h-2 rounded-full bg-purple-500 shrink-0 shadow-2xs"></span>
@@ -585,7 +612,7 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
             >
               <Store className="w-5 h-5 shrink-0" />
               <span className="absolute left-full ml-3 px-2.5 py-1 bg-stone-900 text-white text-[11px] font-semibold rounded-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-150 whitespace-nowrap z-50 shadow-lg">
-                Ver Tienda / Portal
+                Ver Portal Público
               </span>
             </a>
 
@@ -617,7 +644,7 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
             >
               <div className="flex items-center gap-3">
                 <Store className="w-4 h-4 shrink-0 text-stone-500" />
-                <span>Ver Tienda / Portal</span>
+                <span>Ver Portal Público</span>
               </div>
               <ExternalLink className="w-3.5 h-3.5 text-stone-400" />
             </a>
@@ -645,6 +672,42 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
           MAIN CONTENT AREA
           ========================================================================= */}
       <div className="flex-1 flex flex-col min-w-0 transition-all duration-300">
+        {/* Desktop Editorial Topbar */}
+        <header className="hidden lg:flex items-center justify-between px-8 py-3.5 border-b border-stone-200/80 bg-white/70 backdrop-blur-xs sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <span className="font-serif font-black text-sm text-stone-900">
+              Contacto con la Noticia
+            </span>
+            <span className="text-stone-300">&bull;</span>
+            <span className="text-xs text-stone-500 font-medium">
+              Plataforma Editorial Lyberate &bull; Edición Guárico
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-mono font-semibold">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span>Conector WP: Online</span>
+            </div>
+
+            <NotificationCenterDropdown />
+
+            <div className="flex items-center gap-2 pl-2 border-l border-stone-200">
+              <div className="w-8 h-8 rounded-full bg-rose-900 text-white flex items-center justify-center font-bold text-xs">
+                {user?.name?.charAt(0) || 'E'}
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-bold text-stone-900 leading-tight">
+                  {user?.name || 'Editor en Jefe'}
+                </div>
+                <div className="text-[10px] text-stone-500 font-mono">
+                  {user?.roles?.[0] || 'EDITOR'}
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children || <Outlet />}
         </main>

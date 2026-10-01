@@ -31,6 +31,7 @@ import {
   AVAILABLE_BODY_FONTS,
   WHITE_LABEL_PRESETS,
 } from '../../config/whiteLabelDefaults';
+import { notify } from '../../utils/notice';
 
 type ActiveTab =
   | 'identity'
@@ -69,7 +70,7 @@ export const SettingsPage: React.FC = () => {
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
     } catch (err) {
-      alert('Error al guardar la configuración: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+      notify('Error al guardar la configuración: ' + (err instanceof Error ? err.message : 'Error desconocido'), 'error', 'No se pudo actualizar');
     } finally {
       setSaving(false);
     }
@@ -85,7 +86,7 @@ export const SettingsPage: React.FC = () => {
       setSavedSuccess(true);
       setTimeout(() => setSavedSuccess(false), 3000);
     } catch (err) {
-      alert('Error al restablecer: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+      notify('Error al restablecer: ' + (err instanceof Error ? err.message : 'Error desconocido'), 'error', 'No se pudo restablecer');
     } finally {
       setSaving(false);
     }
@@ -128,7 +129,7 @@ export const SettingsPage: React.FC = () => {
         setDraft((prev) => ({ ...prev, logos: { ...prev.logos, [field]: dataUrl } }));
       }
     } catch {
-      alert('Error al procesar el archivo de imagen.');
+      notify('Error al procesar el archivo de imagen.', 'error', 'Imagen no válida');
     }
   };
 

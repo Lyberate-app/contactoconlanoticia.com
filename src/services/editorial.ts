@@ -21,6 +21,11 @@ import type {
 import type { Category } from '../types/category';
 import type { Author } from '../types/author';
 import type { PaginationMeta } from '../types/api';
+import type { ArticleVersionSnapshot } from '../types/version';
+import type { CalendarItem } from '../types/calendar';
+import type { AuditEntry, AuditFilterParams } from '../types/audit';
+import type { JournalistProfile } from '../types/user';
+import type { EditorialNotification } from '../types/notification';
 
 export type {
   ArticleSummary,
@@ -33,6 +38,12 @@ export type {
   CreateArticlePayload,
   UpdateArticlePayload,
   DashboardStats,
+  ArticleVersionSnapshot,
+  CalendarItem,
+  AuditEntry,
+  AuditFilterParams,
+  JournalistProfile,
+  EditorialNotification,
 };
 
 export const editorialService = {
@@ -232,5 +243,162 @@ export const editorialService = {
 
     const res = await apiClient.get<{ tags: Tag[] }>('/admin/tags');
     return res.data?.tags || [];
+  },
+
+  async getArticleVersions(uuid: string): Promise<ArticleVersionSnapshot[]> {
+    if (isMockMode()) {
+      return mockStorage.getArticleVersions(uuid);
+    }
+    const res = await apiClient.get<{ versions: ArticleVersionSnapshot[] }>(
+      `/admin/articles/${encodeURIComponent(uuid)}/versions`
+    );
+    return res.data?.versions || [];
+  },
+
+  async saveArticleVersion(snapshot: ArticleVersionSnapshot): Promise<void> {
+    if (isMockMode()) {
+      mockStorage.saveArticleVersion(snapshot);
+      return;
+    }
+    await apiClient.post(
+      `/admin/articles/${encodeURIComponent(snapshot.article_uuid)}/versions`,
+      snapshot
+    );
+  },
+
+  async returnArticleForCorrection(uuid: string, note: string): Promise<ArticleDetail> {
+    if (isMockMode()) {
+      const art = mockStorage.updateArticle(uuid, {
+        status: 'DRAFT',
+        editorial_note: note,
+      } as any);
+      if (!art) throw new Error('Artículo no encontrado.');
+      mockStorage.logAudit({
+        user_uuid: 'current_user',
+        user_name: 'Editor de Guardia',
+        user_email: 'editor@contactoconlanoticia.com',
+        action: 'ARTICLE_RETURN_REVISION',
+        module: 'ARTICLES',
+        entity_id: uuid,
+        entity_name: art.title,
+        description: `Devolvió noticia a corrección con nota: "${note}"`,
+        ip_address: '127.0.0.1',
+      });
+      mockStorage.addNotification({
+        type: 'ARTICLE_RETURNED',
+        title: 'Artículo devuelto para corrección',
+        message: `"${art.title}" requiere cambios: ${note}`,
+        link: `/admin/articles/edit/${uuid}`,
+        severity: 'warning',
+      });
+      return art;
+    }
+    const res = await apiClient.post<{ article: ArticleDetail }>(
+      `/admin/articles/${encodeURIComponent(uuid)}/return`,
+      { note }
+    );
+    if (!res.data?.article) throw new Error('Error al devolver el artículo.');
+    return res.data.article;
+  },
+
+  async approveAndPublishArticle(uuid: string): Promise<ArticleDetail> {
+    if (isMockMode()) {
+      const art = mockStorage.updateArticle(uuid, {
+        status: 'PUBLISHED',
+        published_at: new Date().toISOString(),
+      });
+      if (!art) throw new Error('Artículo no encontrado.');
+      mockStorage.logAudit({
+        user_uuid: 'current_user',
+        user_name: 'Editor en Jefe',
+        user_email: 'editor@contactoconlanoticia.com',
+        action: 'ARTICLE_PUBLISH',
+        module: 'ARTICLES',
+        entity_id: uuid,
+        entity_name: art.title,
+        description: `Aprobó y publicó la noticia.`,
+        ip_address: '127.0.0.1',
+      });
+      mockStorage.addNotification({
+        type: 'ARTICLE_APPROVED',
+        title: 'Artículo aprobado y publicado',
+        message: `"${art.title}" ha sido publicado en portada.`,
+        link: `/noticia/${art.slug}`,
+        severity: 'success',
+      });
+      return art;
+    }
+    const res = await apiClient.post<{ article: ArticleDetail }>(
+      `/admin/articles/${encodeURIComponent(uuid)}/approve`
+    );
+    if (!res.data?.article) throw new Error('Error al publicar el artículo.');
+    return res.data.article;
+  },
+
+  async getCalendarItems(): Promise<CalendarItem[]> {
+    if (isMockMode()) {
+      return mockStorage.getCalendarItems();
+    }
+    const res = await apiClient.get<{ items: CalendarItem[] }>('/admin/calendar');
+    return res.data?.items || [];
+  },
+
+  async getAuditLogs(params: AuditFilterParams = {}): Promise<{
+    entries: AuditEntry[];
+    total: number;
+    page: number;
+    total_pages: number;
+  }> {
+    if (isMockMode()) {
+      return mockStorage.getAuditLogs(params);
+    }
+    const query = new URLSearchParams();
+    if (params.page) query.set('page', String(params.page));
+    if (params.limit) query.set('limit', String(params.limit));
+    if (params.user_uuid) query.set('user_uuid', params.user_uuid);
+    if (params.module) query.set('module', params.module);
+    if (params.action) query.set('action', params.action);
+    if (params.search) query.set('search', params.search);
+    const res = await apiClient.get<{
+      entries: AuditEntry[];
+      total: number;
+      page: number;
+      total_pages: number;
+    }>(`/admin/audit?${query.toString()}`);
+    return res.data || { entries: [], total: 0, page: 1, total_pages: 1 };
+  },
+
+  async logAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>): Promise<void> {
+    if (isMockMode()) {
+      mockStorage.logAudit(entry);
+      return;
+    }
+    await apiClient.post('/admin/audit', entry);
+  },
+
+  async getJournalistProfiles(): Promise<JournalistProfile[]> {
+    if (isMockMode()) {
+      return mockStorage.getJournalistProfiles();
+    }
+    const res = await apiClient.get<{ profiles: JournalistProfile[] }>('/admin/journalists');
+    return res.data?.profiles || [];
+  },
+
+  async getNotifications(): Promise<EditorialNotification[]> {
+    if (isMockMode()) {
+      return mockStorage.getNotifications();
+    }
+    const res = await apiClient.get<{ notifications: EditorialNotification[] }>(
+      '/admin/notifications'
+    );
+    return res.data?.notifications || [];
+  },
+
+  async markNotificationRead(id: string): Promise<void> {
+    if (isMockMode()) {
+      mockStorage.markNotificationRead(id);
+      return;
+    }
+    await apiClient.post(`/admin/notifications/${encodeURIComponent(id)}/read`);
   },
 };

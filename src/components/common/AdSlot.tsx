@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { getActiveAds, recordAdImpression, recordAdClick, PublicAd } from '../../services/adsApi';
 import { isMockMode } from '../../config/env';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Pause } from 'lucide-react';
 
 export type AdPlacement =
   | 'HEADER_BANNER'
@@ -28,6 +28,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
   const [ads, setAds] = useState<PublicAd[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
+  const [isManuallyPaused, setIsManuallyPaused] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const recordedImpressions = useRef<Set<string>>(new Set());
 
@@ -59,7 +60,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
 
   // Automated Slider Interval when multiple ads exist
   useEffect(() => {
-    if (ads.length <= 1 || isHovered) return;
+    if (ads.length <= 1 || isHovered || isManuallyPaused) return;
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => {
@@ -74,7 +75,7 @@ export const AdSlot: React.FC<AdSlotProps> = ({
     }, autoPlayInterval);
 
     return () => clearInterval(timer);
-  }, [ads, isHovered, autoPlayInterval]);
+  }, [ads, isHovered, isManuallyPaused, autoPlayInterval]);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -128,6 +129,8 @@ export const AdSlot: React.FC<AdSlotProps> = ({
     <aside
       className={`ad-slot-container relative ${getSlotContainerClasses()} ${className}`}
       aria-label="Espacio publicitario"
+      role="region"
+      aria-roledescription="carousel"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -136,14 +139,23 @@ export const AdSlot: React.FC<AdSlotProps> = ({
           <span>Publicidad</span>
           {isMockMode() && <span className="rounded-sm bg-amber-100 px-1.5 py-0.5 font-sans font-bold tracking-normal text-amber-900">Demo</span>}
           {ads.length > 1 && (
-            <span className="text-stone-300 dark:text-stone-600 font-sans">
+            <span className="text-stone-400 font-sans">
               &bull; Anuncio {currentIndex + 1} de {ads.length}
             </span>
           )}
         </span>
 
         {ads.length > 1 && (
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsManuallyPaused((prev) => !prev)}
+              className="p-1 rounded text-stone-400 hover:text-stone-700 transition cursor-pointer"
+              title={isManuallyPaused ? 'Reanudar rotación automática' : 'Pausar rotación de anuncios'}
+              aria-label={isManuallyPaused ? 'Reanudar rotación' : 'Pausar rotación'}
+            >
+              {isManuallyPaused ? <Play className="w-2.5 h-2.5" /> : <Pause className="w-2.5 h-2.5" />}
+            </button>
             {ads.map((_, idx) => (
               <button
                 key={idx}

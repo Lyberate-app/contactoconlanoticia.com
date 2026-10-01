@@ -15,6 +15,7 @@ import {
   Image as ImageIcon,
   Sparkles,
 } from 'lucide-react';
+import { confirmAction, notify } from '../../utils/notice';
 
 const STATUS_TABS = [
   { label: 'Todos', value: '' },
@@ -93,22 +94,25 @@ export const ArticlesListPage: React.FC = () => {
       ? '¿Eliminar este artículo definitivamente? Esta acción no se puede deshacer.'
       : '¿Enviar este artículo a la papelera? Podrá restaurarlo después.';
 
-    if (!window.confirm(confirmMsg)) return;
+    const confirmed = await confirmAction(confirmMsg, isTrash ? 'Eliminar artículo' : 'Enviar a papelera');
+    if (!confirmed) return;
 
     try {
       await editorialService.deleteArticle(uuid, isTrash);
+      notify('El artículo fue actualizado correctamente.', 'success', 'Estado del artículo');
       loadArticles();
     } catch {
-      alert('Error al procesar la eliminación.');
+      notify('Error al procesar la eliminación.', 'error', 'No se pudo completar');
     }
   };
 
   const handleRestore = async (uuid: string) => {
     try {
       await editorialService.restoreArticle(uuid);
+      notify('El artículo se restauró correctamente.', 'success', 'Artículo restaurado');
       loadArticles();
     } catch {
-      alert('Error al restaurar el artículo.');
+      notify('Error al restaurar el artículo.', 'error', 'No se pudo completar');
     }
   };
 

@@ -25,6 +25,11 @@ import type { PushConfig, SubscribePushPayload, PushCandidate, PushCampaign, Sen
 import type { ArticleEvent, GlobalAnalyticsOverview, ArticleAnalytics, TrendingArticle, MostReadArticle } from '../types/analytics';
 import type { WhiteLabelConfig } from '../types/settings';
 import { DEFAULT_WHITE_LABEL_CONFIG } from '../config/whiteLabelDefaults';
+import type { ArticleVersionSnapshot } from '../types/version';
+import type { CalendarItem } from '../types/calendar';
+import type { AuditEntry, AuditFilterParams } from '../types/audit';
+import type { JournalistProfile } from '../types/user';
+import type { EditorialNotification } from '../types/notification';
 
 const KEYS = {
   AUTH_USER: 'lyberate_mock_auth_user',
@@ -40,6 +45,9 @@ const KEYS = {
   EVENTS: 'lyberate_mock_analytics_events',
   PUSH_CAMPAIGNS: 'lyberate_mock_push_campaigns',
   PUSH_CANDIDATES_DISMISSED: 'lyberate_mock_push_dismissed',
+  VERSIONS: 'lyberate_mock_article_versions',
+  AUDIT: 'lyberate_mock_audit_logs',
+  NOTIFICATIONS: 'lyberate_mock_notifications',
 } as const;
 
 function isBrowser(): boolean {
@@ -704,7 +712,7 @@ export const mockStorage = {
     }
   },
 
-  getGlobalAnalyticsOverview(period: 'today' | '24h' | '7d' | '30d' = '24h'): GlobalAnalyticsOverview {
+  getGlobalAnalyticsOverview(period: 'today' | '24h' | '7d' | '30d' | '90d' = '24h'): GlobalAnalyticsOverview {
     const articles = this.getArticles();
     const categories = this.getCategories();
     const totalViews = articles.reduce((acc, a) => acc + ((a as any).views_count || 120), 0);
@@ -969,6 +977,306 @@ export const mockStorage = {
       global_cooldown_remaining_minutes: 0,
       recent_campaigns: defaultRecent,
     };
+  },
+
+  // ---------------------------------------------------------------------------
+  // Article Version History
+  // ---------------------------------------------------------------------------
+
+  getArticleVersions(uuid: string): ArticleVersionSnapshot[] {
+    const all = getItem<Record<string, ArticleVersionSnapshot[]>>(KEYS.VERSIONS, {});
+    return all[uuid] || [];
+  },
+
+  saveArticleVersion(snapshot: ArticleVersionSnapshot): void {
+    const all = getItem<Record<string, ArticleVersionSnapshot[]>>(KEYS.VERSIONS, {});
+    const list = all[snapshot.article_uuid] || [];
+    const updated = [snapshot, ...list.slice(0, 49)];
+    all[snapshot.article_uuid] = updated;
+    setItem(KEYS.VERSIONS, all);
+  },
+
+  // ---------------------------------------------------------------------------
+  // Audit Logs & Compliance
+  // ---------------------------------------------------------------------------
+
+  getAuditLogs(params: AuditFilterParams = {}): {
+    entries: AuditEntry[];
+    total: number;
+    page: number;
+    total_pages: number;
+  } {
+    const defaultAudit: AuditEntry[] = [
+      {
+        id: 'aud_1',
+        user_uuid: 'usr_carlos_1',
+        user_name: 'Carlos Mendoza',
+        user_email: 'editor@contactoconlanoticia.com',
+        action: 'ARTICLE_PUBLISH',
+        module: 'ARTICLES',
+        entity_name: 'Productores de Calabozo denuncian fallas en distribución de combustible',
+        description: 'Aprobó y publicó la noticia en portada principal.',
+        timestamp: new Date(Date.now() - 3600000 * 2).toISOString(),
+        ip_address: '190.202.45.12',
+      },
+      {
+        id: 'aud_2',
+        user_uuid: 'usr_maria_2',
+        user_name: 'María Corina Páez',
+        user_email: 'maria.paez@contactoconlanoticia.com',
+        action: 'ARTICLE_SUBMIT_REVIEW',
+        module: 'ARTICLES',
+        entity_name: 'Rehabilitan tramo vial San Juan - Villa de Cura',
+        description: 'Envió noticia a revisión editorial.',
+        timestamp: new Date(Date.now() - 3600000 * 5).toISOString(),
+        ip_address: '190.202.45.18',
+      },
+      {
+        id: 'aud_3',
+        user_uuid: 'usr_admin',
+        user_name: 'Administrador Lyberate',
+        user_email: 'admin@contactoconlanoticia.com',
+        action: 'LOGIN',
+        module: 'SECURITY',
+        description: 'Inicio de sesión exitoso desde panel administrativo.',
+        timestamp: new Date(Date.now() - 3600000 * 12).toISOString(),
+        ip_address: '190.202.45.1',
+      },
+    ];
+
+    let entries = getItem<AuditEntry[]>(KEYS.AUDIT, defaultAudit);
+
+    if (params.module) {
+      entries = entries.filter((e) => e.module === params.module);
+    }
+    if (params.action) {
+      entries = entries.filter((e) => e.action === params.action);
+    }
+    if (params.user_uuid) {
+      entries = entries.filter((e) => e.user_uuid === params.user_uuid);
+    }
+    if (params.search) {
+      const q = params.search.toLowerCase();
+      entries = entries.filter(
+        (e) =>
+          e.description.toLowerCase().includes(q) ||
+          e.user_name.toLowerCase().includes(q) ||
+          (e.entity_name && e.entity_name.toLowerCase().includes(q))
+      );
+    }
+
+    const total = entries.length;
+    const page = params.page || 1;
+    const limit = params.limit || 15;
+    const total_pages = Math.max(1, Math.ceil(total / limit));
+    const start = (page - 1) * limit;
+    const paged = entries.slice(start, start + limit);
+
+    return { entries: paged, total, page, total_pages };
+  },
+
+  logAudit(entry: Omit<AuditEntry, 'id' | 'timestamp'>): void {
+    const list = getItem<AuditEntry[]>(KEYS.AUDIT, []);
+    const newEntry: AuditEntry = {
+      ...entry,
+      id: `aud_${Date.now()}`,
+      timestamp: new Date().toISOString(),
+    };
+    setItem(KEYS.AUDIT, [newEntry, ...list.slice(0, 499)]);
+  },
+
+  // ---------------------------------------------------------------------------
+  // Editorial Notifications
+  // ---------------------------------------------------------------------------
+
+  getNotifications(): EditorialNotification[] {
+    const defaultNotifs: EditorialNotification[] = [
+      {
+        id: 'notif_1',
+        type: 'ARTICLE_SUBMITTED',
+        title: 'Nueva noticia enviada a revisión',
+        message: 'María Corina Páez envió "Rehabilitan tramo vial San Juan - Villa de Cura" para aprobación.',
+        created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+        read: false,
+        link_url: '/admin/articles',
+        severity: 'info',
+      },
+      {
+        id: 'notif_2',
+        type: 'ARTICLE_RETURNED',
+        title: 'Noticia devuelta con correcciones',
+        message: '"Denuncian baches en avenida Bolívar" requiere verificación de fuentes y foto de mayor resolución.',
+        created_at: new Date(Date.now() - 3600000 * 8).toISOString(),
+        read: false,
+        link_url: '/admin/articles',
+        severity: 'warning',
+      },
+      {
+        id: 'notif_3',
+        type: 'SYSTEM_ALERT',
+        title: 'Conector Hemeroteca WordPress Online',
+        message: 'El archivo histórico de San Juan de los Morros sincronizó correctamente.',
+        created_at: new Date(Date.now() - 3600000 * 24).toISOString(),
+        read: true,
+        severity: 'success',
+      },
+    ];
+
+    return getItem<EditorialNotification[]>(KEYS.NOTIFICATIONS, defaultNotifs);
+  },
+
+  addNotification(notif: Omit<EditorialNotification, 'id' | 'created_at' | 'read'>): void {
+    const list = this.getNotifications();
+    const newNotif: EditorialNotification = {
+      ...notif,
+      id: `notif_${Date.now()}`,
+      created_at: new Date().toISOString(),
+      read: false,
+    };
+    setItem(KEYS.NOTIFICATIONS, [newNotif, ...list.slice(0, 99)]);
+  },
+
+  markNotificationRead(id: string): void {
+    const list = this.getNotifications();
+    const updated = list.map((n) => (n.id === id ? { ...n, read: true } : n));
+    setItem(KEYS.NOTIFICATIONS, updated);
+  },
+
+  // ---------------------------------------------------------------------------
+  // Editorial Calendar
+  // ---------------------------------------------------------------------------
+
+  getCalendarItems(): CalendarItem[] {
+    const articles = this.getArticles();
+    const items: CalendarItem[] = [];
+
+    articles.forEach((a) => {
+      if (a.status === 'SCHEDULED') {
+        items.push({
+          id: `cal_art_${a.article_uuid}`,
+          title: a.title,
+          type: 'SCHEDULED_ARTICLE',
+          date: a.published_at || a.created_at,
+          status: a.status,
+          category_name: a.category_name,
+          author_name: a.author_name,
+          article_uuid: a.article_uuid,
+        });
+      } else if (a.status === 'PENDING_REVIEW') {
+        items.push({
+          id: `cal_rev_${a.article_uuid}`,
+          title: a.title,
+          type: 'PENDING_REVIEW',
+          date: a.created_at,
+          status: a.status,
+          category_name: a.category_name,
+          author_name: a.author_name,
+          article_uuid: a.article_uuid,
+        });
+      } else if (a.status === 'PUBLISHED') {
+        items.push({
+          id: `cal_pub_${a.article_uuid}`,
+          title: a.title,
+          type: 'PUBLISHED_ARTICLE',
+          date: a.published_at || a.created_at,
+          status: a.status,
+          category_name: a.category_name,
+          author_name: a.author_name,
+          article_uuid: a.article_uuid,
+        });
+      }
+    });
+
+    const ads = this.getAds();
+    ads.forEach((ad) => {
+      if (ad.start_at) {
+        items.push({
+          id: `cal_ad_start_${ad.campaign_uuid}`,
+          title: `Inicio campaña: ${ad.campaign_name}`,
+          type: 'AD_CAMPAIGN_START',
+          date: ad.start_at,
+          status: ad.active ? 'ACTIVE' : 'PAUSED',
+          advertiser_name: ad.company_name,
+          campaign_uuid: ad.campaign_uuid,
+        });
+      }
+      if (ad.end_at) {
+        items.push({
+          id: `cal_ad_end_${ad.campaign_uuid}`,
+          title: `Fin campaña: ${ad.campaign_name}`,
+          type: 'AD_CAMPAIGN_END',
+          date: ad.end_at,
+          status: ad.active ? 'ACTIVE' : 'EXPIRED',
+          advertiser_name: ad.company_name,
+          campaign_uuid: ad.campaign_uuid,
+        });
+      }
+    });
+
+    return items;
+  },
+
+  // ---------------------------------------------------------------------------
+  // Journalist Profiles
+  // ---------------------------------------------------------------------------
+
+  getJournalistProfiles(): JournalistProfile[] {
+    return [
+      {
+        author_uuid: 'usr_carlos_1',
+        name: 'Carlos Mendoza',
+        slug: 'carlos-mendoza',
+        email: 'editor@contactoconlanoticia.com',
+        role: 'EDITOR',
+        avatar_url: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&q=80',
+        bio: 'Periodista de investigación con 15 años de trayectoria en los llanos centrales venezolanos.',
+        joined_date: '2023-01-15T00:00:00Z',
+        metrics: {
+          published_count: 142,
+          drafts_count: 3,
+          pending_count: 2,
+          total_views: 384500,
+          avg_reading_time_seconds: 195,
+          effective_read_ratio: 0.78,
+        },
+      },
+      {
+        author_uuid: 'usr_maria_2',
+        name: 'María Corina Páez',
+        slug: 'maria-corina-paez',
+        email: 'maria.paez@contactoconlanoticia.com',
+        role: 'JOURNALIST',
+        avatar_url: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=200&q=80',
+        bio: 'Corresponsal en San Juan de los Morros. Especializada en sucesos, política y servicios públicos.',
+        joined_date: '2024-03-01T00:00:00Z',
+        metrics: {
+          published_count: 88,
+          drafts_count: 5,
+          pending_count: 4,
+          total_views: 219000,
+          avg_reading_time_seconds: 160,
+          effective_read_ratio: 0.71,
+        },
+      },
+      {
+        author_uuid: 'usr_roberto_3',
+        name: 'Roberto Hernández',
+        slug: 'roberto-hernandez',
+        email: 'roberto.h@contactoconlanoticia.com',
+        role: 'JOURNALIST',
+        avatar_url: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&q=80',
+        bio: 'Cronista deportivo y cultural del estado Guárico.',
+        joined_date: '2024-06-10T00:00:00Z',
+        metrics: {
+          published_count: 45,
+          drafts_count: 2,
+          pending_count: 1,
+          total_views: 98400,
+          avg_reading_time_seconds: 140,
+          effective_read_ratio: 0.82,
+        },
+      },
+    ];
   },
 
   // ---------------------------------------------------------------------------

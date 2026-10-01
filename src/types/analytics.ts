@@ -84,7 +84,7 @@ export interface HourlyTrafficPoint {
 }
 
 export interface GlobalAnalyticsOverview {
-  period: 'today' | '24h' | '7d' | '30d';
+  period: 'today' | '24h' | '7d' | '30d' | '90d';
   views_today: number;
   views_today_growth: number;
   views_24h: number;

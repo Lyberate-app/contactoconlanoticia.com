@@ -8,6 +8,7 @@ import {
 } from '../../services/adsApi';
 import { Megaphone, Plus, Trash2, Edit2, CheckCircle2, XCircle, ExternalLink, RefreshCw, Image as ImageIcon, Sparkles, X } from 'lucide-react';
 import { MediaPickerModal } from '../../components/media/MediaPickerModal';
+import { confirmAction, notify } from '../../utils/notice';
 
 const LOCATIONS = [
   { id: 'HEADER_BANNER', name: 'Banner Cabecera (Header Banner)' },
@@ -100,12 +101,14 @@ export const AdCampaignsPage: React.FC = () => {
   };
 
   const handleDelete = async (uuid: string) => {
-    if (!window.confirm('¿Está seguro de eliminar esta campaña publicitaria?')) return;
+    const confirmed = await confirmAction('¿Está seguro de eliminar esta campaña publicitaria?', 'Eliminar campaña');
+    if (!confirmed) return;
     try {
       await deleteAdminCampaign(uuid);
+      notify('La campaña se eliminó correctamente.', 'success', 'Campaña actualizada');
       loadCampaigns();
     } catch (err) {
-      alert('Error al eliminar la campaña.');
+      notify('Error al eliminar la campaña.', 'error', 'No se pudo completar');
     }
   };
 

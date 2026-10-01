@@ -27,11 +27,39 @@ const UsersManagementPage = React.lazy(() => import('../pages/editorial/UsersMan
 const IntegrationsPage = React.lazy(() => import('../pages/editorial/IntegrationsPage').then(m => ({ default: m.IntegrationsPage })));
 const AnalyticsPage = React.lazy(() => import('../pages/editorial/AnalyticsPage').then(m => ({ default: m.AnalyticsPage })));
 
+// New editorial CMS feature pages
+const EditorialCalendarPage = React.lazy(() => import('../pages/editorial/EditorialCalendarPage').then(m => ({ default: m.EditorialCalendarPage })));
+const JournalistProfilesPage = React.lazy(() => import('../pages/editorial/JournalistProfilesPage').then(m => ({ default: m.JournalistProfilesPage })));
+const AuditLogPage = React.lazy(() => import('../pages/editorial/AuditLogPage').then(m => ({ default: m.AuditLogPage })));
+const ImprovementsShowcasePage = React.lazy(() => import('../pages/editorial/ImprovementsShowcasePage').then(m => ({ default: m.ImprovementsShowcasePage })));
+
 const LoadingFallback: React.FC = () => (
   <div className="max-w-7xl mx-auto px-4 py-16 flex items-center justify-center">
     <div className="flex items-center gap-2 text-stone-500 text-xs uppercase tracking-widest font-semibold animate-pulse">
-      <div className="w-2 h-2 rounded-full bg-red-700"></div>
+      <div className="w-2 h-2 rounded-full bg-rose-700"></div>
       <span>Cargando edición digital...</span>
+    </div>
+  </div>
+);
+
+const RouteErrorFallback: React.FC = () => (
+  <div className="min-h-[50vh] flex items-center justify-center p-6 text-center">
+    <div className="bg-white border border-stone-200 rounded-3xl p-8 max-w-md shadow-lg space-y-4">
+      <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-900 mx-auto flex items-center justify-center font-bold text-lg">
+        !
+      </div>
+      <h2 className="text-xl font-serif font-black text-stone-900">
+        Edición Temporalmente Interrumpida
+      </h2>
+      <p className="text-xs text-stone-500 leading-relaxed font-sans">
+        Ha ocurrido una eventualidad al cargar esta vista del portal. Puede retornar con seguridad a la portada principal.
+      </p>
+      <a
+        href="/"
+        className="inline-flex items-center gap-2 px-5 py-2.5 bg-rose-900 text-white rounded-xl text-xs font-bold hover:bg-rose-800 transition shadow-xs"
+      >
+        Volver a la Portada
+      </a>
     </div>
   </div>
 );
@@ -41,6 +69,7 @@ export const router = createBrowserRouter([
   {
     path: '/',
     element: <PublicLayout />,
+    errorElement: <RouteErrorFallback />,
     children: [
       {
         index: true,
@@ -140,6 +169,22 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'participacion/enviar',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <SubmitNewsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'participar',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <SubmitNewsPage />
+          </Suspense>
+        ),
+      },
+      {
         path: 'submit-news',
         element: (
           <Suspense fallback={<LoadingFallback />}>
@@ -161,6 +206,7 @@ export const router = createBrowserRouter([
   // Authentication
   {
     path: '/login',
+    errorElement: <RouteErrorFallback />,
     element: (
       <Suspense fallback={<LoadingFallback />}>
         <LoginPage />
@@ -176,6 +222,7 @@ export const router = createBrowserRouter([
         <EditorialLayout />
       </ProtectedRoute>
     ),
+    errorElement: <RouteErrorFallback />,
     children: [
       {
         index: true,
@@ -218,10 +265,26 @@ export const router = createBrowserRouter([
         ),
       },
       {
+        path: 'calendar',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <EditorialCalendarPage />
+          </Suspense>
+        ),
+      },
+      {
         path: 'media',
         element: (
           <Suspense fallback={<LoadingFallback />}>
             <MediaLibraryPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'journalists',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <JournalistProfilesPage />
           </Suspense>
         ),
       },
@@ -242,14 +305,6 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'settings',
-        element: (
-          <Suspense fallback={<LoadingFallback />}>
-            <SettingsPage />
-          </Suspense>
-        ),
-      },
-      {
         path: 'marketing',
         element: (
           <Suspense fallback={<LoadingFallback />}>
@@ -258,10 +313,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'users',
+        path: 'analytics',
         element: (
           <Suspense fallback={<LoadingFallback />}>
-            <UsersManagementPage />
+            <AnalyticsPage />
           </Suspense>
         ),
       },
@@ -274,10 +329,42 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'analytics',
+        path: 'audit',
         element: (
           <Suspense fallback={<LoadingFallback />}>
-            <AnalyticsPage />
+            <AuditLogPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'showcase',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <ImprovementsShowcasePage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'users',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <UsersManagementPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: 'settings',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <SettingsPage />
+          </Suspense>
+        ),
+      },
+      {
+        path: '*',
+        element: (
+          <Suspense fallback={<LoadingFallback />}>
+            <NotFoundPage />
           </Suspense>
         ),
       },
