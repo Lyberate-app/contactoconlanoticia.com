@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { TrendingUp, Newspaper, ChevronRight, Flame, MessageSquareQuote } from 'lucide-react';
+import { TrendingUp, Newspaper, ChevronRight, Flame } from 'lucide-react';
 import { publicApi, HomeFeedData } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { AdSlot } from '../../components/common/AdSlot';
-import { LeadArticle, ArticleCard } from '../../components/articles';
-import { SITE_URL } from '../../config/env';
+import { LeadArticle, ArticleCard, NewsTicker } from '../../components/articles';
+import { getAbsoluteSiteAssetUrl, SITE_URL } from '../../config/env';
+import { useSettings } from '../../context/SettingsContext';
 
 export const HomePage: React.FC = () => {
+  const { settings } = useSettings();
   const [feed, setFeed] = useState<HomeFeedData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -17,7 +19,7 @@ export const HomePage: React.FC = () => {
     {
       '@context': 'https://schema.org',
       '@type': 'WebSite',
-      name: 'Contacto con la Noticia',
+      name: settings.identity.siteName,
       url: `${SITE_URL}/`,
       potentialAction: {
         '@type': 'SearchAction',
@@ -31,20 +33,21 @@ export const HomePage: React.FC = () => {
     {
       '@context': 'https://schema.org',
       '@type': 'NewsMediaOrganization',
-      name: 'Contacto con la Noticia',
+      name: settings.identity.siteName,
       url: `${SITE_URL}/`,
       logo: {
         '@type': 'ImageObject',
-        url: `${SITE_URL}/icons/icon-512x512.png`,
+        url: getAbsoluteSiteAssetUrl(settings.pwa.icon512Url),
         width: 512,
         height: 512,
       },
-      description: 'Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo.',
+      description: settings.identity.tagline,
       sameAs: [
-        'https://twitter.com/contactonoticia',
-        'https://facebook.com/contactoconlanoticia',
-        'https://instagram.com/contactoconlanoticia',
-      ],
+        settings.social.twitterUrl,
+        settings.social.facebookUrl,
+        settings.social.instagramUrl,
+        settings.social.youtubeUrl,
+      ].filter(Boolean),
       publishingPrinciples: `${SITE_URL}/`,
       ethicsPolicy: `${SITE_URL}/`,
     },
@@ -112,8 +115,8 @@ export const HomePage: React.FC = () => {
   return (
     <div className="space-y-8">
       <SeoHead
-        title="Contacto con la Noticia | Diario Digital Independiente"
-        description="Periódico digital independiente. Información veraz y oportuna de Venezuela y el mundo."
+        title={`${settings.identity.siteName} | ${settings.identity.editionName}`}
+        description={settings.identity.tagline}
         canonicalUrl={`${SITE_URL}/`}
         type="website"
         imageUrl="/icons/icon-512x512.png"
@@ -122,6 +125,10 @@ export const HomePage: React.FC = () => {
         imageAlt="Contacto con la Noticia"
         jsonLd={homeJsonLd}
       />
+
+      {settings.features.showBreakingNewsTicker && (
+        <NewsTicker articles={feed.breaking_news} label="Última hora" />
+      )}
 
       {/* 1. iOS 27 HORIZONTAL CATEGORY PILL SELECTOR (Mobile-First Touch Rail) */}
       <section className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
@@ -320,45 +327,36 @@ export const HomePage: React.FC = () => {
             </ol>
           </div>
 
-          {/* Tribuna Editorial (iOS Opinion Card) */}
+          {/* Editorial picks are drawn from the live feed to avoid publishing placeholder copy. */}
           <div className="glass-card p-5 rounded-[28px] space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b border-stone-200/60">
-              <MessageSquareQuote className="w-4 h-4 text-rose-700" />
+              <Newspaper className="w-4 h-4 text-rose-700" />
               <h3 className="font-bold text-xs uppercase tracking-wider text-stone-950">
-                Tribuna & Opinión
+                Desde la redacción
               </h3>
             </div>
 
-            <div className="space-y-3 text-xs text-stone-700">
-              <div className="glass-panel p-3.5 rounded-2xl space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-stone-900 text-white flex items-center justify-center font-bold text-[10px]">
-                    C
-                  </div>
-                  <div>
-                    <span className="font-semibold text-stone-900 block text-xs">Carlos Mendoza</span>
-                    <span className="text-[10px] text-stone-500 italic block">Análisis Llanero</span>
-                  </div>
-                </div>
-                <p className="line-clamp-3 text-stone-700 leading-relaxed font-serif text-[11px] pt-1">
-                  "El valor de la producción cerealera llanera frente a los retos económicos del ciclo agrícola nacional."
-                </p>
-              </div>
-
-              <div className="glass-panel p-3.5 rounded-2xl space-y-1.5">
-                <div className="flex items-center gap-2">
-                  <div className="w-6 h-6 rounded-full bg-rose-700 text-white flex items-center justify-center font-bold text-[10px]">
-                    E
-                  </div>
-                  <div>
-                    <span className="font-semibold text-stone-900 block text-xs">Elena Vásquez</span>
-                    <span className="text-[10px] text-stone-500 italic block">Comunidad & Servicios</span>
-                  </div>
-                </div>
-                <p className="line-clamp-3 text-stone-700 leading-relaxed font-serif text-[11px] pt-1">
-                  "La articulación vecinal y la preservación de los afluentes urbanos en la capital guariqueña."
-                </p>
-              </div>
+            <div className="space-y-3">
+              {latest_articles.slice(0, 2).map((article) => (
+                <Link
+                  key={article.article_uuid}
+                  to={`/noticia/${article.slug}`}
+                  className="glass-panel block p-3.5 rounded-2xl space-y-1.5 hover:border-rose-300 transition-colors"
+                >
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-700">
+                    {article.category_name}
+                  </span>
+                  <span className="font-serif font-bold text-xs text-stone-900 leading-snug block">
+                    {article.title}
+                  </span>
+                  <span className="text-[10px] text-stone-500 block">
+                    Por {article.author_name || 'Redacción'}
+                  </span>
+                </Link>
+              ))}
+              {latest_articles.length === 0 && (
+                <p className="text-xs text-stone-500">Aún no hay publicaciones disponibles.</p>
+              )}
             </div>
           </div>
         </aside>

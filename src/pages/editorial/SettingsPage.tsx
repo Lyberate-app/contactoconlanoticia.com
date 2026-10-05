@@ -15,7 +15,6 @@ import {
   Sparkles,
   Globe,
   Bell,
-  SunMedium,
   CheckCircle2,
   AlertTriangle,
   Send,
@@ -302,11 +301,6 @@ export const SettingsPage: React.FC = () => {
               >
                 <span>{draft.identity.editionName}</span>
                 <div className="flex items-center gap-3">
-                  {draft.features.showWeatherWidget && (
-                    <span className="flex items-center gap-1">
-                      <SunMedium className="w-3 h-3 text-amber-500" /> 31°C
-                    </span>
-                  )}
                   {draft.features.showCitizenSubmissionButton && (
                     <span
                       style={{ color: draft.colors.accent }}
@@ -1852,22 +1846,217 @@ export const SettingsPage: React.FC = () => {
                   />
                 </label>
 
+                {/* Cintillo Económico & Meteorológico */}
+                <div className="p-3.5 bg-stone-50 rounded-xl border border-stone-200 space-y-3">
+                  <label className="flex items-center justify-between cursor-pointer">
+                    <div>
+                      <span className="text-xs font-bold text-stone-900 block">
+                        Cintillo Económico & Clima de Guárico (Barra Superior)
+                      </span>
+                      <span className="text-[11px] text-stone-500">
+                        Muestra la cotización del Dólar BCV, Paralelo, Euro y temperatura de municipios llaneros en tiempo real.
+                      </span>
+                    </div>
+                    <input
+                      type="checkbox"
+                      checked={draft.features.showEconomicIndicators !== false}
+                      onChange={(e) =>
+                        setDraft((prev) => ({
+                          ...prev,
+                          features: { ...prev.features, showEconomicIndicators: e.target.checked },
+                        }))
+                      }
+                      className="w-4 h-4 rounded text-rose-900 focus:ring-rose-800"
+                    />
+                  </label>
+
+                  {draft.features.showEconomicIndicators !== false && (
+                    <div className="pt-2 border-t border-stone-200/70 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">
+                          Dólar BCV (Oficial)
+                        </label>
+                        <input
+                          type="text"
+                          value={draft.features.economicRates?.bcvRate || 'Bs. 54.12'}
+                          onChange={(e) =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              features: {
+                                ...prev.features,
+                                economicRates: {
+                                  bcvRate: e.target.value,
+                                  parallelRate: prev.features.economicRates?.parallelRate || 'Bs. 62.40',
+                                  euroRate: prev.features.economicRates?.euroRate || 'Bs. 58.75',
+                                },
+                              },
+                            }))
+                          }
+                          className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs text-stone-900 font-mono"
+                          placeholder="Bs. 54.12"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">
+                          Dólar Paralelo
+                        </label>
+                        <input
+                          type="text"
+                          value={draft.features.economicRates?.parallelRate || 'Bs. 62.40'}
+                          onChange={(e) =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              features: {
+                                ...prev.features,
+                                economicRates: {
+                                  bcvRate: prev.features.economicRates?.bcvRate || 'Bs. 54.12',
+                                  parallelRate: e.target.value,
+                                  euroRate: prev.features.economicRates?.euroRate || 'Bs. 58.75',
+                                },
+                              },
+                            }))
+                          }
+                          className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs text-stone-900 font-mono"
+                          placeholder="Bs. 62.40"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold uppercase tracking-wider text-stone-500 mb-1">
+                          Euro BCV
+                        </label>
+                        <input
+                          type="text"
+                          value={draft.features.economicRates?.euroRate || 'Bs. 58.75'}
+                          onChange={(e) =>
+                            setDraft((prev) => ({
+                              ...prev,
+                              features: {
+                                ...prev.features,
+                                economicRates: {
+                                  bcvRate: prev.features.economicRates?.bcvRate || 'Bs. 54.12',
+                                  parallelRate: prev.features.economicRates?.parallelRate || 'Bs. 62.40',
+                                  euroRate: e.target.value,
+                                },
+                              },
+                            }))
+                          }
+                          className="w-full bg-white border border-stone-300 rounded-lg px-2.5 py-1.5 text-xs text-stone-900 font-mono"
+                          placeholder="Bs. 58.75"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Locutor de Voz / Audiolector */}
                 <label className="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-stone-200 cursor-pointer">
                   <div>
                     <span className="text-xs font-bold text-stone-900 block">
-                      Widget del Clima en Barra Superior
+                      Locución por Voz / Audiolector con IA (Web Speech API)
                     </span>
                     <span className="text-[11px] text-stone-500">
-                      Muestra la temperatura y pronóstico regional en la cabecera.
+                      Permite a los usuarios escuchar la narración en audio de cualquier artículo con control de velocidad y onda sonora.
                     </span>
                   </div>
                   <input
                     type="checkbox"
-                    checked={draft.features.showWeatherWidget}
+                    checked={draft.features.showAudioReader !== false}
                     onChange={(e) =>
                       setDraft((prev) => ({
                         ...prev,
-                        features: { ...prev.features, showWeatherWidget: e.target.checked },
+                        features: { ...prev.features, showAudioReader: e.target.checked },
+                      }))
+                    }
+                    className="w-4 h-4 rounded text-rose-900 focus:ring-rose-800"
+                  />
+                </label>
+
+                {/* Foro & Comentarios Ciudadanos */}
+                <label className="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-stone-200 cursor-pointer">
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 block">
+                      Foro de Comentarios de la Comunidad & Reacciones
+                    </span>
+                    <span className="text-[11px] text-stone-500">
+                      Habilita la caja de comentarios comunitarios, votaciones a favor y métricas de reacciones de los lectores.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={draft.features.showComments !== false}
+                    onChange={(e) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        features: { ...prev.features, showComments: e.target.checked },
+                      }))
+                    }
+                    className="w-4 h-4 rounded text-rose-900 focus:ring-rose-800"
+                  />
+                </label>
+
+                {/* Tiempo de Lectura */}
+                <label className="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-stone-200 cursor-pointer">
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 block">
+                      Estimador de Tiempo de Lectura y Conteo de Palabras
+                    </span>
+                    <span className="text-[11px] text-stone-500">
+                      Muestra en la cabecera del artículo los minutos estimados para lectura completa.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={draft.features.showReadingTime !== false}
+                    onChange={(e) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        features: { ...prev.features, showReadingTime: e.target.checked },
+                      }))
+                    }
+                    className="w-4 h-4 rounded text-rose-900 focus:ring-rose-800"
+                  />
+                </label>
+
+                {/* Artículos Guardados */}
+                <label className="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-stone-200 cursor-pointer">
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 block">
+                      Bandeja de Artículos Guardados (Lectura Offline)
+                    </span>
+                    <span className="text-[11px] text-stone-500">
+                      Permite a los lectores guardar notas con 1 clic para leer después en su cajón personal.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={draft.features.showBookmarks !== false}
+                    onChange={(e) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        features: { ...prev.features, showBookmarks: e.target.checked },
+                      }))
+                    }
+                    className="w-4 h-4 rounded text-rose-900 focus:ring-rose-800"
+                  />
+                </label>
+
+                {/* Edición Impresa / Kiosco */}
+                <label className="flex items-center justify-between p-3.5 bg-stone-50 rounded-xl border border-stone-200 cursor-pointer">
+                  <div>
+                    <span className="text-xs font-bold text-stone-900 block">
+                      Kiosco Digital & Portada de Edición Impresa
+                    </span>
+                    <span className="text-[11px] text-stone-500">
+                      Habilita el botón de portada facsimilar imprimible en PDF con diagramación de primera plana tradicional.
+                    </span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={draft.features.showPrintEdition !== false}
+                    onChange={(e) =>
+                      setDraft((prev) => ({
+                        ...prev,
+                        features: { ...prev.features, showPrintEdition: e.target.checked },
                       }))
                     }
                     className="w-4 h-4 rounded text-rose-900 focus:ring-rose-800"

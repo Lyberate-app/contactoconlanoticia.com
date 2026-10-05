@@ -14,6 +14,7 @@ import { PrePublishChecklistModal } from '../../components/editorial/PrePublishC
 import { SeoAssistant } from '../../components/editorial/SeoAssistant';
 import { GalleryManagerModal } from '../../components/editorial/GalleryManagerModal';
 import { OptimizedImage } from '../../components/common/OptimizedImage';
+import { renderArticleMarkdown, renderInlineContent } from '../../utils/markdownRenderer';
 import { mediaService } from '../../services/mediaApi';
 import { notify } from '../../utils/notice';
 import {
@@ -951,43 +952,7 @@ export const ArticleEditorPage: React.FC = () => {
                       Resultado en Maqueta
                     </span>
                     <div className="prose prose-stone max-w-none text-stone-900 font-sans leading-relaxed text-sm space-y-3">
-                      {content.split('\n').map((line, idx) => {
-                        const imgMatch = line.match(/^!\[(.*?)\]\((.*?)\)$/);
-                        if (imgMatch) {
-                          return (
-                            <figure key={idx} className="my-3 rounded-lg overflow-hidden border border-stone-200 bg-stone-50">
-                              <img src={imgMatch[2]} alt={imgMatch[1]} className="w-full max-h-[300px] object-cover" />
-                              {imgMatch[1] && (
-                                <figcaption className="p-2 text-xs text-stone-500 font-sans italic text-center">
-                                  {imgMatch[1]}
-                                </figcaption>
-                              )}
-                            </figure>
-                          );
-                        }
-                        if (line.startsWith('## ')) {
-                          return <h2 key={idx} className="text-lg font-bold font-serif text-stone-950 mt-4">{line.replace('## ', '')}</h2>;
-                        }
-                        if (line.startsWith('### ')) {
-                          return <h3 key={idx} className="text-base font-bold font-serif text-stone-900 mt-3">{line.replace('### ', '')}</h3>;
-                        }
-                        if (line.startsWith('> ')) {
-                          return (
-                            <blockquote key={idx} className="border-l-4 border-rose-800 pl-3 py-1 italic font-serif text-stone-800 bg-rose-50/30 text-xs">
-                              {line.replace('> ', '')}
-                            </blockquote>
-                          );
-                        }
-                        if (line.startsWith(':::gallery')) {
-                          return (
-                            <div key={idx} className="p-3 bg-stone-100 border border-stone-300 rounded-lg text-xs font-mono text-stone-600">
-                              [Galería fotográfica incrustada]
-                            </div>
-                          );
-                        }
-                        if (!line.trim()) return <div key={idx} className="h-1" />;
-                        return <p key={idx} className="text-stone-800 leading-relaxed text-xs">{line}</p>;
-                      })}
+                      {renderArticleMarkdown(content, { enableDropCap: false })}
                     </div>
                   </div>
                 </div>
@@ -998,11 +963,11 @@ export const ArticleEditorPage: React.FC = () => {
                 <div className="border border-stone-200 rounded-xl p-6 bg-white">
                   <div className="max-w-2xl mx-auto space-y-4">
                     <h1 className="font-serif font-black text-2xl sm:text-3xl text-stone-950 leading-tight">
-                      {title || 'Titular de la Noticia'}
+                      {renderInlineContent(title || 'Titular de la Noticia')}
                     </h1>
                     {subtitle && (
                       <p className="text-sm sm:text-base font-medium text-stone-600">
-                        {subtitle}
+                        {renderInlineContent(subtitle)}
                       </p>
                     )}
                     {featuredMedia?.url && (
@@ -1017,15 +982,12 @@ export const ArticleEditorPage: React.FC = () => {
                     )}
                     {excerpt && (
                       <p className="text-sm font-semibold text-stone-800 leading-relaxed border-l-2 border-stone-300 pl-3 italic">
-                        {excerpt}
+                        {renderInlineContent(excerpt)}
                       </p>
                     )}
                     <hr className="border-stone-200 my-4" />
-                    <div className="space-y-4 font-sans text-sm leading-relaxed text-stone-800">
-                      {content.split('\n').map((line, idx) => {
-                        if (!line.trim()) return <div key={idx} className="h-2" />;
-                        return <p key={idx}>{line}</p>;
-                      })}
+                    <div className="space-y-4 font-sans text-sm sm:text-base leading-relaxed text-stone-800">
+                      {renderArticleMarkdown(content, { enableDropCap: true })}
                     </div>
                   </div>
                 </div>

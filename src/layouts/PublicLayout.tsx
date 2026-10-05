@@ -4,7 +4,6 @@ import {
   Search,
   Menu,
   X,
-  SunMedium,
   ArrowRight,
   Shield,
   Bell,
@@ -15,12 +14,20 @@ import {
   ChevronRight,
   Zap,
   Clock,
+  Bookmark,
+  Newspaper,
 } from 'lucide-react';
 import { publicApi, PublicCategory, PublicArticleSummary } from '../services/publicApi';
 import { PwaManager } from '../components/common/PwaManager';
 import { AdSlot } from '../components/common/AdSlot';
+import { EconomicWeatherBar } from '../components/common/EconomicWeatherBar';
+import { BookmarksDrawer } from '../components/common/BookmarksDrawer';
+import { PrintEditionModal } from '../components/common/PrintEditionModal';
+import { LiveThemeCustomizer } from '../components/common/LiveThemeCustomizer';
+import { bookmarksService } from '../services/bookmarksService';
 import { formatMastheadDate } from '../utils/date';
 import { useSettings } from '../context/SettingsContext';
+import { isMockMode } from '../config/env';
 
 declare global {
   interface Window {
@@ -36,6 +43,9 @@ export const PublicLayout: React.FC = () => {
   const [latestNewsOpen, setLatestNewsOpen] = useState(false);
   const [bottomSheetOpen, setBottomSheetOpen] = useState(false);
   const [searchModalOpen, setSearchModalOpen] = useState(false);
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
+  const [printModalOpen, setPrintModalOpen] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
@@ -76,10 +86,19 @@ export const PublicLayout: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Sync bookmarks count
+  useEffect(() => {
+    setSavedCount(bookmarksService.getBookmarks().length);
+    return bookmarksService.onBookmarksChange(() => {
+      setSavedCount(bookmarksService.getBookmarks().length);
+    });
+  }, []);
+
   // Close drawers on route change
   useEffect(() => {
     setBottomSheetOpen(false);
     setSearchModalOpen(false);
+    setBookmarksOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [location.pathname]);
 
@@ -94,20 +113,40 @@ export const PublicLayout: React.FC = () => {
   };
 
   const formattedDate = formatMastheadDate();
+  const mastheadLayout = settings.features.mastheadLayout;
+  const socialLinks = [
+    { label: 'X', href: settings.social.twitterUrl },
+    { label: 'Facebook', href: settings.social.facebookUrl },
+    { label: 'Instagram', href: settings.social.instagramUrl },
+    { label: 'WhatsApp', href: settings.social.whatsappChannelUrl },
+    { label: 'Telegram', href: settings.social.telegramChannelUrl },
+    { label: 'YouTube', href: settings.social.youtubeUrl },
+  ].filter((link) => /^https?:\/\//i.test(link.href));
 
   return (
-    <div className="min-h-screen text-stone-900 font-sans flex flex-col antialiased selection:bg-rose-500/20 selection:text-rose-950 ambient-glow-mesh relative">
+    <div
+      data-type-scale={settings.typography.scale}
+      className="portal-theme min-h-screen text-stone-900 font-sans flex flex-col antialiased selection:bg-rose-500/20 selection:text-rose-950 ambient-glow-mesh relative"
+      style={{ backgroundColor: settings.colors.pageBg }}
+    >
+      {/* 1. TOP UTILITY: ECONOMIC RATES & REGIONAL WEATHER BAR */}
+      <EconomicWeatherBar />
+
       {/* 2. STICKY FROSTED GLASS HEADER (iOS 27 Glass) */}
       <header
+        style={{ backgroundColor: settings.colors.mastheadBg }}
         className={`sticky top-0 z-40 transition-all duration-200 ${
           isScrolled
-            ? 'bg-white shadow-sm border-b border-stone-200 py-2 sm:py-2.5'
-            : 'bg-white border-b border-stone-200 py-2.5 sm:py-3.5'
+            ? 'shadow-sm border-b border-stone-200 py-2 sm:py-2.5'
+            : 'border-b border-stone-200 py-2.5 sm:py-3.5'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Top Row: Date, Weather Chip & Redaction */}
-          <div className="flex items-center justify-between gap-3 text-xs mb-1.5 sm:mb-2 text-stone-500">
+          <div
+            className="portal-utility-bar flex items-center justify-between gap-3 text-xs mb-1.5 sm:mb-2"
+            style={{ backgroundColor: settings.colors.topBarBg, color: settings.colors.topBarText }}
+          >
             <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
               <span className="font-medium text-stone-700 text-[11px] sm:text-xs tracking-tight">
                 {formattedDate}
@@ -116,20 +155,48 @@ export const PublicLayout: React.FC = () => {
               <span className="hidden sm:inline text-[11px] text-stone-500">
                 {settings.identity.editionName}
               </span>
-              {settings.features.showWeatherWidget && (
-                <div className="inline-flex items-center gap-1 bg-amber-500/10 text-amber-900 border border-amber-500/20 px-2 py-0.5 rounded-full text-[10px] font-medium">
-                  <SunMedium className="w-3 h-3 text-amber-600" />
-                  <span>31°C · Soleado</span>
-                </div>
+              {isMockMode() && (
+                <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-900">
+                  Vista previa · datos de demostración
+                </span>
               )}
             </div>
 
-            {/* Header Right Actions (Alerts, Citizen Submit, Redacción) */}
+            {/* Header Right Actions (Kiosco PDF, Bookmarks, Alerts, Citizen Submit, Redacción) */}
             <div className="flex items-center gap-2">
+              {settings.features.showPrintEdition !== false && (
+                <button
+                  type="button"
+                  onClick={() => setPrintModalOpen(true)}
+                  className="border border-stone-200 bg-white px-2.5 py-1 text-[11px] font-medium text-stone-700 hover:text-rose-700 flex items-center gap-1.5 transition-colors cursor-pointer rounded-md"
+                  title="Ver portada digital de la edición impresa"
+                >
+                  <Newspaper className="w-3 h-3 text-stone-600" />
+                  <span className="hidden sm:inline">Edición Impresa</span>
+                </button>
+              )}
+
+              {settings.features.showBookmarks !== false && (
+                <button
+                  type="button"
+                  onClick={() => setBookmarksOpen(true)}
+                  className="border border-stone-200 bg-white px-2.5 py-1 text-[11px] font-medium text-stone-700 hover:text-rose-700 flex items-center gap-1.5 transition-colors cursor-pointer rounded-md relative"
+                  title="Ver lecturas guardadas"
+                >
+                  <Bookmark className="w-3 h-3 text-stone-600 fill-current" />
+                  <span className="hidden sm:inline">Guardadas</span>
+                  {savedCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-rose-700 text-white text-[9px] font-bold flex items-center justify-center">
+                      {savedCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
               <button
                 type="button"
                 onClick={() => window.openPushPreferences?.()}
-                className="border border-stone-200 bg-white px-2.5 py-1 text-[11px] font-medium text-stone-700 hover:text-rose-700 flex items-center gap-1.5"
+                className="border border-stone-200 bg-white px-2.5 py-1 text-[11px] font-medium text-stone-700 hover:text-rose-700 flex items-center gap-1.5 rounded-md cursor-pointer"
                 title="Alertas y Notificaciones"
               >
                 <Bell className="w-3 h-3 text-rose-600" />
@@ -139,7 +206,7 @@ export const PublicLayout: React.FC = () => {
               {settings.features.showCitizenSubmissionButton && (
                 <Link
                   to="/enviar-noticia"
-                  className="hidden md:inline-flex items-center gap-1.5 border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100"
+                  className="hidden md:inline-flex items-center gap-1.5 border border-rose-200 bg-rose-50 px-3 py-1 text-[11px] font-semibold text-rose-700 hover:bg-rose-100 rounded-md"
                 >
                   <Send className="w-3 h-3" />
                   <span>Envíanos tu noticia</span>
@@ -158,8 +225,26 @@ export const PublicLayout: React.FC = () => {
           </div>
 
           {/* Middle Row: Brand Masthead */}
-          <div className="flex items-center justify-between py-1">
-            <Link to="/" className="inline-block group">
+          <div
+            className={`portal-masthead flex items-center py-1 ${
+              mastheadLayout === 'modern_centered'
+                ? 'relative justify-center text-center'
+                : 'justify-between'
+            } ${mastheadLayout === 'classic_double_rule' ? 'border-y-4 my-1' : ''} ${
+              mastheadLayout === 'clean_compact' ? 'py-0' : ''
+            }`}
+            style={{
+              borderColor: mastheadLayout === 'classic_double_rule' ? settings.colors.primary : undefined,
+              borderStyle: mastheadLayout === 'classic_double_rule' ? 'double' : undefined,
+              color: settings.colors.mastheadText,
+            }}
+          >
+            <Link
+              to="/"
+              className={`inline-block group ${
+                mastheadLayout === 'modern_centered' ? 'mx-auto' : ''
+              }`}
+            >
               {settings.logos.headerLogoUrl ? (
                 <img
                   src={settings.logos.headerLogoUrl}
@@ -173,7 +258,7 @@ export const PublicLayout: React.FC = () => {
                     style={{
                       fontFamily: 'var(--font-serif)',
                       fontWeight: Number(settings.typography.headingWeight) || 900,
-                      color: settings.colors.primary,
+                      color: settings.colors.mastheadText,
                     }}
                     className="text-2xl sm:text-4xl md:text-5xl uppercase tracking-tighter group-hover:opacity-90 transition-opacity"
                   >
@@ -182,9 +267,19 @@ export const PublicLayout: React.FC = () => {
                 </div>
               )}
             </Link>
+            {settings.logos.headerLogoUrl && settings.identity.historicSubtitle && mastheadLayout !== 'clean_compact' && (
+              <span className="hidden sm:block text-[10px] uppercase tracking-[0.18em] text-stone-500 ml-3">
+                {settings.identity.historicSubtitle}
+              </span>
+            )}
 
             {/* Desktop Quick Search Pill */}
-            <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-1.5">
+            <form
+              onSubmit={handleSearchSubmit}
+              className={`hidden md:flex items-center gap-1.5 ${
+                mastheadLayout === 'modern_centered' ? 'absolute right-0' : ''
+              }`}
+            >
               <div className="relative">
                 <input
                   type="text"
@@ -225,7 +320,10 @@ export const PublicLayout: React.FC = () => {
           </div>
 
           {/* Desktop Categories Pill Navigation Bar */}
-          <div className="hidden md:flex items-center gap-1 pt-2.5 pb-1 overflow-x-auto no-scrollbar border-t border-stone-200/50">
+          <div
+            className="portal-category-nav hidden md:flex items-center gap-1 pt-2.5 pb-1 overflow-x-auto no-scrollbar border-t border-stone-200/50"
+            style={{ backgroundColor: settings.colors.navBg, color: settings.colors.navText }}
+          >
             <Link
               to="/"
               className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 ${
@@ -273,18 +371,34 @@ export const PublicLayout: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 pb-8 border-b border-stone-200/60">
             {/* Column 1: Identity */}
             <div className="space-y-3">
-              <h2
+              {settings.logos.footerLogoUrl ? (
+                <img
+                  src={settings.logos.footerLogoUrl}
+                  alt={settings.identity.siteName}
+                  className="max-h-12 max-w-full object-contain"
+                />
+              ) : <h2
                 style={{
                   fontFamily: 'var(--font-serif)',
-                  color: settings.colors.primary,
+                  color: settings.colors.mastheadText,
                 }}
                 className="text-lg font-black uppercase tracking-tight"
               >
                 {settings.identity.siteName}
-              </h2>
+              </h2>}
               <p className="text-stone-600 leading-relaxed text-xs">
                 {settings.identity.tagline}
               </p>
+              {settings.identity.contactEmail && (
+                <a className="block hover:text-rose-700" href={`mailto:${settings.identity.contactEmail}`}>
+                  {settings.identity.contactEmail}
+                </a>
+              )}
+              {settings.identity.contactPhone && (
+                <a className="block hover:text-rose-700" href={`tel:${settings.identity.contactPhone.replace(/[^\d+]/g, '')}`}>
+                  {settings.identity.contactPhone}
+                </a>
+              )}
               <div className="text-stone-500 text-[11px]">
                 {settings.identity.address || `Sede: ${settings.identity.centralLocation}`}
               </div>
@@ -320,6 +434,21 @@ export const PublicLayout: React.FC = () => {
                 <li><span className="text-stone-400">Tarifario Publicitario</span></li>
                 <li><Link to="/buscar" className="hover:text-rose-700">Hemeroteca & Archivo</Link></li>
               </ul>
+              {socialLinks.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-x-3 gap-y-2" aria-label="Redes sociales">
+                  {socialLinks.map(({ label, href }) => (
+                    <a
+                      key={label}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold hover:text-rose-700 hover:underline"
+                    >
+                      {label}
+                    </a>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Column 4: Redacción Digital */}
@@ -670,6 +799,15 @@ export const PublicLayout: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Bookmarks & Reading List Drawer */}
+      <BookmarksDrawer isOpen={bookmarksOpen} onClose={() => setBookmarksOpen(false)} />
+
+      {/* Digital Kiosk Print Edition Modal */}
+      <PrintEditionModal isOpen={printModalOpen} onClose={() => setPrintModalOpen(false)} />
+
+      {/* Live Brand Customizer Drawer */}
+      <LiveThemeCustomizer />
 
       {/* PWA & Web Push Manager */}
       <PwaManager />

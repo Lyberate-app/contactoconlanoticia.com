@@ -13,6 +13,10 @@ import {
   AlertTriangle,
   Sparkles,
   X,
+  MessageSquare,
+  ThumbsUp,
+  Check,
+  ShieldCheck,
 } from 'lucide-react';
 import {
   getAdminSubmissions,
@@ -21,13 +25,24 @@ import {
   CitizenSubmission,
   SubmissionStatus,
 } from '../../services/submissionApi';
+import { commentsService } from '../../services/commentsService';
+import type { ArticleComment } from '../../types/comments';
 import { formatDate } from '../../utils/date';
 import { confirmAction, notify } from '../../utils/notice';
 
 export const SubmissionsModerationPage: React.FC = () => {
+  const [moderationTab, setModerationTab] = useState<'submissions' | 'comments'>('submissions');
+
+  // Submissions State
   const [submissions, setSubmissions] = useState<CitizenSubmission[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Comments Moderation State
+  const [comments, setComments] = useState<ArticleComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(false);
+  const [commentsFilter, setCommentsFilter] = useState<'ALL' | 'APPROVED' | 'PENDING' | 'REJECTED'>('ALL');
+  const [commentsSearch, setCommentsSearch] = useState('');
 
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -93,6 +108,55 @@ export const SubmissionsModerationPage: React.FC = () => {
       setActionLoading(false);
     }
   };
+
+  const loadComments = async () => {
+    setCommentsLoading(true);
+    try {
+      const data = await commentsService.getAllAdminComments();
+      setComments(data);
+    } catch (err: any) {
+      notify(err.message || 'Error al cargar los comentarios.', 'error', 'Error');
+    } finally {
+      setCommentsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (moderationTab === 'comments') {
+      loadComments();
+    }
+  }, [moderationTab]);
+
+  const handleModerateComment = async (commentUuid: string, newStatus: 'APPROVED' | 'REJECTED') => {
+    try {
+      await commentsService.moderateComment(commentUuid, newStatus);
+      setComments((prev) =>
+        prev.map((c) => (c.comment_uuid === commentUuid ? { ...c, status: newStatus } : c))
+      );
+      notify(
+        newStatus === 'APPROVED' ? 'Comentario aprobado y visible en el portal.' : 'Comentario ocultado y restringido.',
+        'success',
+        'Moderación de comentarios'
+      );
+    } catch (err: any) {
+      notify(err.message || 'No se pudo actualizar el comentario.', 'error', 'Error');
+    }
+  };
+
+  const filteredComments = comments.filter((c) => {
+    if (commentsFilter !== 'ALL' && c.status !== commentsFilter) {
+      return false;
+    }
+    if (commentsSearch.trim()) {
+      const q = commentsSearch.toLowerCase();
+      return (
+        c.author_name.toLowerCase().includes(q) ||
+        c.content.toLowerCase().includes(q) ||
+        (c.author_email && c.author_email.toLowerCase().includes(q))
+      );
+    }
+    return true;
+  });
 
   const handleConvert = async (submission: CitizenSubmission) => {
     const confirmed = await confirmAction('¿Desea convertir este reporte en un artículo borrador asignado a la redacción?', 'Convertir a borrador');
@@ -169,8 +233,57 @@ export const SubmissionsModerationPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Filters and Search Bar */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        {/* Navigation Tabs */}
+        <div className="flex items-center gap-2 border-b border-black/5 dark:border-white/10 pb-3">
+          <button
+            type="button"
+            onClick={() => setModerationTab('submissions')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              moderationTab === 'submissions'
+                ? 'bg-rose-900 text-white shadow-md'
+                : 'bg-white/60 dark:bg-stone-800/60 text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-800'
+            }`}
+          >
+            <Inbox className="w-4 h-4" />
+            <span>Denuncias Ciudadanas (Buzón)</span>
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                moderationTab === 'submissions'
+                  ? 'bg-rose-950 text-rose-200'
+                  : 'bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300'
+              }`}
+            >
+              {submissions.length}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setModerationTab('comments')}
+            className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all cursor-pointer ${
+              moderationTab === 'comments'
+                ? 'bg-rose-900 text-white shadow-md'
+                : 'bg-white/60 dark:bg-stone-800/60 text-stone-600 dark:text-stone-300 hover:bg-white dark:hover:bg-stone-800'
+            }`}
+          >
+            <MessageSquare className="w-4 h-4" />
+            <span>Comentarios de Lectores (Comunidad)</span>
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
+                moderationTab === 'comments'
+                  ? 'bg-rose-950 text-rose-200'
+                  : 'bg-stone-200 dark:bg-stone-700 text-stone-700 dark:text-stone-300'
+              }`}
+            >
+              {comments.length}
+            </span>
+          </button>
+        </div>
+
+        {moderationTab === 'submissions' ? (
+          <>
+            {/* Filters and Search Bar */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
           <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px] max-w-md">
             <input
               type="text"
@@ -333,7 +446,170 @@ export const SubmissionsModerationPage: React.FC = () => {
             </div>
           )}
         </div>
+      </>
+    ) : (
+      /* Comments Moderation Dashboard */
+      <div className="space-y-4">
+        {/* Quick Metrics Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="glass-card rounded-2xl p-3.5 border border-white/60 dark:border-white/10">
+            <span className="text-[10px] uppercase font-bold text-stone-500 tracking-wider">Total Comentarios</span>
+            <p className="text-xl font-bold font-serif text-stone-900 dark:text-white mt-0.5">{comments.length}</p>
+          </div>
+          <div className="glass-card rounded-2xl p-3.5 border border-white/60 dark:border-white/10">
+            <span className="text-[10px] uppercase font-bold text-emerald-600 tracking-wider">Aprobados / Visibles</span>
+            <p className="text-xl font-bold font-serif text-emerald-700 dark:text-emerald-400 mt-0.5">
+              {comments.filter((c) => c.status === 'APPROVED').length}
+            </p>
+          </div>
+          <div className="glass-card rounded-2xl p-3.5 border border-white/60 dark:border-white/10">
+            <span className="text-[10px] uppercase font-bold text-amber-600 tracking-wider">En Revisión</span>
+            <p className="text-xl font-bold font-serif text-amber-700 dark:text-amber-400 mt-0.5">
+              {comments.filter((c) => c.status === 'PENDING').length}
+            </p>
+          </div>
+          <div className="glass-card rounded-2xl p-3.5 border border-white/60 dark:border-white/10">
+            <span className="text-[10px] uppercase font-bold text-red-600 tracking-wider">Ocultos / Rechazados</span>
+            <p className="text-xl font-bold font-serif text-red-700 dark:text-red-400 mt-0.5">
+              {comments.filter((c) => c.status === 'REJECTED').length}
+            </p>
+          </div>
+        </div>
+
+        {/* Filter and Search Bar for Comments */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <input
+              type="text"
+              placeholder="Buscar por comentarista o palabras en el comentario..."
+              value={commentsSearch}
+              onChange={(e) => setCommentsSearch(e.target.value)}
+              className="w-full text-xs border border-white/60 dark:border-white/10 bg-white/70 dark:bg-stone-800/70 backdrop-blur-md rounded-full pl-9 pr-4 py-2.5 text-stone-800 dark:text-stone-200 placeholder-stone-400 focus:outline-none focus:ring-2 focus:ring-stone-800 shadow-xs"
+            />
+            <Search className="w-4 h-4 text-stone-400 absolute left-3 top-3" />
+          </div>
+
+          <div className="flex items-center gap-2 justify-end text-xs">
+            <select
+              value={commentsFilter}
+              onChange={(e) => setCommentsFilter(e.target.value as any)}
+              className="text-xs border border-white/60 dark:border-white/10 bg-white/70 dark:bg-stone-800/70 backdrop-blur-md px-4 py-2.5 rounded-full text-stone-700 dark:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-800 shadow-xs cursor-pointer"
+            >
+              <option value="ALL">Todos los comentarios ({comments.length})</option>
+              <option value="APPROVED">Solo aprobados ({comments.filter((c) => c.status === 'APPROVED').length})</option>
+              <option value="PENDING">Pendientes de revisión ({comments.filter((c) => c.status === 'PENDING').length})</option>
+              <option value="REJECTED">Ocultos / Rechazados ({comments.filter((c) => c.status === 'REJECTED').length})</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Comments List Container */}
+        <div className="glass-card rounded-[28px] overflow-hidden border border-white/60 dark:border-white/10 shadow-sm p-4 sm:p-6">
+          {commentsLoading ? (
+            <div className="p-16 text-center text-xs text-stone-500 font-mono animate-pulse">
+              Cargando comentarios comunitarios en tiempo real...
+            </div>
+          ) : filteredComments.length === 0 ? (
+            <div className="p-12 text-center space-y-2 text-stone-500">
+              <MessageSquare className="w-8 h-8 text-stone-300 mx-auto" />
+              <p className="font-serif text-sm font-bold text-stone-700 dark:text-stone-200">
+                No hay comentarios con los filtros actuales
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-black/5 dark:divide-white/5 space-y-4">
+              {filteredComments.map((comment) => (
+                <div
+                  key={comment.comment_uuid}
+                  className="pt-4 first:pt-0 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-3 rounded-2xl hover:bg-stone-50/50 dark:hover:bg-white/[0.02] transition-colors"
+                >
+                  <div className="flex items-start gap-3 flex-1 min-w-0">
+                    <div className="w-10 h-10 rounded-full bg-rose-900 text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-xs">
+                      {comment.author_name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-bold text-xs text-stone-900 dark:text-white">
+                          {comment.author_name}
+                        </span>
+                        {comment.is_verified && (
+                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 bg-rose-100 dark:bg-rose-950/60 text-rose-800 dark:text-rose-300 text-[10px] rounded-full font-semibold">
+                            <ShieldCheck className="w-3 h-3 text-rose-600" />
+                            Redactor Verificado
+                          </span>
+                        )}
+                        <span className="text-[11px] text-stone-400 font-mono">
+                          {formatDate(comment.created_at, 'withTime')}
+                        </span>
+                      </div>
+                      {comment.author_email && (
+                        <span className="text-[11px] text-stone-400 block mt-0.5">
+                          {comment.author_email}
+                        </span>
+                      )}
+                      <p className="text-xs text-stone-700 dark:text-stone-200 bg-white/70 dark:bg-stone-800/70 border border-black/5 dark:border-white/5 rounded-xl p-3 mt-2 leading-relaxed font-sans">
+                        "{comment.content}"
+                      </p>
+                      <div className="flex items-center gap-3 mt-1.5 text-[11px] text-stone-500">
+                        <span className="inline-flex items-center gap-1 font-semibold text-rose-700">
+                          <ThumbsUp className="w-3 h-3" />
+                          {comment.likes_count} votos
+                        </span>
+                        <span className="font-mono text-[10px] bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded text-stone-500">
+                          ID: {comment.article_uuid.slice(0, 8)}...
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:items-end gap-2 shrink-0 self-end sm:self-center">
+                    <span
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold ${
+                        comment.status === 'APPROVED'
+                          ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20'
+                          : comment.status === 'REJECTED'
+                          ? 'bg-red-500/10 text-red-700 dark:text-red-300 border border-red-500/20'
+                          : 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20'
+                      }`}
+                    >
+                      {comment.status === 'APPROVED'
+                        ? 'Aprobado (Visible)'
+                        : comment.status === 'REJECTED'
+                        ? 'Oculto / Bloqueado'
+                        : 'Pendiente de Revisión'}
+                    </span>
+
+                    <div className="flex items-center gap-1.5">
+                      {comment.status !== 'APPROVED' && (
+                        <button
+                          type="button"
+                          onClick={() => handleModerateComment(comment.comment_uuid, 'APPROVED')}
+                          className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full text-xs font-semibold inline-flex items-center gap-1 active:scale-95 transition-all shadow-xs cursor-pointer"
+                        >
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Aprobar</span>
+                        </button>
+                      )}
+                      {comment.status !== 'REJECTED' && (
+                        <button
+                          type="button"
+                          onClick={() => handleModerateComment(comment.comment_uuid, 'REJECTED')}
+                          className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-700 dark:text-red-300 rounded-full text-xs font-semibold inline-flex items-center gap-1 active:scale-95 transition-all cursor-pointer"
+                        >
+                          <XCircle className="w-3.5 h-3.5" />
+                          <span>Ocultar</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
+    )}
+  </div>
 
       {/* Detail Modal */}
       {selectedSubmission && (

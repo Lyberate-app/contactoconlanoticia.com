@@ -81,6 +81,25 @@ export const LoginPage: React.FC = () => {
     }
   };
 
+  const handleQuickDemoLogin = async () => {
+    setEmail('director@contactoconlanoticia.com');
+    setPassword('admin123');
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await authService.login('director@contactoconlanoticia.com', 'admin123');
+      if (res.success && res.data?.user) {
+        navigate(from, { replace: true });
+      } else {
+        setError(res.error?.message || 'Error de acceso demo.');
+      }
+    } catch {
+      setError('Error al conectar con la autenticación demo.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen ambient-glow-mesh flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans relative">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
@@ -97,6 +116,31 @@ export const LoginPage: React.FC = () => {
 
       <div className="mt-6 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="glass-panel p-6 sm:p-8 rounded-[32px] shadow-2xl">
+          {/* Quick Demo One-Click Access Button */}
+          <div className="mb-5 rounded-2xl border border-rose-200/80 bg-gradient-to-br from-rose-50/90 via-amber-50/50 to-white p-3.5 shadow-xs">
+            <div className="flex items-center justify-between gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-rose-900 uppercase tracking-wider">
+                <span className="flex h-2 w-2 rounded-full bg-rose-600 animate-pulse" />
+                Acceso Rápido de Prueba
+              </span>
+              <span className="text-[10px] bg-rose-100 text-rose-800 px-2 py-0.5 rounded-full font-semibold">
+                Director Editorial
+              </span>
+            </div>
+            <p className="text-[11px] text-stone-600 leading-relaxed mb-3">
+              Ingresa al panel del CMS con 1 solo clic para evaluar todas las herramientas de redacción y personalización sin teclear credenciales.
+            </p>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={handleQuickDemoLogin}
+              className="w-full flex items-center justify-center gap-2 bg-rose-900 hover:bg-rose-950 text-white text-xs font-semibold py-2.5 px-3 rounded-xl transition-all shadow-sm active:scale-95 disabled:opacity-50 cursor-pointer"
+            >
+              <span>⚡ Ingresar como Director Editorial</span>
+              <ArrowRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           {error && (
             <div className="mb-5 p-3.5 bg-rose-50/90 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-rose-800 text-xs">
               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />

@@ -459,3 +459,4 @@ export const SeoAssistant: React.FC<SeoAssistantProps> = ({
     </div>
   );
 };
+

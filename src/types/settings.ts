@@ -90,6 +90,19 @@ export interface PortalFeaturesSettings {
   showCitizenSubmissionButton: boolean;
   showSocialShareButtons: boolean;
   mastheadLayout: 'classic_double_rule' | 'modern_centered' | 'clean_compact';
+  showEconomicIndicators?: boolean;
+  showAudioReader?: boolean;
+  showComments?: boolean;
+  showReadingTime?: boolean;
+  showBookmarks?: boolean;
+  showPrintEdition?: boolean;
+  weatherCity?: string;
+  weatherTemp?: string;
+  economicRates?: {
+    bcvRate: string;
+    parallelRate: string;
+    euroRate: string;
+  };
 }
 
 export interface WhiteLabelConfig {

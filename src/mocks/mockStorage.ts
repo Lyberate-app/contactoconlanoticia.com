@@ -13,6 +13,8 @@ import {
   MOCK_ADS,
   MOCK_SUBMISSIONS,
   MOCK_MEDIA,
+  DEFAULT_COMMENTS,
+  DEFAULT_REACTIONS,
 } from './mockData';
 import type { AuthUser } from '../types/auth';
 import type { PublicCategory } from '../types/category';
@@ -30,6 +32,8 @@ import type { CalendarItem } from '../types/calendar';
 import type { AuditEntry, AuditFilterParams } from '../types/audit';
 import type { JournalistProfile } from '../types/user';
 import type { EditorialNotification } from '../types/notification';
+import type { ArticleComment, NewCommentPayload } from '../types/comments';
+import type { BookmarkedArticle } from '../types/bookmarks';
 
 const KEYS = {
   AUTH_USER: 'lyberate_mock_auth_user',
@@ -48,6 +52,9 @@ const KEYS = {
   VERSIONS: 'lyberate_mock_article_versions',
   AUDIT: 'lyberate_mock_audit_logs',
   NOTIFICATIONS: 'lyberate_mock_notifications',
+  COMMENTS: 'lyberate_mock_comments',
+  REACTIONS: 'lyberate_mock_reactions',
+  BOOKMARKS: 'lyberate_mock_bookmarks',
 } as const;
 
 function isBrowser(): boolean {
@@ -1280,6 +1287,96 @@ export const mockStorage = {
   },
 
   // ---------------------------------------------------------------------------
+  // Citizen Comments & Reader Engagement
+  // ---------------------------------------------------------------------------
+
+  getComments(articleUuid: string): ArticleComment[] {
+    const all = getItem<ArticleComment[]>(KEYS.COMMENTS, DEFAULT_COMMENTS);
+    return all.filter((c) => c.article_uuid === articleUuid && c.status === 'APPROVED');
+  },
+
+  getAllCommentsAdmin(): ArticleComment[] {
+    return getItem<ArticleComment[]>(KEYS.COMMENTS, DEFAULT_COMMENTS);
+  },
+
+  addComment(payload: NewCommentPayload): ArticleComment {
+    const all = getItem<ArticleComment[]>(KEYS.COMMENTS, DEFAULT_COMMENTS);
+    const newComment: ArticleComment = {
+      comment_uuid: 'cmt-' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+      article_uuid: payload.article_uuid,
+      author_name: payload.author_name.trim(),
+      author_email: payload.author_email?.trim() || undefined,
+      location: payload.location?.trim() || undefined,
+      content: payload.content.trim(),
+      created_at: new Date().toISOString(),
+      likes_count: 0,
+      status: 'APPROVED',
+      is_verified: false,
+      parent_uuid: payload.parent_uuid || null,
+    };
+    all.unshift(newComment);
+    setItem(KEYS.COMMENTS, all);
+    return newComment;
+  },
+
+  likeComment(commentUuid: string): { likes_count: number; user_liked: boolean } {
+    const all = getItem<ArticleComment[]>(KEYS.COMMENTS, DEFAULT_COMMENTS);
+    const comment = all.find((c) => c.comment_uuid === commentUuid);
+    if (!comment) return { likes_count: 0, user_liked: false };
+    comment.likes_count = (comment.likes_count || 0) + 1;
+    setItem(KEYS.COMMENTS, all);
+    return { likes_count: comment.likes_count, user_liked: true };
+  },
+
+  moderateComment(commentUuid: string, status: 'APPROVED' | 'REJECTED'): void {
+    const all = getItem<ArticleComment[]>(KEYS.COMMENTS, DEFAULT_COMMENTS);
+    const comment = all.find((c) => c.comment_uuid === commentUuid);
+    if (comment) {
+      comment.status = status;
+      setItem(KEYS.COMMENTS, all);
+    }
+  },
+
+  getReactions(articleUuid: string): Record<string, number> {
+    const all = getItem<Record<string, Record<string, number>>>(KEYS.REACTIONS, DEFAULT_REACTIONS);
+    return all[articleUuid] || { interesante: 0, util: 0, alegria: 0, sorprendente: 0, preocupante: 0 };
+  },
+
+  addReaction(articleUuid: string, reactionType: string): Record<string, number> {
+    const all = getItem<Record<string, Record<string, number>>>(KEYS.REACTIONS, DEFAULT_REACTIONS);
+    if (!all[articleUuid]) {
+      all[articleUuid] = { interesante: 0, util: 0, alegria: 0, sorprendente: 0, preocupante: 0 };
+    }
+    all[articleUuid][reactionType] = (all[articleUuid][reactionType] || 0) + 1;
+    setItem(KEYS.REACTIONS, all);
+    return all[articleUuid];
+  },
+
+  getBookmarks(): BookmarkedArticle[] {
+    return getItem<BookmarkedArticle[]>(KEYS.BOOKMARKS, []);
+  },
+
+  isBookmarked(articleUuid: string): boolean {
+    const list = this.getBookmarks();
+    return list.some((b) => b.article_uuid === articleUuid);
+  },
+
+  toggleBookmark(article: BookmarkedArticle): boolean {
+    const list = this.getBookmarks();
+    const index = list.findIndex((b) => b.article_uuid === article.article_uuid);
+    let nextSavedState: boolean;
+    if (index >= 0) {
+      list.splice(index, 1);
+      nextSavedState = false;
+    } else {
+      list.unshift(article);
+      nextSavedState = true;
+    }
+    setItem(KEYS.BOOKMARKS, list);
+    return nextSavedState;
+  },
+
+  // ---------------------------------------------------------------------------
   // Maintenance & Developer Reset Utility
   // ---------------------------------------------------------------------------
 
@@ -1294,6 +1391,9 @@ export const mockStorage = {
     setItem(KEYS.SUBMISSIONS, MOCK_SUBMISSIONS);
     setItem(KEYS.MEDIA, MOCK_MEDIA);
     setItem(KEYS.SETTINGS, DEFAULT_WHITE_LABEL_CONFIG);
+    setItem(KEYS.COMMENTS, DEFAULT_COMMENTS);
+    setItem(KEYS.REACTIONS, DEFAULT_REACTIONS);
+    setItem(KEYS.BOOKMARKS, []);
   },
 };
 

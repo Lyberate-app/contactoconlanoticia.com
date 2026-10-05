@@ -53,3 +53,4 @@ export interface WordPressHistoricResponse {
   status: WordPressConnectorStatus;
   fromCache: boolean;
 }
+

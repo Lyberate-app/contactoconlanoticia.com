@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { editorialService, ArticleSummary, DashboardStats } from '../../services/editorial';
+import { analyticsService } from '../../services/analyticsService';
+import type { GlobalAnalyticsOverview } from '../../types/analytics';
+import { useSettings } from '../../context/SettingsContext';
+import { isMockMode } from '../../config/env';
 import {
   FileText,
   PlusCircle,
@@ -20,16 +24,21 @@ import {
 } from 'lucide-react';
 
 export const EditorialDashboardPage: React.FC = () => {
+  const { settings } = useSettings();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [recentPublished, setRecentPublished] = useState<ArticleSummary[]>([]);
   const [pendingDrafts, setPendingDrafts] = useState<ArticleSummary[]>([]);
+  const [analytics, setAnalytics] = useState<GlobalAnalyticsOverview | null>(null);
+  const [analyticsError, setAnalyticsError] = useState('');
+  const [dashboardError, setDashboardError] = useState('');
   const [loading, setLoading] = useState(true);
   const [timeFilter, setTimeFilter] = useState<'today' | 'week' | 'month'>('today');
-  const [chartMetric, setChartMetric] = useState<'views' | 'articles'>('views');
+  const [chartMetric, setChartMetric] = useState<'views' | 'reads'>('views');
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const loadDashboardData = async () => {
     try {
+      setDashboardError('');
       const statsData = await editorialService.getDashboardStats();
       setStats(statsData);
 
@@ -46,6 +55,7 @@ export const EditorialDashboardPage: React.FC = () => {
       setPendingDrafts(draftsRes.articles);
     } catch (err) {
       console.error('Error al cargar panel editorial:', err);
+      setDashboardError(err instanceof Error ? err.message : 'No se pudieron cargar los datos editoriales.');
     } finally {
       setLoading(false);
       setIsRefreshing(false);
@@ -56,6 +66,30 @@ export const EditorialDashboardPage: React.FC = () => {
     setLoading(true);
     loadDashboardData();
   }, []);
+
+  useEffect(() => {
+    let isCurrentRequest = true;
+    const period = timeFilter === 'today' ? 'today' : timeFilter === 'week' ? '7d' : '30d';
+
+    analyticsService.getOverview(period)
+      .then((data) => {
+        if (!isCurrentRequest) return;
+        setAnalytics(data);
+        setAnalyticsError('');
+      })
+      .catch((err: unknown) => {
+        if (!isCurrentRequest) return;
+        console.error('Error al cargar analítica del panel editorial:', err);
+        setAnalytics(null);
+        setAnalyticsError(
+          err instanceof Error ? err.message : 'No se pudieron cargar las métricas.',
+        );
+      });
+
+    return () => {
+      isCurrentRequest = false;
+    };
+  }, [timeFilter]);
 
   const handleRefresh = () => {
     setIsRefreshing(true);
@@ -71,46 +105,25 @@ export const EditorialDashboardPage: React.FC = () => {
     greeting = 'Buenas noches';
   }
 
-  // Real datasets according to timeFilter and chartMetric
-  const chartDatasets = {
-    today: {
-      labels: ['00:00', '03:00', '06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
-      views: [620, 240, 1850, 4920, 6840, 5210, 7890, 4230],
-      articles: [0, 0, 1, 3, 2, 1, 2, 1],
-      totalViews: 31800,
-      totalArticles: 10,
-      avgViews: '3,975 / intervalo',
-      peakLabel: '7,890 lecturas (18:00 hrs)',
-      growth: '+14.2%',
-      periodTitle: 'Hoy (Monitoreo 24 Horas)',
-    },
-    week: {
-      labels: ['Lun 18', 'Mar 19', 'Mié 20', 'Jue 21', 'Vie 22', 'Sáb 23', 'Dom 24'],
-      views: [28400, 31250, 34800, 29600, 38920, 33100, 36490],
-      articles: [5, 4, 7, 6, 9, 4, 6],
-      totalViews: 232560,
-      totalArticles: 41,
-      avgViews: '33,222 / día',
-      peakLabel: '38,920 lecturas (Viernes 22)',
-      growth: '+18.5%',
-      periodTitle: 'Últimos 7 Días (Semana en Curso)',
-    },
-    month: {
-      labels: ['Semana 1', 'Semana 2', 'Semana 3', 'Semana 4'],
-      views: [224000, 248500, 271200, 298400],
-      articles: [38, 42, 49, 45],
-      totalViews: 1042100,
-      totalArticles: 174,
-      avgViews: '260,525 / semana',
-      peakLabel: '298,400 lecturas (Semana 4)',
-      growth: '+22.4%',
-      periodTitle: 'Últimos 30 Días (Mensual Acumulado)',
-    },
-  };
-
-  const currentDataset = chartDatasets[timeFilter];
-  const chartLabels = currentDataset.labels;
-  const activePoints = chartMetric === 'views' ? currentDataset.views : currentDataset.articles;
+  const periodTitle = timeFilter === 'today'
+    ? 'Hoy'
+    : timeFilter === 'week'
+      ? 'Últimos 7 días'
+      : 'Últimos 30 días';
+  const history = analytics?.recent_history ?? [];
+  const sourcePoints = chartMetric === 'views'
+    ? history.map((point) => point.views)
+    : history.map((point) => point.reads);
+  const chartLabels = history.length > 0
+    ? history.map((point) => point.label)
+    : ['Sin datos'];
+  const activePoints = sourcePoints.length > 0 ? sourcePoints : [0];
+  const metricTotal = sourcePoints.reduce((total, value) => total + value, 0);
+  const peakValue = Math.max(0, ...sourcePoints);
+  const peakIndex = sourcePoints.indexOf(peakValue);
+  const growth = timeFilter === 'today'
+    ? analytics?.views_today_growth
+    : analytics?.views_24h_growth;
 
   // Chart layout dimensions
   const svgWidth = 760;
@@ -124,20 +137,21 @@ export const EditorialDashboardPage: React.FC = () => {
   const chartInnerHeight = svgHeight - paddingTop - paddingBottom;
 
   // Y-Scale calculations
-  const maxVal = chartMetric === 'views'
-    ? (timeFilter === 'today' ? 10000 : timeFilter === 'week' ? 40000 : 320000)
-    : (timeFilter === 'month' ? 60 : 10);
+  const dataMaximum = Math.max(1, ...activePoints);
+  const magnitude = 10 ** Math.floor(Math.log10(dataMaximum));
+  const normalizedMaximum = dataMaximum / magnitude;
+  const maxVal = (normalizedMaximum <= 1 ? 1 : normalizedMaximum <= 2 ? 2 : normalizedMaximum <= 5 ? 5 : 10) * magnitude;
 
   const yTicks = [
-    { val: maxVal, label: chartMetric === 'views' ? `${Math.round(maxVal / 1000)}k` : `${maxVal}` },
-    { val: maxVal * 0.75, label: chartMetric === 'views' ? `${Math.round((maxVal * 0.75) / 1000)}k` : `${Math.round(maxVal * 0.75)}` },
-    { val: maxVal * 0.5, label: chartMetric === 'views' ? `${Math.round((maxVal * 0.5) / 1000)}k` : `${Math.round(maxVal * 0.5)}` },
-    { val: maxVal * 0.25, label: chartMetric === 'views' ? `${Math.round((maxVal * 0.25) / 1000)}k` : `${Math.round(maxVal * 0.25)}` },
+    { val: maxVal, label: maxVal >= 1000 ? `${Math.round(maxVal / 1000)}k` : `${maxVal}` },
+    { val: maxVal * 0.75, label: maxVal >= 1000 ? `${+(maxVal * 0.75 / 1000).toFixed(1)}k` : `${Math.round(maxVal * 0.75)}` },
+    { val: maxVal * 0.5, label: maxVal >= 1000 ? `${+(maxVal * 0.5 / 1000).toFixed(1)}k` : `${Math.round(maxVal * 0.5)}` },
+    { val: maxVal * 0.25, label: maxVal >= 1000 ? `${+(maxVal * 0.25 / 1000).toFixed(1)}k` : `${Math.round(maxVal * 0.25)}` },
     { val: 0, label: '0' },
   ];
 
   const coordinates = activePoints.map((val, idx) => {
-    const x = paddingLeft + (idx / (activePoints.length - 1)) * chartInnerWidth;
+    const x = paddingLeft + (idx / Math.max(1, activePoints.length - 1)) * chartInnerWidth;
     const y = paddingTop + chartInnerHeight - (val / maxVal) * chartInnerHeight;
     return { x, y, val, label: chartLabels[idx] };
   });
@@ -168,11 +182,13 @@ export const EditorialDashboardPage: React.FC = () => {
               </span>
               <span className="glass-pill px-3 py-1 rounded-full text-[11px] font-semibold text-stone-700 inline-flex items-center gap-1.5 shadow-2xs">
                 <Building className="w-3.5 h-3.5 text-stone-500" />
-                <span>Sede Guárico Central</span>
+                <span>{settings.identity.centralLocation}</span>
               </span>
-              <span className="glass-pill px-3 py-1 rounded-full text-[11px] font-medium text-emerald-800 inline-flex items-center gap-1.5 shadow-2xs">
-                <Activity className="w-3.5 h-3.5 text-emerald-600" />
-                <span>LocalStore Activo</span>
+              <span className={`glass-pill px-3 py-1 rounded-full text-[11px] font-medium inline-flex items-center gap-1.5 shadow-2xs ${
+                isMockMode() ? 'text-amber-800' : 'text-emerald-800'
+              }`}>
+                <Activity className={`w-3.5 h-3.5 ${isMockMode() ? 'text-amber-600' : 'text-emerald-600'}`} />
+                <span>{isMockMode() ? 'Datos de demostración' : 'Modo API'}</span>
               </span>
             </div>
 
@@ -182,7 +198,7 @@ export const EditorialDashboardPage: React.FC = () => {
                 {greeting}, Administrador
               </h1>
               <p className="text-xs sm:text-sm text-stone-600 mt-1 font-sans">
-                Centro de mando editorial, métricas de lectura y rendimiento periodístico en tiempo real.
+                Gestión de contenidos, planificación y seguimiento editorial.
               </p>
             </div>
           </div>
@@ -247,6 +263,11 @@ export const EditorialDashboardPage: React.FC = () => {
       </div>
 
       {/* 2. FOUR KPI CARDS (iOS 27 Glassmorphic Widgets) */}
+      {dashboardError && (
+        <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-900">
+          No fue posible cargar el resumen editorial: {dashboardError}
+        </p>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {/* CARD 1: NOTICIAS PUBLICADAS */}
         <div className="glass-card glass-card-interactive rounded-[28px] p-5 sm:p-6 shadow-sm flex flex-col justify-between group">
@@ -255,28 +276,27 @@ export const EditorialDashboardPage: React.FC = () => {
               <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center font-bold shadow-inner">
                 <FileText className="w-5 h-5" />
               </div>
-              <span className="glass-pill px-2.5 py-0.5 rounded-full text-[11px] font-bold text-rose-700 inline-flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                +18.5%
+              <span className="glass-pill px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-stone-600">
+                Publicadas
               </span>
             </div>
 
             <div className="mt-4">
               <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block font-sans">
-                Noticias en Línea (Hoy)
+                Artículos publicados
               </span>
               <div className="text-3xl font-serif font-black text-stone-950 mt-1">
-                {loading ? '...' : (stats ? stats.published_articles : '12')}
+                {loading ? '...' : (stats?.published_articles ?? '—')}
                 <span className="text-xs font-sans font-normal text-stone-400 ml-1.5">artículos</span>
               </div>
               <p className="text-xs text-stone-500 font-sans mt-0.5">
-                ≈ 14,820 lecturas estimadas
+                {stats ? `${stats.total_articles} artículos registrados en total` : 'Conteo disponible al conectar el CMS'}
               </p>
             </div>
           </div>
 
           <div className="pt-4 mt-4 border-t border-stone-200/60 flex items-center justify-between text-xs">
-            <span className="text-stone-400 text-[11px]">Web: 85% · Móvil: 15%</span>
+            <span className="text-stone-400 text-[11px]">Resumen editorial</span>
             <Link
               to="/admin/articles"
               className="text-rose-900 font-semibold text-xs hover:text-rose-700 inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
@@ -295,11 +315,11 @@ export const EditorialDashboardPage: React.FC = () => {
                 <Edit3 className="w-5 h-5" />
               </div>
               <span className={`glass-pill px-2.5 py-0.5 rounded-full text-[11px] font-bold ${
-                (stats?.draft_articles ?? 1) > 0
+                (stats?.draft_articles ?? 0) > 0
                   ? 'text-amber-700 bg-amber-50/80 border border-amber-200/60'
                   : 'text-emerald-700 bg-emerald-50/80 border border-emerald-200/60'
               }`}>
-                {(stats?.draft_articles ?? 1) > 0 ? 'En Redacción' : 'Al Día'}
+                {stats ? (stats.draft_articles > 0 ? 'En redacción' : 'Al día') : '—'}
               </span>
             </div>
 
@@ -308,13 +328,13 @@ export const EditorialDashboardPage: React.FC = () => {
                 Borradores en Curso
               </span>
               <div className="text-3xl font-serif font-black text-stone-950 mt-1 flex items-baseline">
-                {loading ? '...' : (stats ? stats.draft_articles : '1')}
+                {loading ? '...' : (stats?.draft_articles ?? '—')}
                 <span className="text-xs font-sans font-normal text-stone-500 ml-1.5">
-                  {(stats?.draft_articles ?? 1) === 1 ? 'nota en borrador' : 'notas en borrador'}
+                  {stats?.draft_articles === 1 ? 'nota en borrador' : 'notas en borrador'}
                 </span>
               </div>
               <p className="text-xs text-stone-500 font-sans mt-0.5">
-                {stats?.pending_review_articles ? `${stats.pending_review_articles} en revisión editorial` : '0 notas en revisión editorial'}
+                {stats ? `${stats.pending_review_articles} en revisión editorial` : 'Estado de revisión no disponible'}
               </p>
             </div>
           </div>
@@ -338,8 +358,8 @@ export const EditorialDashboardPage: React.FC = () => {
               <div className="w-10 h-10 rounded-2xl bg-blue-100 text-blue-800 flex items-center justify-center font-bold shadow-inner">
                 <Inbox className="w-5 h-5" />
               </div>
-              <span className="glass-pill px-2.5 py-0.5 rounded-full text-[11px] font-bold text-rose-700">
-                Pendientes
+              <span className="glass-pill px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-stone-600">
+                Moderación
               </span>
             </div>
 
@@ -348,11 +368,11 @@ export const EditorialDashboardPage: React.FC = () => {
                 Reportes Ciudadanos
               </span>
               <div className="text-3xl font-serif font-black text-stone-950 mt-1 flex items-baseline">
-                {loading ? '...' : (stats ? stats.pending_submissions : '2')}
-                <span className="text-xs font-sans font-normal text-stone-400 ml-1.5">denuncias</span>
+                {loading ? '...' : (stats?.pending_submissions ?? '—')}
+                <span className="text-xs font-sans font-normal text-stone-400 ml-1.5">pendientes</span>
               </div>
               <p className="text-xs text-stone-500 font-sans mt-0.5">
-                Total acumulado: {loading ? '...' : (stats ? stats.pending_submissions + 2 : '5')}
+                {stats ? 'Reportes por revisar' : 'Conteo disponible al conectar el CMS'}
               </p>
             </div>
           </div>
@@ -376,8 +396,8 @@ export const EditorialDashboardPage: React.FC = () => {
               <div className="w-10 h-10 rounded-2xl bg-purple-100 text-purple-800 flex items-center justify-center font-bold shadow-inner">
                 <Megaphone className="w-5 h-5" />
               </div>
-              <span className="glass-pill px-2.5 py-0.5 rounded-full text-[11px] font-bold text-purple-700">
-                3.8% CTR
+              <span className="glass-pill px-2.5 py-0.5 rounded-full text-[11px] font-semibold text-stone-600">
+                Publicidad
               </span>
             </div>
 
@@ -386,17 +406,17 @@ export const EditorialDashboardPage: React.FC = () => {
                 Campañas de Anuncios
               </span>
               <div className="text-3xl font-serif font-black text-stone-950 mt-1 flex items-baseline">
-                {loading ? '...' : (stats ? stats.total_ads : '4')}
-                <span className="text-xs font-sans font-normal text-stone-400 ml-1.5">banners</span>
+                {loading ? '...' : (stats?.total_ads ?? '—')}
+                <span className="text-xs font-sans font-normal text-stone-400 ml-1.5">campañas</span>
               </div>
               <p className="text-xs text-stone-500 font-sans mt-0.5">
-                Archivos en DAM: {loading ? '...' : (stats ? stats.total_media : '14')} fotos
+                Archivos multimedia: {loading ? '...' : (stats?.total_media ?? '—')}
               </p>
             </div>
           </div>
 
           <div className="pt-4 mt-4 border-t border-stone-200/60 flex items-center justify-between text-xs">
-            <span className="text-stone-400 text-[11px]">Inventario: 85% libre</span>
+            <span className="text-stone-400 text-[11px]">Centro comercial</span>
             <Link
               to="/admin/ads"
               className="text-purple-700 font-semibold text-xs hover:text-purple-900 inline-flex items-center gap-1 group-hover:translate-x-0.5 transition-transform"
@@ -418,7 +438,7 @@ export const EditorialDashboardPage: React.FC = () => {
                 Evolución de Cobertura Periodística & Audiencia
               </h2>
               <p className="text-xs text-stone-500 mt-0.5">
-                {currentDataset.periodTitle} — Métricas reales consolidadas de lectura digital y ritmo editorial
+                {periodTitle} · Serie de analítica para el período seleccionado
               </p>
             </div>
           </div>
@@ -436,28 +456,44 @@ export const EditorialDashboardPage: React.FC = () => {
               Lecturas (Vistas)
             </button>
             <button
-              onClick={() => setChartMetric('articles')}
+              onClick={() => setChartMetric('reads')}
               className={`px-3.5 py-1 rounded-full text-xs font-semibold transition-all ${
-                chartMetric === 'articles'
+                chartMetric === 'reads'
                   ? 'bg-rose-900 text-white shadow-xs'
                   : 'text-stone-600 hover:text-stone-900'
               }`}
             >
-              Publicaciones (N)
+              Lecturas efectivas
             </button>
           </div>
         </div>
+
+        {analyticsError && (
+          <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-900">
+            No fue posible actualizar las métricas: {analyticsError}
+          </p>
+        )}
+        {!analytics && !analyticsError && (
+          <p role="status" className="rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-xs text-stone-600">
+            Cargando métricas del período...
+          </p>
+        )}
+        {analytics && sourcePoints.length === 0 && (
+          <p role="status" className="rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-xs text-stone-600">
+            Todavía no hay registros de {chartMetric === 'views' ? 'vistas' : 'lecturas efectivas'} para este período.
+          </p>
+        )}
 
         {/* Executive KPI Summary Bar */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3.5 sm:p-4 rounded-2xl bg-stone-50/70 border border-stone-200/60 text-xs">
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block font-sans">
-              {chartMetric === 'views' ? 'Total Lecturas' : 'Total Artículos'}
+              {chartMetric === 'views' ? 'Total de vistas' : 'Lecturas efectivas'}
             </span>
             <span className="text-base sm:text-lg font-serif font-black text-stone-950 mt-0.5 block">
-              {chartMetric === 'views' ? currentDataset.totalViews.toLocaleString('es-VE') : currentDataset.totalArticles}
+              {metricTotal.toLocaleString('es-VE')}
               <span className="text-[11px] font-sans font-normal text-stone-400 ml-1">
-                {chartMetric === 'views' ? 'vistas' : 'notas'}
+                {chartMetric === 'views' ? 'vistas' : 'lecturas'}
               </span>
             </span>
           </div>
@@ -467,9 +503,9 @@ export const EditorialDashboardPage: React.FC = () => {
               Promedio
             </span>
             <span className="text-base sm:text-lg font-serif font-black text-stone-950 mt-0.5 block">
-              {chartMetric === 'views'
-                ? currentDataset.avgViews
-                : `${(currentDataset.totalArticles / chartLabels.length).toFixed(1)} / ciclo`}
+              {sourcePoints.length > 0
+                ? `${(metricTotal / sourcePoints.length).toLocaleString('es-VE', { maximumFractionDigits: 1 })} / intervalo`
+                : '—'}
             </span>
           </div>
 
@@ -478,17 +514,21 @@ export const EditorialDashboardPage: React.FC = () => {
               Pico Máximo
             </span>
             <span className="text-xs sm:text-sm font-semibold text-rose-900 mt-1 block line-clamp-1">
-              {currentDataset.peakLabel}
+              {sourcePoints.length > 0
+                ? `${peakValue.toLocaleString('es-VE')} · ${chartLabels[peakIndex]}`
+                : 'Sin registros'}
             </span>
           </div>
 
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block font-sans">
-              Crecimiento
+              Variación de vistas
             </span>
-            <span className="text-xs sm:text-sm font-bold text-emerald-700 mt-1 inline-flex items-center gap-1">
-              <TrendingUp className="w-3.5 h-3.5" />
-              {currentDataset.growth} vs previo
+            <span className={`text-xs sm:text-sm font-bold mt-1 inline-flex items-center gap-1 ${
+              (growth ?? 0) >= 0 ? 'text-emerald-700' : 'text-rose-700'
+            }`}>
+              <TrendingUp className={`w-3.5 h-3.5 ${(growth ?? 0) < 0 ? 'rotate-180' : ''}`} />
+              {growth === undefined ? '—' : `${growth >= 0 ? '+' : ''}${growth}%`} vs. período anterior
             </span>
           </div>
         </div>

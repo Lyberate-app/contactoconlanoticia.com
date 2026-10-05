@@ -19,9 +19,13 @@ export const NewsTicker: React.FC<NewsTickerProps> = ({
   }
 
   return (
-    <div className={`glass-pill-dark text-white text-xs flex items-center overflow-hidden rounded-[20px] shadow-lg p-1 ${className}`}>
+    <div
+      className={`glass-pill-dark text-white text-xs flex items-center overflow-hidden rounded-[20px] shadow-lg p-1 ${className}`}
+      style={{ backgroundColor: 'var(--color-brand-primary, #881337)' }}
+      aria-label={`${label}: ${articles.length} noticias`}
+    >
       {/* Kicker Tag */}
-      <div className="bg-rose-600/90 text-white font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shrink-0 uppercase tracking-wider text-[10px] shadow-sm">
+      <div className="bg-rose-600/90 text-white font-bold px-3 py-1.5 rounded-full flex items-center gap-1.5 shrink-0 uppercase tracking-wider text-[10px] shadow-sm" style={{ backgroundColor: 'var(--color-brand-accent, #e11d48)' }}>
         <span className="w-2 h-2 rounded-full bg-white radar-pulse"></span>
         <span>{label}</span>
       </div>

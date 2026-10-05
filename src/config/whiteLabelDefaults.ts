@@ -98,6 +98,19 @@ export const DEFAULT_WHITE_LABEL_CONFIG: WhiteLabelConfig = {
     showCitizenSubmissionButton: true,
     showSocialShareButtons: true,
     mastheadLayout: 'classic_double_rule',
+    showEconomicIndicators: true,
+    showAudioReader: true,
+    showComments: true,
+    showReadingTime: true,
+    showBookmarks: true,
+    showPrintEdition: true,
+    weatherCity: 'San Juan de los Morros',
+    weatherTemp: '32°C',
+    economicRates: {
+      bcvRate: 'Bs. 54.12',
+      parallelRate: 'Bs. 62.40',
+      euroRate: 'Bs. 58.75',
+    },
   },
 };
 

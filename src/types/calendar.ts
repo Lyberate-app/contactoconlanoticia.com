@@ -24,3 +24,4 @@ export interface CalendarItem {
 }
 
 export type CalendarViewMode = 'month' | 'week' | 'list';
+

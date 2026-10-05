@@ -171,6 +171,16 @@ npm run dev
 
 El portal público estará disponible en `http://localhost:5173/` y la mesa de redacción editorial en `http://localhost:5173/admin/articles`.
 
+### Modo de demostración del frontend
+
+El frontend inicia en modo local de demostración (`VITE_DATA_MODE=mock`) si no se define otra variable. En este modo:
+
+* Las noticias, anuncios y analíticas son datos de muestra; las modificaciones del CMS se guardan en el `localStorage` del navegador y no se comparten con otros usuarios.
+* Para revisar el panel, abre `/login` e ingresa cualquier correo válido y una contraseña no vacía. Este acceso es exclusivamente de demostración, no una autenticación real.
+* Los enlaces de anuncios de muestra no llevan a anunciantes externos.
+
+Para conectar el backend, configura `VITE_DATA_MODE=api` y sirve o proxya las rutas `/api/v1/*` desde el mismo origen del frontend. Antes de presentar el sitio como operativo, valida con el backend la autenticación, permisos, persistencia, publicaciones, medios, analítica, anuncios y servicios externos.
+
 ---
 
 ## 🧪 Verificación & Suites de Pruebas Automatizadas

@@ -68,6 +68,38 @@
   transition-duration: 0.15s;
 }
 
+.portal-theme .glass-card,
+.portal-theme .glass-panel {
+  background-color: var(--color-brand-card-bg, #ffffff);
+}
+
+.portal-theme .text-rose-700,
+.portal-theme .text-rose-800,
+.portal-theme .text-rose-900 {
+  color: var(--color-brand-primary, #881337);
+}
+
+.portal-theme .bg-rose-900 {
+  background-color: var(--color-brand-primary, #881337);
+}
+
+.portal-theme .bg-rose-600,
+.portal-theme .bg-rose-700 {
+  background-color: var(--color-brand-accent, #e11d48);
+}
+
+.portal-category-nav a:not(.bg-rose-900) {
+  color: var(--color-brand-nav-text, #1c1917);
+}
+
+.portal-theme[data-type-scale="compact"] {
+  font-size: 0.94rem;
+}
+
+.portal-theme[data-type-scale="spacious"] {
+  font-size: 1.06rem;
+}
+
 /* 3. iOS Floating Bottom Dock (Mobile Tab Bar) */
 .glass-dock {
   background: #ffffff;

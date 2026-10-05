@@ -12,6 +12,7 @@ import type { ArticleDetail, Tag } from '../types/article';
 import type { AdCampaign } from '../types/ads';
 import type { CitizenSubmission } from '../types/submission';
 import type { MediaItem } from '../types/media';
+import type { ArticleComment } from '../types/comments';
 
 export const MOCK_USER: AuthUser = {
   user_uuid: 'usr-001',
@@ -25,12 +26,15 @@ export const MOCK_USER: AuthUser = {
 };
 
 export const MOCK_CATEGORIES: PublicCategory[] = [
-  { category_uuid: 'cat-1', name: 'Regionales', slug: 'regionales', sort_order: 1, articles_count: 5 },
-  { category_uuid: 'cat-2', name: 'Sucesos', slug: 'sucesos', sort_order: 2, articles_count: 3 },
-  { category_uuid: 'cat-3', name: 'Comunidades', slug: 'comunidades', sort_order: 3, articles_count: 4 },
+  { category_uuid: 'cat-1', name: 'Regionales', slug: 'regionales', sort_order: 1, articles_count: 6 },
+  { category_uuid: 'cat-2', name: 'Sucesos', slug: 'sucesos', sort_order: 2, articles_count: 4 },
+  { category_uuid: 'cat-3', name: 'Comunidades', slug: 'comunidades', sort_order: 3, articles_count: 5 },
   { category_uuid: 'cat-4', name: 'Municipales', slug: 'municipales', sort_order: 4, articles_count: 3 },
-  { category_uuid: 'cat-5', name: 'Turismo', slug: 'turismo', sort_order: 5, articles_count: 2 },
-  { category_uuid: 'cat-6', name: 'Internacionales', slug: 'internacionales', sort_order: 6, articles_count: 1 },
+  { category_uuid: 'cat-5', name: 'Turismo', slug: 'turismo', sort_order: 5, articles_count: 3 },
+  { category_uuid: 'cat-6', name: 'Internacionales', slug: 'internacionales', sort_order: 6, articles_count: 2 },
+  { category_uuid: 'cat-7', name: 'Deportes', slug: 'deportes', sort_order: 7, articles_count: 3 },
+  { category_uuid: 'cat-8', name: 'Economía', slug: 'economia', sort_order: 8, articles_count: 3 },
+  { category_uuid: 'cat-9', name: 'Opinión', slug: 'opinion', sort_order: 9, articles_count: 2 },
 ];
 
 export const MOCK_AUTHOR: PublicAuthor = {
@@ -49,6 +53,11 @@ export const MOCK_TAGS: Tag[] = [
   { tag_uuid: 'tag-5', name: 'Servicios Públicos', slug: 'servicios-publicos' },
   { tag_uuid: 'tag-6', name: 'Turismo Llanero', slug: 'turismo-llanero' },
   { tag_uuid: 'tag-7', name: 'Salud', slug: 'salud' },
+  { tag_uuid: 'tag-8', name: 'Deportes', slug: 'deportes' },
+  { tag_uuid: 'tag-9', name: 'Cultura', slug: 'cultura' },
+  { tag_uuid: 'tag-10', name: 'Ganadería', slug: 'ganaderia' },
+  { tag_uuid: 'tag-11', name: 'Opinión', slug: 'opinion' },
+  { tag_uuid: 'tag-12', name: 'Educación', slug: 'educacion' },
 ];
 
 export const MOCK_ARTICLES: ArticleDetail[] = [
@@ -505,6 +514,238 @@ Las fechas, declaraciones y entidades de esta historia son ficticias. No corresp
       og_image_media_uuid: 'med-001',
     },
   },
+  {
+    article_uuid: 'art-013',
+    title: 'Llaneros de Guárico clasifica a cuartos de final de la Superliga con electrizante triunfo en el Domo Olímpico',
+    subtitle: 'El quinteto llanero superó 89-86 a Centauros con una canasta decisiva a falta de 4 segundos en un recinto abarrotado.',
+    excerpt: 'Con un Domo Olímpico colmado de más de 4.000 aficionados, Llaneros de Guárico aseguró su pase a la siguiente ronda de la Superliga Profesional de Baloncesto en una jornada histórica para el deporte regional.',
+    content: `En una auténtica fiesta del baloncesto llanero, el equipo Llaneros de Guárico selló su clasificación a la postemporada tras vencer a Centauros con pizarra final de 89 a 86 en un encuentro de infarto disputado en el Domo Olímpico de San Juan de los Morros.
+    
+El base armador importado lideró la ofensiva con 24 puntos, 7 asistencias y 4 triples, incluyendo el canasto definitivo desde el perímetro a falta de cuatro segundos en el reloj que desató la euforia en los graderíos.
+
+"Este triunfo se lo dedicamos a toda la fanaticada guariqueña que nunca dejó de creer. Ahora nos preparamos con máxima concentración para la serie semifinal, donde dejaremos el alma en la cancha", declaró el director técnico en rueda de prensa.
+
+La directiva anunció que la boletería para los encuentros de cuartos de final estará disponible desde este jueves tanto en taquilla como a través de la plataforma digital del club.`,
+    slug: 'llaneros-de-guarico-clasifica-cuartos-de-final-superliga-baloncesto',
+    status: 'PUBLISHED',
+    published_at: '2026-09-24T18:00:00Z',
+    modified_at: '2026-09-24T18:30:00Z',
+    created_at: '2026-09-24T15:00:00Z',
+    updated_at: '2026-09-24T18:30:00Z',
+    author_uuid: 'aut-1',
+    author_name: 'Roberto Hernández',
+    author_slug: 'roberto-hernandez',
+    category_uuid: 'cat-7',
+    category_name: 'Deportes',
+    category_slug: 'deportes',
+    featured_media_uuid: 'med-015',
+    featured_media: {
+      media_uuid: 'med-015',
+      url: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?auto=format&fit=crop&w=1200&q=80',
+      alt_text: 'Baloncesto profesional en cancha cubierta',
+      caption: 'Momento de la canasta decisiva en el Domo Olímpico de San Juan de los Morros.',
+      credit: 'Prensa Llaneros BBC / Deportes Guárico',
+      width: 1200,
+      height: 675,
+    },
+    tags: [
+      { tag_uuid: 'tag-8', name: 'Deportes', slug: 'deportes' },
+      { tag_uuid: 'tag-3', name: 'Comunidad', slug: 'comunidad' },
+    ],
+    seo: {
+      meta_title: 'Llaneros de Guárico clasifica a cuartos de final de la Superliga',
+      meta_description: 'Victoria épica 89-86 en el Domo Olímpico de San Juan de los Morros.',
+      canonical_url: null,
+      og_title: null,
+      og_description: null,
+      og_image_media_uuid: null,
+    },
+  },
+  {
+    article_uuid: 'art-014',
+    title: 'Guárico consolida liderazgo agropecuario con más de 450 mil litros diarios de leche procesada para queso llanero',
+    subtitle: 'Asociaciones ganaderas de Chaguaramas y Las Mercedes reportan récords de rendimiento en la temporada y altos estándares de inocuidad.',
+    excerpt: 'El circuito lácteo de los Llanos Centrales abastece el 38% del queso blanco duro y semiduro consumido en la Gran Caracas y el centro del país.',
+    content: `La cuenca lechera del estado Guárico ratificó su posición hegemónica en el sector agroalimentario nacional al alcanzar un volumen de acopio superior a los 450 mil litros diarios de leche cruda destinados a la elaboración de derivados lácteos artesanales e industriales.
+
+Fincas modelo ubicadas entre Chaguaramas, Valle de la Pascua y Las Mercedes del Llano han incorporado protocolos de ensilaje de pasto, ordeño mecánico higiénico y mejoramiento genético con razas cebuinas doble propósito (Guzerá y Girolando).
+
+"El queso guariqueño no tiene rival en sabor ni en rendimiento culinario. Estamos trabajando en conjunto con la gobernación y el Ministerio de Agricultura para obtener la Denominación de Origen Protegida que garantice el valor de nuestra marca regional en mercados internacionales", afirmó el presidente de la asociación ganadera.`,
+    slug: 'guarico-consolida-liderazgo-agropecuario-produccion-lactea-queso-llanero',
+    status: 'PUBLISHED',
+    published_at: '2026-09-24T14:15:00Z',
+    modified_at: null,
+    created_at: '2026-09-24T11:00:00Z',
+    updated_at: '2026-09-24T14:15:00Z',
+    author_uuid: 'aut-1',
+    author_name: 'Carlos Mendoza',
+    author_slug: 'carlos-mendoza',
+    category_uuid: 'cat-8',
+    category_name: 'Economía',
+    category_slug: 'economia',
+    featured_media_uuid: 'med-016',
+    featured_media: {
+      media_uuid: 'med-016',
+      url: 'https://images.unsplash.com/photo-1527153857715-3908f2ae5e04?auto=format&fit=crop&w=1200&q=80',
+      alt_text: 'Rebaño ganadero en sabanas verdes de pastoreo',
+      caption: 'Ganadería de doble propósito en los llanos centrales de Guárico.',
+      credit: 'Asociación de Ganaderos / Fotografía Rural',
+      width: 1200,
+      height: 675,
+    },
+    tags: [
+      { tag_uuid: 'tag-10', name: 'Ganadería', slug: 'ganaderia' },
+      { tag_uuid: 'tag-4', name: 'Economía Regional', slug: 'economia-regional' },
+      { tag_uuid: 'tag-2', name: 'Agricultura', slug: 'agricultura' },
+    ],
+    seo: {
+      meta_title: 'Guárico lidera producción láctea y queso llanero en Venezuela',
+      meta_description: 'Más de 450 mil litros diarios procesados en el circuito lechero regional.',
+      canonical_url: null,
+      og_title: null,
+      og_description: null,
+      og_image_media_uuid: null,
+    },
+  },
+  {
+    article_uuid: 'art-015',
+    title: 'Festival Nacional de la Panoja de Oro anuncia cartelera de gala con 60 copleros y arpistas en Valle de la Pascua',
+    subtitle: 'La 47ª edición del magno evento folclórico rendirá homenaje a los baluartes del contrapunteo y la declamación recia.',
+    excerpt: 'Valle de la Pascua se prepara para recibir a delegaciones de 14 estados en las modalidades de voz recia, pasaje sabanero, baile de joropo y contrapunteo libre.',
+    content: `El comité organizador de la Panoja de Oro presentó la programación oficial de su cuadragésima séptima edición, consolidándose como el certamen más respetado y longevo de la música llanera en territorio venezolano.
+
+Durante tres noches continuas en la manga de coleo y concha acústica municipal, los mejores exponentes del cuatro, arpa, maracas y bajo competirán por la codiciada espiga dorada, en un despliegue de tradición que atrae a miles de turistas y coleadores de todo el país.
+
+El evento contará con un dispositivo especial de transporte y seguridad, así como una feria gastronómica donde el visitante podrá degustar ternera en vara, cachapas con queso de mano y dulcería criolla típica.`,
+    slug: 'festival-nacional-panoja-de-oro-cartelera-valle-de-la-pascua',
+    status: 'PUBLISHED',
+    published_at: '2026-09-24T10:30:00Z',
+    modified_at: null,
+    created_at: '2026-09-24T08:00:00Z',
+    updated_at: '2026-09-24T10:30:00Z',
+    author_uuid: 'aut-1',
+    author_name: 'María Corina Páez',
+    author_slug: 'maria-corina-paez',
+    category_uuid: 'cat-5',
+    category_name: 'Turismo',
+    category_slug: 'turismo',
+    featured_media_uuid: 'med-017',
+    featured_media: {
+      media_uuid: 'med-017',
+      url: 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=1200&q=80',
+      alt_text: 'Instrumentos folclóricos y concierto de música tradicional',
+      caption: 'Ensayo previo de los maestros del arpa en Valle de la Pascua.',
+      credit: 'Fundación Festival Panoja de Oro',
+      width: 1200,
+      height: 675,
+    },
+    tags: [
+      { tag_uuid: 'tag-9', name: 'Cultura', slug: 'cultura' },
+      { tag_uuid: 'tag-6', name: 'Turismo Llanero', slug: 'turismo-llanero' },
+    ],
+    seo: {
+      meta_title: 'Festival Panoja de Oro 2026 en Valle de la Pascua',
+      meta_description: 'Más de 60 copleros y arpistas en la 47ª edición del festival llanero.',
+      canonical_url: null,
+      og_title: null,
+      og_description: null,
+      og_image_media_uuid: null,
+    },
+  },
+  {
+    article_uuid: 'art-016',
+    title: 'Universidad Rómulo Gallegos (UNERG) abre 800 cupos en Ciencias de la Salud y Agronomía para bachilleres llaneros',
+    subtitle: 'El rectorado anunció la modernización de laboratorios de simulación médica y parcelas experimentales de cultivo.',
+    excerpt: 'La principal casa de estudios superiores de los Llanos Centrales inicia el proceso de asignación de plazas con énfasis en estudiantes de municipios foráneos.',
+    content: `La Universidad Nacional Experimental de los Llanos Centrales Rómulo Gallegos (UNERG), con sede principal en San Juan de los Morros, dio inicio al cronograma de admisión para el período académico 2026-II, ofertando 800 plazas en las carreras prioritarias de Medicina Humana, Odontología, Enfermería e Ingeniería Agronómica.
+
+La institución universitaria culminó recientemente la rehabilitación integral de sus salas de anatomía y la dotación de microscopios de alta resolución para los laboratorios de microbiología.
+
+Asimismo, los estudiantes de agronomía contarán con 50 hectáreas de siembra experimental en el Valle del Río Pao dotadas de riego por goteo automatizado para el desarrollo de tesis de grado e investigación aplicada a cultivos cerealeros.`,
+    slug: 'unerg-abre-800-cupos-ciencias-salud-agronomia-bachilleres',
+    status: 'PUBLISHED',
+    published_at: '2026-09-23T16:00:00Z',
+    modified_at: null,
+    created_at: '2026-09-23T12:00:00Z',
+    updated_at: '2026-09-23T16:00:00Z',
+    author_uuid: 'aut-1',
+    author_name: 'María Corina Páez',
+    author_slug: 'maria-corina-paez',
+    category_uuid: 'cat-3',
+    category_name: 'Comunidades',
+    category_slug: 'comunidades',
+    featured_media_uuid: 'med-018',
+    featured_media: {
+      media_uuid: 'med-018',
+      url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1200&q=80',
+      alt_text: 'Estudiantes universitarios en campus académico',
+      caption: 'Estudiantes en los jardines del campus universitario de la UNERG en San Juan de los Morros.',
+      credit: 'Prensa Universitaria UNERG',
+      width: 1200,
+      height: 675,
+    },
+    tags: [
+      { tag_uuid: 'tag-12', name: 'Educación', slug: 'educacion' },
+      { tag_uuid: 'tag-7', name: 'Salud', slug: 'salud' },
+      { tag_uuid: 'tag-3', name: 'Comunidad', slug: 'comunidad' },
+    ],
+    seo: {
+      meta_title: 'UNERG abre 800 cupos en Medicina y Agronomía',
+      meta_description: 'Admisión académica abierta para bachilleres de Guárico y regiones vecinas.',
+      canonical_url: null,
+      og_title: null,
+      og_description: null,
+      og_image_media_uuid: null,
+    },
+  },
+  {
+    article_uuid: 'art-017',
+    title: 'Tribuna Editorial: El renacer de los llanos venezolanos exige crédito productivo y seguridad jurídica en el campo',
+    subtitle: 'Por Carlos Mendoza · Director de Redacción de Contacto con la Noticia',
+    excerpt: 'El esfuerzo de miles de familias campesinas y medianos productores no puede quedar a expensas de la especulación de insumos o el deterioro de la vialidad rural.',
+    content: `Quien recorre los caminos del Guárico profundo, desde las riberas del Portuguesa hasta los confines de Zaraza y Cabruta, no puede sino sentir una profunda admiración por el temple del hombre y la mujer del campo venezolano.
+
+En medio de vicisitudes de combustible, vaivenes de precios y caminos de tierra que desafían cualquier vehículo, este pueblo sigue levantándose a las cuatro de la madrugada para ordeñar el rebaño, sembrar la semilla y arrimar la cosecha que alimenta a millones en las grandes ciudades.
+
+Sin embargo, el coraje individual no basta cuando las políticas públicas no brindan el andamiaje necesario: crédito bancario accesible a tasas productivas, mantenimiento riguroso de las vías de penetración agrícola y un combate frontal contra el abigeato y la extorsión rural.
+
+Desde esta tribuna informativa independiente, alzamos la voz junto a los que producen: apostar por el campo no es un favor gubernamental, es la única garantía soberana de paz social, progreso económico y dignidad para nuestra patria llanera.`,
+    slug: 'tribuna-editorial-renacer-llanos-credito-productivo-seguridad-juridica',
+    status: 'PUBLISHED',
+    published_at: '2026-09-24T07:00:00Z',
+    modified_at: null,
+    created_at: '2026-09-24T06:00:00Z',
+    updated_at: '2026-09-24T07:00:00Z',
+    author_uuid: 'aut-1',
+    author_name: 'Carlos Mendoza',
+    author_slug: 'carlos-mendoza',
+    category_uuid: 'cat-9',
+    category_name: 'Opinión',
+    category_slug: 'opinion',
+    featured_media_uuid: 'med-019',
+    featured_media: {
+      media_uuid: 'med-019',
+      url: 'https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=1200&q=80',
+      alt_text: 'Pluma estilográfica y libreta de notas de periodista',
+      caption: 'Columna editorial semanal de Contacto con la Noticia.',
+      credit: 'Mesa Editorial / Carlos Mendoza',
+      width: 1200,
+      height: 675,
+    },
+    tags: [
+      { tag_uuid: 'tag-11', name: 'Opinión', slug: 'opinion' },
+      { tag_uuid: 'tag-2', name: 'Agricultura', slug: 'agricultura' },
+      { tag_uuid: 'tag-4', name: 'Economía Regional', slug: 'economia-regional' },
+    ],
+    seo: {
+      meta_title: 'Opinión: El renacer de los llanos y el crédito productivo',
+      meta_description: 'Análisis editorial de Carlos Mendoza sobre la realidad agropecuaria.',
+      canonical_url: null,
+      og_title: null,
+      og_description: null,
+      og_image_media_uuid: null,
+    },
+  },
 ];
 
 export const MOCK_ADS: AdCampaign[] = [
@@ -860,3 +1101,91 @@ export const MOCK_MEDIA: MediaItem[] = [
     updated_at: null,
   },
 ];
+
+export const DEFAULT_COMMENTS: ArticleComment[] = [
+  {
+    comment_uuid: 'cmt-001',
+    article_uuid: 'art-001',
+    author_name: 'Ing. Rafael Ochoa',
+    author_email: 'r.ochoa@gmail.com',
+    location: 'Calabozo, Guárico',
+    content: 'Excelente avance en la obra. Los transportistas y productores de Calabozo estábamos sufriendo mucho por el paso provisional en la balsa. Esperamos que culminen antes de las lluvias de mayo.',
+    created_at: new Date(Date.now() - 3600000 * 5).toISOString(),
+    likes_count: 14,
+    is_verified: true,
+    status: 'APPROVED',
+  },
+  {
+    comment_uuid: 'cmt-002',
+    article_uuid: 'art-001',
+    author_name: 'Carmen Elena Hurtado',
+    author_email: 'carmen.h@hotmail.com',
+    location: 'San Juan de los Morros',
+    content: 'Gracias a Contacto con la Noticia por mantenernos informados con fotos reales del avance. Es una arteria vital para toda la región llanera.',
+    created_at: new Date(Date.now() - 3600000 * 3).toISOString(),
+    likes_count: 8,
+    is_verified: false,
+    status: 'APPROVED',
+  },
+  {
+    comment_uuid: 'cmt-003',
+    article_uuid: 'art-002',
+    author_name: 'Marcos Rondón',
+    author_email: 'marcosrondon@agro.ve',
+    location: 'Valle de la Pascua',
+    content: 'El campo llanero es el motor que sostiene la mesa del venezolano. Con gasoil a tiempo y crédito justo, los llanos demuestran su potencial inmenso.',
+    created_at: new Date(Date.now() - 3600000 * 12).toISOString(),
+    likes_count: 23,
+    is_verified: true,
+    status: 'APPROVED',
+  },
+  {
+    comment_uuid: 'cmt-004',
+    article_uuid: 'art-003',
+    author_name: 'Dra. Sonia de Pérez',
+    author_email: 'soniaperez@gmail.com',
+    location: 'San Juan de los Morros',
+    content: 'La avenida Bolívar luce mucho más segura de noche ahora. Los comerciantes del centro agradecemos este tipo de mejoras en los servicios.',
+    created_at: new Date(Date.now() - 3600000 * 8).toISOString(),
+    likes_count: 11,
+    is_verified: false,
+    status: 'APPROVED',
+  },
+  {
+    comment_uuid: 'cmt-005',
+    article_uuid: 'art-005',
+    author_name: 'Lcdo. Alberto Montilla',
+    author_email: 'amontilla@ecoturismo.ve',
+    location: 'San Fernando / Guárico',
+    content: 'El Parque Nacional Aguaro-Guariquito es una joya ecológica de nivel mundial. Ojalá se fomente más el turismo responsable en nuestras sabanas.',
+    created_at: new Date(Date.now() - 3600000 * 18).toISOString(),
+    likes_count: 19,
+    is_verified: true,
+    status: 'APPROVED',
+  },
+  {
+    comment_uuid: 'cmt-006',
+    article_uuid: 'art-013',
+    author_name: 'Javier Colmenares',
+    author_email: 'javier.c@gmail.com',
+    location: 'San Juan de los Morros',
+    content: '¡Qué partidazo de Llaneros! El Domo Olímpico temblaba de la emoción con ese triple al final. ¡Vamos por el campeonato de la Superliga!',
+    created_at: new Date(Date.now() - 3600000 * 2).toISOString(),
+    likes_count: 37,
+    is_verified: true,
+    status: 'APPROVED',
+  },
+];
+
+export const DEFAULT_REACTIONS: Record<string, Record<string, number>> = {
+  'art-001': { 'interesante': 42, 'util': 31, 'alegria': 25, 'sorprendente': 9 },
+  'art-002': { 'interesante': 56, 'alegria': 38, 'util': 29, 'sorprendente': 12 },
+  'art-003': { 'alegria': 34, 'util': 28, 'interesante': 15, 'sorprendente': 4 },
+  'art-005': { 'alegria': 62, 'interesante': 48, 'util': 22, 'sorprendente': 18 },
+  'art-006': { 'sorprendente': 31, 'preocupante': 44, 'interesante': 12, 'util': 8 },
+  'art-013': { 'alegria': 89, 'interesante': 45, 'util': 18, 'sorprendente': 27 },
+  'art-014': { 'interesante': 51, 'alegria': 39, 'util': 33, 'sorprendente': 8 },
+  'art-015': { 'alegria': 74, 'interesante': 38, 'util': 26, 'sorprendente': 14 },
+  'art-017': { 'interesante': 65, 'util': 42, 'alegria': 28, 'preocupante': 15 },
+};
+

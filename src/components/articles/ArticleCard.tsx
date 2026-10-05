@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Clock, ArrowUpRight } from 'lucide-react';
 import { OptimizedImage } from '../common/OptimizedImage';
 import { formatDate } from '../../utils/date';
+import { renderInlineContent } from '../../utils/markdownRenderer';
 import type { PublicArticleSummary, RelatedArticle } from '../../types/article';
 
 export interface ArticleCardProps {
@@ -64,7 +65,7 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
 
           <Link to={articleUrl} className="block">
             <h4 className="font-serif font-bold text-stone-900 text-xs sm:text-[14px] leading-snug group-hover:text-rose-900 transition-colors line-clamp-2">
-              {article.title}
+              {renderInlineContent(article.title)}
             </h4>
           </Link>
 
@@ -117,19 +118,19 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
 
           <Link to={articleUrl} className="block">
             <h3 className="font-serif font-bold text-stone-900 text-base sm:text-lg leading-snug group-hover:text-rose-900 transition-colors">
-              {article.title}
+              {renderInlineContent(article.title)}
             </h3>
           </Link>
 
           {'subtitle' in article && article.subtitle && (
             <p className="text-xs sm:text-sm font-serif italic text-stone-600 line-clamp-1">
-              {article.subtitle}
+              {renderInlineContent(article.subtitle)}
             </p>
           )}
 
           {showExcerpt && article.excerpt && (
             <p className="text-xs sm:text-sm text-stone-600 line-clamp-2 leading-relaxed">
-              {article.excerpt}
+              {renderInlineContent(article.excerpt)}
             </p>
           )}
 
@@ -185,19 +186,19 @@ export const ArticleCard: React.FC<ArticleCardProps> = ({
 
           <Link to={articleUrl} className="block">
             <h3 className="font-serif font-bold text-stone-900 text-base sm:text-lg leading-snug group-hover:text-rose-900 transition-colors line-clamp-3">
-              {article.title}
+              {renderInlineContent(article.title)}
             </h3>
           </Link>
 
           {'subtitle' in article && article.subtitle && (
             <p className="text-xs font-serif italic text-stone-600 line-clamp-2 leading-normal">
-              {article.subtitle}
+              {renderInlineContent(article.subtitle)}
             </p>
           )}
 
           {showExcerpt && article.excerpt && (
             <p className="text-xs text-stone-600 line-clamp-2 leading-relaxed">
-              {article.excerpt}
+              {renderInlineContent(article.excerpt)}
             </p>
           )}
         </div>

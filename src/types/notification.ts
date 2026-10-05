@@ -24,3 +24,4 @@ export interface EditorialNotification {
   recipient_uuid?: string;
   severity?: 'info' | 'warning' | 'error' | 'success';
 }
+

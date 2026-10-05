@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Calendar, User, Clock, Tag as TagIcon, Monitor, Smartphone, Sparkles } from 'lucide-react';
 import { OptimizedImage } from '../common/OptimizedImage';
+import { renderArticleMarkdown, renderInlineContent } from '../../utils/markdownRenderer';
 
 interface ArticleLivePreviewModalProps {
   isOpen: boolean;
@@ -44,60 +45,11 @@ export const ArticleLivePreviewModal: React.FC<ArticleLivePreviewModalProps> = (
   const wordCount = data.content ? data.content.trim().split(/\s+/).length : 0;
   const readingMinutes = Math.max(1, Math.ceil(wordCount / 200));
 
-  // Render content with basic markdown paragraphs
   const renderFormattedContent = (raw: string) => {
     if (!raw) return <p className="italic text-stone-400">Sin contenido en el cuerpo de la noticia.</p>;
-
-    const blocks = raw.split(/\n\s*\n/);
-    return blocks.map((block, idx) => {
-      const trimmed = block.trim();
-      if (trimmed.startsWith('## ')) {
-        return (
-          <h2 key={idx} className="font-serif font-black text-2xl text-stone-900 dark:text-white mt-8 mb-4 border-b border-black/5 dark:border-white/5 pb-2">
-            {trimmed.replace(/^##\s+/, '')}
-          </h2>
-        );
-      }
-      if (trimmed.startsWith('### ')) {
-        return (
-          <h3 key={idx} className="font-serif font-bold text-xl text-stone-800 dark:text-stone-100 mt-6 mb-3">
-            {trimmed.replace(/^###\s+/, '')}
-          </h3>
-        );
-      }
-      if (trimmed.startsWith('> ')) {
-        return (
-          <blockquote key={idx} className="border-l-4 border-rose-600 pl-4 py-2 my-6 italic font-serif text-lg text-stone-800 dark:text-stone-200 bg-rose-500/5 rounded-r-2xl">
-            {trimmed.replace(/^>\s+/, '')}
-          </blockquote>
-        );
-      }
-      if (trimmed.startsWith('- ')) {
-        const items = trimmed.split('\n').map((i) => i.replace(/^-\s+/, ''));
-        return (
-          <ul key={idx} className="list-disc list-inside space-y-1.5 my-4 text-stone-800 dark:text-stone-200">
-            {items.map((item, itemIdx) => (
-              <li key={itemIdx}>{item}</li>
-            ))}
-          </ul>
-        );
-      }
-      if (/^\d+\.\s+/.test(trimmed)) {
-        const items = trimmed.split('\n').map((i) => i.replace(/^\d+\.\s+/, ''));
-        return (
-          <ol key={idx} className="list-decimal list-inside space-y-1.5 my-4 text-stone-800 dark:text-stone-200">
-            {items.map((item, itemIdx) => (
-              <li key={itemIdx}>{item}</li>
-            ))}
-          </ol>
-        );
-      }
-
-      return (
-        <p key={idx} className="text-base sm:text-lg leading-relaxed text-stone-800 dark:text-stone-200 mb-6 font-sans">
-          {trimmed}
-        </p>
-      );
+    return renderArticleMarkdown(raw, {
+      enableDropCap: true,
+      paragraphClassName: 'text-base sm:text-lg leading-relaxed text-stone-800 dark:text-stone-200 mb-6 font-sans',
     });
   };
 
@@ -181,13 +133,13 @@ export const ArticleLivePreviewModal: React.FC<ArticleLivePreviewModalProps> = (
 
             {/* Headline */}
             <h1 className="font-serif text-2xl sm:text-4xl font-black text-stone-900 dark:text-white leading-tight tracking-tight mb-4">
-              {data.title || 'Titular de la noticia no especificado'}
+              {renderInlineContent(data.title || 'Titular de la noticia no especificado')}
             </h1>
 
             {/* Subtitle */}
             {data.subtitle && (
               <p className="font-serif text-base sm:text-lg text-stone-600 dark:text-stone-300 italic border-l-2 border-rose-500 pl-3.5 mb-6">
-                {data.subtitle}
+                {renderInlineContent(data.subtitle)}
               </p>
             )}
 
@@ -236,7 +188,7 @@ export const ArticleLivePreviewModal: React.FC<ArticleLivePreviewModalProps> = (
             {/* Excerpt / Lead */}
             {data.excerpt && (
               <div className="text-base sm:text-lg font-sans font-medium text-stone-800 dark:text-stone-200 leading-relaxed border-l-4 border-stone-900 dark:border-white pl-4 py-1.5 mb-8 bg-black/5 dark:bg-white/5 rounded-r-2xl">
-                {data.excerpt}
+                {renderInlineContent(data.excerpt)}
               </div>
             )}
 

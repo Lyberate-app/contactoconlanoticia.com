@@ -18,3 +18,10 @@ export const isMockMode = (): boolean => DATA_MODE !== 'api';
 export const SITE_URL = (import.meta.env.VITE_SITE_URL || 'https://contactoconlanoticia.com').replace(/\/+$/, '');
 
 export const getSiteUrl = (): string => SITE_URL;
+
+export const getAbsoluteSiteAssetUrl = (path?: string): string => {
+  const fallback = `${SITE_URL}/icons/icon-512x512.png`;
+  if (!path || path.startsWith('data:')) return fallback;
+  if (/^https?:\/\//i.test(path)) return path;
+  return `${SITE_URL}/${path.replace(/^\/+/, '')}`;
+};

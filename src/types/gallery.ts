@@ -17,3 +17,4 @@ export interface GalleryData {
   description?: string;
   items: GalleryItem[];
 }
+

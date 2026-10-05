@@ -11,18 +11,21 @@ import {
   ChevronRight,
   Type,
   ArrowUp,
-  MessageSquare,
-  Send,
-  ShieldCheck,
-  ThumbsUp,
+  Bookmark,
+  Printer,
 } from 'lucide-react';
 import { publicApi, PublicArticleDetail } from '../../services/publicApi';
 import { SeoHead } from '../../components/common/SeoHead';
 import { AdSlot } from '../../components/common/AdSlot';
 import { OptimizedImage } from '../../components/common/OptimizedImage';
 import { RelatedArticles } from '../../components/articles';
+import { AudioNewsPlayer } from '../../components/articles/AudioNewsPlayer';
+import { ArticleComments } from '../../components/articles/ArticleComments';
+import { ArticleReactions } from '../../components/articles/ArticleReactions';
+import { bookmarksService } from '../../services/bookmarksService';
 import { formatDate } from '../../utils/date';
-import { SITE_URL } from '../../config/env';
+import { getAbsoluteSiteAssetUrl, SITE_URL } from '../../config/env';
+import { useSettings } from '../../context/SettingsContext';
 
 // Helper to resolve realistic journalist portrait photos
 const getAuthorAvatar = (name?: string, slug?: string): string => {
@@ -32,81 +35,21 @@ const getAuthorAvatar = (name?: string, slug?: string): string => {
   if (slug?.includes('valderrama') || name?.toLowerCase().includes('valderrama')) {
     return 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&h=200&fit=crop&crop=faces&q=80';
   }
-  // Default: Carlos Mendoza (Periodista Principal)
-  return 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&h=200&fit=crop&crop=faces&q=80';
+  return 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop&crop=faces&q=80';
 };
 
-interface CommentItem {
-  id: string;
-  name: string;
-  email: string;
-  text: string;
-  date: string;
-  likes: number;
-}
+import { renderArticleMarkdown, renderInlineContent, stripMarkdown } from '../../utils/markdownRenderer';
 
-function renderInlineMarkup(text: string): React.ReactNode[] {
-  return text.split(/(\*\*[^*]+\*\*|~~[^~]+~~|\*[^*]+\*)/g).map((part, index) => {
-    if (part.startsWith('**') && part.endsWith('**')) {
-      return <strong key={index}>{part.slice(2, -2)}</strong>;
-    }
-    if (part.startsWith('~~') && part.endsWith('~~')) {
-      return <del key={index}>{part.slice(2, -2)}</del>;
-    }
-    if (part.startsWith('*') && part.endsWith('*')) {
-      return <em key={index}>{part.slice(1, -1)}</em>;
-    }
-    return part;
+function renderArticleContent(content: string): React.ReactNode[] {
+  return renderArticleMarkdown(content, {
+    enableDropCap: true,
+    injectMiddleAd: true,
+    adComponent: <AdSlot placement="ARTICLE_MIDDLE" />,
   });
 }
 
-function renderArticleContent(content: string): React.ReactNode[] {
-  const normalizedContent = content.replace(/(!\[[^\]]*\]\([^)]+\))\n(\*[^*\n]+\*)/g, '$1\n\n$2');
-  const blocks = normalizedContent.split(/\n{2,}/).map((block) => block.trim()).filter(Boolean);
-  const middleIndex = Math.max(1, Math.floor(blocks.length / 2));
-  const rendered: React.ReactNode[] = [];
-
-  for (let index = 0; index < blocks.length; index += 1) {
-    const block = blocks[index];
-    const imageMatch = block.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+|\/[^\s)]*)\)$/);
-
-    if (imageMatch) {
-      const captionMatch = blocks[index + 1]?.match(/^\*([^*]+)\*$/);
-      rendered.push(
-        <OptimizedImage
-          key={`image-${index}`}
-          src={imageMatch[2]}
-          alt={imageMatch[1] || 'Fotografía de la noticia'}
-          caption={captionMatch?.[1] || null}
-          aspectRatio="16/9"
-          className="w-full rounded-lg"
-        />
-      );
-      if (captionMatch) index += 1;
-    } else if (block.startsWith('### ')) {
-      rendered.push(<h3 key={index} className="text-lg font-bold text-stone-900">{renderInlineMarkup(block.slice(4))}</h3>);
-    } else if (block.startsWith('## ')) {
-      rendered.push(<h2 key={index} className="pt-2 text-xl font-bold text-stone-950">{renderInlineMarkup(block.slice(3))}</h2>);
-    } else if (block.startsWith('> ')) {
-      rendered.push(<blockquote key={index} className="border-l-4 border-rose-700 pl-4 font-serif italic text-stone-700">{renderInlineMarkup(block.slice(2))}</blockquote>);
-    } else {
-      const isDropCap = index === 0;
-      rendered.push(
-        <p key={index} className="leading-relaxed">
-          {isDropCap && block.length > 0 ? <><span className="float-left pr-2 pt-1 text-4xl font-black leading-none text-rose-950 sm:text-5xl">{block.charAt(0)}</span>{renderInlineMarkup(block.slice(1))}</> : renderInlineMarkup(block)}
-        </p>
-      );
-    }
-
-    if (index === middleIndex && blocks.length > 2) {
-      rendered.push(<AdSlot key={`ad-${index}`} placement="ARTICLE_MIDDLE" />);
-    }
-  }
-
-  return rendered;
-}
-
 export const ArticlePage: React.FC = () => {
+  const { settings } = useSettings();
   const { slug } = useParams<{ slug: string }>();
   const [article, setArticle] = useState<PublicArticleDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -114,49 +57,6 @@ export const ArticlePage: React.FC = () => {
   const [copied, setCopied] = useState(false);
   const [fontSizeIndex, setFontSizeIndex] = useState(0); // 0: Normal, 1: Grande, 2: Muy Grande
   const [readingProgress, setReadingProgress] = useState(0);
-
-  // Comments state with pre-populated community opinions
-  const [comments, setComments] = useState<CommentItem[]>([
-    {
-      id: 'c1',
-      name: 'Manuel Rivas',
-      email: 'm.rivas@gmail.com',
-      text: 'Excelente cobertura periodística y seguimiento a las obras viales en el estado. Es fundamental mantener informada a la ciudadanía.',
-      date: 'Hace 2 horas',
-      likes: 5,
-    },
-    {
-      id: 'c2',
-      name: 'Elena Morales',
-      email: 'elena.morales@hotmail.com',
-      text: 'Muy oportuna la noticia. Esperamos que los trabajos concluyan antes de que inicie la temporada de lluvias.',
-      date: 'Hace 45 minutos',
-      likes: 3,
-    },
-  ]);
-  const [commentName, setCommentName] = useState('');
-  const [commentEmail, setCommentEmail] = useState('');
-  const [commentText, setCommentText] = useState('');
-  const [commentSubmitted, setCommentSubmitted] = useState(false);
-
-  const handleAddComment = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!commentName.trim() || !commentText.trim()) return;
-    const newC: CommentItem = {
-      id: `c_${Date.now()}`,
-      name: commentName.trim(),
-      email: commentEmail.trim(),
-      text: commentText.trim(),
-      date: 'Justo ahora',
-      likes: 0,
-    };
-    setComments([newC, ...comments]);
-    setCommentName('');
-    setCommentEmail('');
-    setCommentText('');
-    setCommentSubmitted(true);
-    setTimeout(() => setCommentSubmitted(false), 4000);
-  };
 
   const fontSizes = [
     'text-base sm:text-lg leading-relaxed',
@@ -174,8 +74,8 @@ export const ArticlePage: React.FC = () => {
         '@type': 'WebPage',
         '@id': canonicalUrl,
       },
-      headline: article.seo?.meta_title || article.title,
-      description: article.seo?.meta_description || article.excerpt || article.subtitle || '',
+      headline: stripMarkdown(article.seo?.meta_title || article.title),
+      description: stripMarkdown(article.seo?.meta_description || article.excerpt || article.subtitle || ''),
       image: article.featured_media?.url
         ? [article.featured_media.url.startsWith('http') ? article.featured_media.url : `${SITE_URL}${article.featured_media.url}`]
         : [`${SITE_URL}/placeholder-news.jpg`],
@@ -189,11 +89,11 @@ export const ArticlePage: React.FC = () => {
       },
       publisher: {
         '@type': 'NewsMediaOrganization',
-        name: 'Contacto con la Noticia',
+        name: settings.identity.siteName,
         url: `${SITE_URL}/`,
         logo: {
           '@type': 'ImageObject',
-          url: `${SITE_URL}/icons/icon-512x512.png`,
+          url: getAbsoluteSiteAssetUrl(settings.pwa.icon512Url),
           width: 512,
           height: 512,
         },
@@ -203,7 +103,7 @@ export const ArticlePage: React.FC = () => {
       keywords: article.tags?.map(t => t.name) || [],
       copyrightHolder: {
         '@type': 'NewsMediaOrganization',
-        name: 'Contacto con la Noticia',
+        name: settings.identity.siteName,
       },
     },
     {
@@ -241,7 +141,7 @@ export const ArticlePage: React.FC = () => {
       .then(data => {
         setArticle(data);
         if (data.title) {
-          document.title = `${data.title} | Contacto con la Noticia`;
+          document.title = `${data.title} | ${settings.identity.siteName}`;
         }
       })
       .catch((err) => {
@@ -252,9 +152,9 @@ export const ArticlePage: React.FC = () => {
       .finally(() => setLoading(false));
 
     return () => {
-      document.title = 'Contacto con la Noticia';
+      document.title = settings.identity.siteName;
     };
-  }, [slug]);
+  }, [slug, settings.identity.siteName]);
 
   // Track scroll progress for reading bar
   useEffect(() => {
@@ -281,8 +181,8 @@ export const ArticlePage: React.FC = () => {
     if (navigator.share && article) {
       try {
         await navigator.share({
-          title: article.title,
-          text: article.excerpt || article.subtitle || article.title,
+          title: stripMarkdown(article.title),
+          text: stripMarkdown(article.excerpt || article.subtitle || article.title),
           url: window.location.href,
         });
       } catch {
@@ -292,6 +192,38 @@ export const ArticlePage: React.FC = () => {
       handleCopyLink();
     }
   };
+
+  const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    if (article) {
+      setIsSaved(bookmarksService.isBookmarked(article.article_uuid));
+    }
+  }, [article]);
+
+  const handleToggleSave = () => {
+    if (!article) return;
+    const next = bookmarksService.toggleBookmark({
+      article_uuid: article.article_uuid,
+      slug: article.slug,
+      title: article.title,
+      subtitle: article.subtitle || undefined,
+      category_name: article.category_name,
+      category_slug: article.category_slug,
+      published_at: article.published_at,
+      thumbnail_url: article.featured_media?.url,
+      author_name: article.author_name,
+      saved_at: new Date().toISOString(),
+    });
+    setIsSaved(next);
+  };
+
+  const handlePrintArticle = () => {
+    window.print();
+  };
+
+  const wordCount = article?.content ? article.content.split(/\s+/).filter(Boolean).length : 0;
+  const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 190));
 
   const toggleFontSize = () => {
     setFontSizeIndex((prev) => (prev + 1) % fontSizes.length);
@@ -350,7 +282,7 @@ export const ArticlePage: React.FC = () => {
   }
 
   const shareUrl = encodeURIComponent(window.location.href);
-  const shareTitle = encodeURIComponent(article.title);
+  const shareTitle = encodeURIComponent(stripMarkdown(article.title));
 
   return (
     <div className="max-w-3xl mx-auto py-4 space-y-6 relative">
@@ -363,8 +295,8 @@ export const ArticlePage: React.FC = () => {
       </div>
 
       <SeoHead
-        title={article.seo?.meta_title || article.title}
-        description={article.seo?.meta_description || article.excerpt || article.subtitle || undefined}
+        title={stripMarkdown(article.seo?.meta_title || article.title)}
+        description={stripMarkdown(article.seo?.meta_description || article.excerpt || article.subtitle || '') || undefined}
         canonicalUrl={canonicalUrl}
         type="article"
         imageUrl={article.featured_media?.url}
@@ -398,12 +330,12 @@ export const ArticlePage: React.FC = () => {
         </Link>
 
         <h1 className="text-2xl sm:text-4xl md:text-5xl font-serif font-black text-stone-950 leading-[1.18] tracking-tight">
-          {article.title}
+          {renderInlineContent(article.title)}
         </h1>
 
         {article.subtitle && (
           <p className="text-base sm:text-lg lg:text-xl font-serif italic text-stone-600 leading-snug">
-            {article.subtitle}
+            {renderInlineContent(article.subtitle)}
           </p>
         )}
 
@@ -428,7 +360,13 @@ export const ArticlePage: React.FC = () => {
             </div>
           </div>
 
-          <div className="text-[11px] text-stone-500 space-y-0.5 sm:text-right">
+          <div className="text-[11px] text-stone-500 space-y-1 sm:text-right">
+            <div className="flex items-center gap-1.5 sm:justify-end flex-wrap">
+              <span className="inline-flex items-center gap-1 bg-stone-100 text-stone-700 px-2 py-0.5 rounded-full font-medium text-[10px]">
+                <Clock className="w-3 h-3 text-stone-500" />
+                <span>{readingTimeMinutes} min de lectura ({wordCount} palabras)</span>
+              </span>
+            </div>
             <div className="flex items-center gap-1 sm:justify-end">
               <Calendar className="w-3.5 h-3.5 text-stone-400" />
               <span>Publicado: {formatDate(article.published_at, 'full')}</span>
@@ -445,6 +383,7 @@ export const ArticlePage: React.FC = () => {
 
       {/* 4. SOCIAL SHARING & READER TOOLBAR (iOS 27 Glass) */}
       <div className="glass-card p-2.5 sm:p-3 rounded-2xl flex flex-wrap items-center justify-between gap-2 text-xs text-stone-700 shadow-xs">
+        {settings.features.showSocialShareButtons && (
         <div className="flex items-center gap-1.5 flex-wrap">
           <button
             type="button"
@@ -508,26 +447,56 @@ export const ArticlePage: React.FC = () => {
                 <span className="text-emerald-700 font-semibold">¡Copiado!</span>
               </>
             ) : (
-              <span>Copiar enlace</span>
+              <span>Copiar</span>
             )}
           </button>
         </div>
+        )}
 
-        {/* Text Size Control */}
-        <div className="flex items-center gap-1">
+        {/* Reader Tools: Save, Print & Text Size Control */}
+        <div className="flex items-center gap-1.5">
+          <button
+            type="button"
+            onClick={handleToggleSave}
+            className={`glass-pill px-2.5 py-1.5 font-semibold flex items-center gap-1 active:scale-95 transition-transform cursor-pointer text-xs ${
+              isSaved ? 'text-rose-700 bg-rose-50 border-rose-300' : 'text-stone-700 hover:text-stone-950'
+            }`}
+            title={isSaved ? 'Guardada en lecturas' : 'Guardar noticia'}
+          >
+            <Bookmark className={`w-3.5 h-3.5 ${isSaved ? 'fill-current text-rose-700' : 'text-stone-500'}`} />
+            <span>{isSaved ? 'Guardada' : 'Guardar'}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handlePrintArticle}
+            className="glass-pill px-2.5 py-1.5 text-stone-700 font-semibold flex items-center gap-1 hover:bg-stone-100 active:scale-95 transition-transform cursor-pointer text-xs"
+            title="Imprimir artículo"
+          >
+            <Printer className="w-3.5 h-3.5 text-stone-500" />
+            <span className="hidden sm:inline">Imprimir</span>
+          </button>
+
           <button
             type="button"
             onClick={toggleFontSize}
-            className="glass-pill px-3 py-1.5 text-stone-700 font-semibold flex items-center gap-1 hover:bg-stone-100 active:scale-95 transition-all cursor-pointer"
+            className="glass-pill px-2.5 py-1.5 text-stone-700 font-semibold flex items-center gap-1 hover:bg-stone-100 active:scale-95 transition-all cursor-pointer text-xs"
             title="Ajustar tamaño de letra"
           >
             <Type className="w-3.5 h-3.5 text-rose-700" />
-            <span className="text-[11px]">
-              {fontSizeIndex === 0 ? 'A' : fontSizeIndex === 1 ? 'A+' : 'A++'}
-            </span>
+            <span>{fontSizeIndex === 0 ? 'A' : fontSizeIndex === 1 ? 'A+' : 'A++'}</span>
           </button>
         </div>
       </div>
+
+      {/* 4.1. AUDIO NARRATION READER (TTS) */}
+      {settings.features.showAudioReader !== false && (
+        <AudioNewsPlayer
+          title={article.title}
+          content={article.content}
+          excerpt={article.excerpt || article.subtitle || undefined}
+        />
+      )}
 
       {/* 5. FEATURED IMAGE (SQUIRCLE CORNERS) */}
       {article.featured_media?.url ? (
@@ -560,7 +529,7 @@ export const ArticlePage: React.FC = () => {
       <div className="space-y-6 pt-2">
         {article.excerpt && (
           <div className="glass-panel border-l-4 border-rose-700 p-4 sm:p-5 rounded-r-2xl text-base sm:text-lg font-serif italic text-stone-800 leading-relaxed shadow-sm">
-            {article.excerpt}
+            {renderInlineContent(article.excerpt)}
           </div>
         )}
 
@@ -623,133 +592,17 @@ export const ArticlePage: React.FC = () => {
           </Link>
         </div>
 
-        {/* 9. SECCIÓN DE COMENTARIOS Y OPINIÓN CIUDADANA */}
-        <div className="glass-card p-6 sm:p-7 rounded-[32px] space-y-6 mt-8 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-200/60">
-            <div className="flex items-center gap-2">
-              <span className="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-700 flex items-center justify-center">
-                <MessageSquare className="w-4 h-4" />
-              </span>
-              <div>
-                <h3 className="font-serif font-bold text-stone-900 text-base">
-                  Comentarios y Opinión Ciudadana ({comments.length})
-                </h3>
-                <span className="text-[11px] text-stone-500">
-                  Espacio moderado de intercambio comunitario
-                </span>
-              </div>
-            </div>
-
-            <div className="hidden sm:flex items-center gap-1 text-[11px] text-stone-500 bg-stone-100 px-2.5 py-1 rounded-full">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Protección Cloudflare Turnstile</span>
-            </div>
-          </div>
-
-          {/* Comment Form */}
-          <form onSubmit={handleAddComment} className="space-y-3.5 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold text-stone-700 mb-1">
-                  Tu Nombre o Apodo *
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={commentName}
-                  onChange={(e) => setCommentName(e.target.value)}
-                  placeholder="Ej. Carlos Valera"
-                  className="w-full px-3.5 py-2 bg-stone-50 rounded-xl border border-stone-200 text-stone-900 focus:outline-none focus:ring-2 focus:ring-rose-500/30 font-sans"
-                />
-              </div>
-
-              <div>
-                <label className="block font-bold text-stone-700 mb-1">
-                  Correo Electrónico (No se publicará)
-                </label>
-                <input
-                  type="email"
-                  value={commentEmail}
-                  onChange={(e) => setCommentEmail(e.target.value)}
-                  placeholder="correo@ejemplo.com"
-                  className="w-full px-3.5 py-2 bg-stone-50 rounded-xl border border-stone-200 text-stone-900 focus:outline-none focus:ring-2 focus:ring-rose-500/30 font-sans"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block font-bold text-stone-700 mb-1">
-                Escribe tu comentario u opinión sobre esta noticia *
-              </label>
-              <textarea
-                rows={3}
-                required
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-                placeholder="Comparta su punto de vista respetuoso con la comunidad..."
-                className="w-full px-3.5 py-2.5 bg-stone-50 rounded-2xl border border-stone-200 text-stone-900 focus:outline-none focus:ring-2 focus:ring-rose-500/30 font-sans leading-relaxed resize-none"
-              />
-            </div>
-
-            {commentSubmitted && (
-              <div className="p-3 bg-emerald-50 text-emerald-800 rounded-xl text-xs flex items-center gap-2 border border-emerald-200">
-                <Check className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>¡Tu comentario ha sido publicado con éxito tras la verificación anti-bot!</span>
-              </div>
-            )}
-
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-1">
-              <div className="flex items-center gap-1.5 text-[11px] text-stone-500">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <span>Verificación Cloudflare Turnstile activa contra spam y bots automáticos</span>
-              </div>
-
-              <button
-                type="submit"
-                className="px-5 py-2.5 bg-rose-800 hover:bg-rose-900 active:scale-95 text-white font-semibold rounded-2xl shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
-              >
-                <Send className="w-3.5 h-3.5" />
-                <span>Publicar Opinión</span>
-              </button>
-            </div>
-          </form>
-
-          {/* Comments List */}
-          <div className="pt-4 border-t border-stone-100 space-y-3">
-            {comments.map((c) => (
-              <div
-                key={c.id}
-                className="p-4 rounded-2xl bg-stone-50/80 border border-stone-200/60 space-y-1.5"
-              >
-                <div className="flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-rose-200 text-rose-900 font-bold text-xs flex items-center justify-center">
-                      {c.name.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <span className="font-bold text-stone-900">{c.name}</span>
-                      <span className="text-[10px] text-stone-400 ml-2">{c.date}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setComments(comments.map((item) => (item.id === c.id ? { ...item, likes: item.likes + 1 } : item)));
-                    }}
-                    className="flex items-center gap-1 text-[11px] text-stone-500 hover:text-rose-700 bg-white px-2 py-0.5 rounded-full border border-stone-200 cursor-pointer"
-                  >
-                    <ThumbsUp className="w-3 h-3" />
-                    <span>{c.likes}</span>
-                  </button>
-                </div>
-                <p className="text-xs text-stone-700 font-sans leading-relaxed pl-9">
-                  {c.text}
-                </p>
-              </div>
-            ))}
-          </div>
+        {/* Reacciones de los lectores */}
+        <div className="mt-8">
+          <ArticleReactions articleUuid={article.article_uuid} />
         </div>
+
+        {/* Foro de comentarios de la comunidad */}
+        {settings.features.showComments !== false && (
+          <div className="mt-8">
+            <ArticleComments articleUuid={article.article_uuid} />
+          </div>
+        )}
       </div>
 
       {/* ARTICLE_BOTTOM AD SLOT */}

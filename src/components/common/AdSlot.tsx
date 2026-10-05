@@ -176,14 +176,19 @@ export const AdSlot: React.FC<AdSlotProps> = ({
 
       <div className="relative group overflow-hidden rounded-2xl border border-stone-200/80 bg-stone-50 shadow-xs">
         <a
-          href={currentAd.target_url || '#'}
-          target="_blank"
-          rel="noopener noreferrer sponsored"
-          onClick={() => {
+          href={isMockMode() ? undefined : currentAd.target_url || undefined}
+          target={isMockMode() ? undefined : '_blank'}
+          rel={isMockMode() ? undefined : 'noopener noreferrer sponsored'}
+          aria-disabled={isMockMode()}
+          onClick={(event) => {
+            if (isMockMode()) {
+              event.preventDefault();
+              return;
+            }
             recordAdClick(currentAd.campaign_uuid).catch(() => {});
           }}
-          className="block transition-all duration-300"
-          title={currentAd.company_name ? `Anuncio de ${currentAd.company_name}` : 'Publicidad'}
+          className={`block transition-all duration-300 ${isMockMode() ? 'cursor-default' : ''}`}
+          title={isMockMode() ? 'Anuncio de demostración, sin destino activo' : currentAd.company_name ? `Anuncio de ${currentAd.company_name}` : 'Publicidad'}
         >
           {currentAd.media_url ? (
             <div className="relative overflow-hidden">
@@ -198,8 +203,8 @@ export const AdSlot: React.FC<AdSlotProps> = ({
             <div className="p-6 text-center bg-gradient-to-br from-stone-50 via-rose-50/30 to-amber-50/20 text-stone-900 border border-stone-200/60 transition">
               <p className="font-serif text-lg font-bold text-stone-900">{currentAd.company_name}</p>
               <p className="text-xs text-stone-600 mt-1">{currentAd.campaign_name}</p>
-              <span className="inline-block mt-3 text-xs bg-rose-800 hover:bg-rose-900 text-white px-4 py-1.5 font-semibold uppercase tracking-wider rounded-full shadow-xs">
-                Conocer más &rarr;
+              <span className="inline-block mt-3 text-xs bg-rose-800 text-white px-4 py-1.5 font-semibold uppercase tracking-wider rounded-full shadow-xs">
+                {isMockMode() ? 'Anuncio de demostración' : 'Conocer más →'}
               </span>
             </div>
           )}

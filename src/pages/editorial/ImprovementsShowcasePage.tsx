@@ -13,7 +13,7 @@ interface ImprovementItem {
   title: string;
   category: 'Redacción' | 'SEO & Marketing' | 'Auditoría & Roles' | 'Móvil & PWA' | 'Arquitectura';
   description: string;
-  status: 'IMPLEMENTADO' | 'LISTO_BACKEND';
+  status: 'DEMO' | 'REQUIERE_BACKEND';
   route?: string;
   features: string[];
 }
@@ -24,7 +24,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'SEO Avanzado & Asistente Editorial',
     category: 'SEO & Marketing',
     description: 'Diagnóstico en tiempo real de titulares, legibilidad, canonicals, Open Graph, Twitter Cards y marcado NewsArticle JSON-LD.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/articles/new',
     features: ['Evaluador semántico', 'Preview SERP Google & Redes', 'NewsArticle Schema', 'Sitemap News'],
   },
@@ -33,7 +33,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Redactor Editorial Profesional',
     category: 'Redacción',
     description: 'Editor con barra de herramientas adaptable para escritorio y móvil, inserción de citas, separadores y bloques.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/articles/new',
     features: ['Toolbar táctil móvil', 'Formato enriquecido', 'Bloques dinámicos', 'Embeds multimedia'],
   },
@@ -42,7 +42,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Autoguardado & Control de Versiones',
     category: 'Redacción',
     description: 'Guardado automático continuo contra pérdida de datos, recuperación de borradores y modal de diff entre versiones.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/articles/new',
     features: ['Autosave a 15s', 'Historial con diff visual', 'Recuperación de crash', 'Atribución de autor'],
   },
@@ -51,7 +51,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Workflow Editorial de 6 Estados',
     category: 'Redacción',
     description: 'Flujo periodístico completo: Borrador, Pendiente de Revisión, Programado, Publicado, Archivado y Papelera.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/articles',
     features: ['Transiciones con permisos', 'Aprobación de editores', 'Devolución con notas', 'Restauración'],
   },
@@ -60,7 +60,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Checklist Pre-Publicación',
     category: 'Redacción',
     description: 'Auditoría de calidad que valida titular, cuerpo mínimo, categoría, créditos fotográficos y descripción antes de publicar.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/articles/new',
     features: ['Errores bloqueantes', 'Advertencias recomendadas', 'Conteo de palabras', 'Validación de slug'],
   },
@@ -69,7 +69,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Compresión & Optimización de Imágenes',
     category: 'Arquitectura',
     description: 'Pipeline de subida con redimensión automática a 1200px max, conversión a WebP/AVIF y cálculo de ahorro porcentual.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/media',
     features: ['Redimensionamiento 1200px', 'WebP progresivo', 'Metadata ALT y crédito', 'Drag & drop'],
   },
@@ -78,7 +78,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Galerías Fotográficas & Multi-Imagen',
     category: 'Redacción',
     description: 'Gestor modal de reportajes gráficos con reordenamiento, pies de foto individuales, créditos y layout responsivo.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/articles/new',
     features: ['Múltiples imágenes', 'Reordenamiento fluido', 'Créditos por foto', 'Inserción en cuerpo'],
   },
@@ -87,7 +87,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Control de Acceso & Roles Granulares',
     category: 'Auditoría & Roles',
     description: 'Matriz estricta de 13 permisos jerárquicos entre Super Admin, Editor, Periodista y Gestor de Publicidad.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/users',
     features: ['Matriz de permisos', 'Protección de rutas', 'Validación server-side', 'Gestión de perfiles'],
   },
@@ -96,7 +96,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Perfiles de Periodistas & Métricas Éticas',
     category: 'Auditoría & Roles',
     description: 'Visualización no competitiva de la producción de la sala de redacción, tiempo promedio de lectura y retención.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/journalists',
     features: ['Métricas éticas', 'Tasa de retención', 'Hemeroteca por autor', 'Biografías editoriales'],
   },
@@ -105,7 +105,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Calendario Editorial & Planificación',
     category: 'Redacción',
     description: 'Parrilla mensual y agenda de publicaciones programadas, noticias en revisión y fechas de pautas publicitarias.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/calendar',
     features: ['Vista mensual y agenda', 'Filtro por tipo de evento', 'Navegación temporal', 'Acceso directo al editor'],
   },
@@ -114,7 +114,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Registro de Auditoría & Trazabilidad',
     category: 'Auditoría & Roles',
     description: 'Bitácora inmutable de cada acción en el CMS (publicaciones, ediciones, logins, cambios de configuración) con exportación CSV.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/audit',
     features: ['Registro de IP y usuario', 'Filtro por módulo', 'Exportación CSV', 'Historial forense'],
   },
@@ -123,7 +123,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Centro de Notificaciones en Vivo',
     category: 'Redacción',
     description: 'Menú desplegable de alertas con estado leído/no leído para avisos de revisión, aprobaciones y notas ciudadanas.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin',
     features: ['Marcado en tiempo real', 'Enlaces directos a notas', 'Severidad visual', 'Contador dinámico'],
   },
@@ -132,7 +132,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Conector Desacoplado WordPress Histórico',
     category: 'Arquitectura',
     description: 'Integración de solo lectura contra la API REST de WordPress para consultar archivo histórico sin migración masiva.',
-    status: 'LISTO_BACKEND',
+    status: 'REQUIERE_BACKEND',
     route: '/admin/integrations',
     features: ['Zero migración destructiva', 'Cache y fallback seguro', 'Búsqueda unificada', 'Mocks de contratos'],
   },
@@ -141,7 +141,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Buzón Ciudadano & Moderación',
     category: 'Redacción',
     description: 'Mesa de recepción de notas comunitarias con workflow de aprobación y conversión directa a borrador de redacción.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/submissions',
     features: ['Filtro de verificación', 'Conversión a noticia', 'Adjuntos y contacto', 'Estados de moderación'],
   },
@@ -150,7 +150,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Motor de Pautas Publicitarias',
     category: 'SEO & Marketing',
     description: 'Gestión de banners, patrocinios, métricas de impresiones y clics (CTR) con fechas de vigencia y anunciantes.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/ads',
     features: ['Slots responsivos', 'Cálculo de CTR', 'Vigencia automática', 'Múltiples formatos'],
   },
@@ -159,7 +159,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Experiencia Móvil iOS 27 Glass',
     category: 'Móvil & PWA',
     description: 'Dock inferior con 5 botones accesibles, botón central de noticias al minuto (Rayo ⚡) y drawers táctiles fluidos.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/',
     features: ['Dock inferior de 5 botones', 'Drawer Rayo al Minuto', 'Fondos iOS 27 Glass', 'Navegación táctil nativa'],
   },
@@ -168,7 +168,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Marketing Hub & Smart Push',
     category: 'SEO & Marketing',
     description: 'Envío de notificaciones push segmentadas a lectores, boletines informativos y métricas de alcance en tiempo real.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/marketing',
     features: ['Web Push API', 'Segmentación por intereses', 'Campañas programadas', 'Tasa de apertura'],
   },
@@ -177,7 +177,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'PWA Completa con Modo Offline',
     category: 'Móvil & PWA',
     description: 'Service Worker registrado, manifiesto web, caché de noticias para lectura en zonas de baja conectividad.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/',
     features: ['Lectura offline', 'Instalación en pantalla de inicio', 'Actualización en segundo plano', 'Caché adaptativo'],
   },
@@ -186,7 +186,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Configuración Multi-Tenant & Marca',
     category: 'Arquitectura',
     description: 'Personalización de paleta cromática, tipografías, logotipos, enlaces institucionales y metadatos del sitio.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin/settings',
     features: ['Paleta editable', 'Subida de logotipos', 'Parámetros editoriales', 'Persistencia reactiva'],
   },
@@ -195,7 +195,7 @@ const IMPROVEMENTS_DATA: ImprovementItem[] = [
     title: 'Modo Mock Robusto para Espera de Backend',
     category: 'Arquitectura',
     description: 'Capa mock en localStorage que preserva todas las entidades y operaciones de desarrollo sin bloquear la interfaz.',
-    status: 'IMPLEMENTADO',
+    status: 'DEMO',
     route: '/admin',
     features: ['Persistencia local', 'Contratos idénticos a PHP', 'Fallback transparente', 'Cero fallas 404'],
   },
@@ -227,20 +227,20 @@ export const ImprovementsShowcasePage: React.FC = () => {
             <span>Lyberate CMS — Contacto con la Noticia v2.0.0</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-serif font-black tracking-tight text-white">
-            Showcase de Mejoras Editoriales
+            Módulos de la plataforma editorial
           </h1>
           <p className="text-xs sm:text-sm text-stone-300 leading-relaxed font-sans">
-            Auditoría y estado de cumplimiento de los 20 pilares arquitectónicos implementados para la sala de redacción profesional.
+            Recorrido por las herramientas disponibles en el frontend. En este entorno de demostración, los datos son ilustrativos y las operaciones no sustituyen la integración ni la validación del backend.
           </p>
 
           <div className="flex flex-wrap items-center gap-4 pt-2 text-xs">
             <div className="flex items-center gap-1.5 text-emerald-400 font-bold">
               <CheckCircle2 className="w-4 h-4" />
-              <span>19 Mejoras 100% Funcionales</span>
+              <span>20 módulos para explorar</span>
             </div>
             <div className="flex items-center gap-1.5 text-blue-300 font-bold">
               <Database className="w-4 h-4" />
-              <span>1 Módulo Conector WP (Backend Ready)</span>
+              <span>Integraciones externas pendientes de conectar</span>
             </div>
           </div>
         </div>
@@ -293,12 +293,12 @@ export const ImprovementsShowcasePage: React.FC = () => {
                 </span>
                 <span
                   className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border ${
-                    item.status === 'IMPLEMENTADO'
+                    item.status === 'DEMO'
                       ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                       : 'bg-blue-100 text-blue-800 border-blue-200'
                   }`}
                 >
-                  {item.status === 'IMPLEMENTADO' ? 'En Vivo' : 'Backend Ready'}
+                  {item.status === 'DEMO' ? 'Interfaz disponible' : 'Requiere integración'}
                 </span>
               </div>
 
@@ -333,7 +333,7 @@ export const ImprovementsShowcasePage: React.FC = () => {
                   to={item.route}
                   className="inline-flex items-center justify-between w-full p-2.5 rounded-xl bg-stone-50 hover:bg-rose-50 border border-stone-200/80 hover:border-rose-200 text-stone-800 hover:text-rose-900 text-xs font-bold transition group"
                 >
-                  <span>Probar funcionalidad</span>
+                  <span>Abrir módulo</span>
                   <ChevronRight className="w-4 h-4 text-stone-400 group-hover:text-rose-900 transition-transform group-hover:translate-x-0.5" />
                 </Link>
               </div>

@@ -29,3 +29,4 @@ export interface VersionDiffResult {
   contentChanged: boolean;
   timestamp: string;
 }
+

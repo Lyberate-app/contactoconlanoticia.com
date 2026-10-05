@@ -28,6 +28,7 @@ import {
 import { authService, AuthUser } from '../services/auth';
 import { useSettings } from '../context/SettingsContext';
 import { NotificationCenterDropdown } from '../components/editorial/NotificationCenterDropdown';
+import { isMockMode } from '../config/env';
 
 interface EditorialLayoutProps {
   children?: React.ReactNode;
@@ -676,18 +677,22 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
         <header className="hidden lg:flex items-center justify-between px-8 py-3.5 border-b border-stone-200/80 bg-white/70 backdrop-blur-xs sticky top-0 z-20">
           <div className="flex items-center gap-3">
             <span className="font-serif font-black text-sm text-stone-900">
-              Contacto con la Noticia
+              {settings.identity.siteName}
             </span>
             <span className="text-stone-300">&bull;</span>
             <span className="text-xs text-stone-500 font-medium">
-              Plataforma Editorial Lyberate &bull; Edición Guárico
+              Plataforma Editorial Lyberate &bull; {settings.identity.editionName}
             </span>
           </div>
 
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-800 text-[11px] font-mono font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Conector WP: Online</span>
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${
+              isMockMode()
+                ? 'bg-amber-50 border-amber-200 text-amber-900'
+                : 'bg-stone-50 border-stone-200 text-stone-700'
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full ${isMockMode() ? 'bg-amber-500' : 'bg-stone-400'}`} />
+              <span>{isMockMode() ? 'Vista de demostración' : 'Modo API'}</span>
             </div>
 
             <NotificationCenterDropdown />
@@ -707,6 +712,12 @@ export const EditorialLayout: React.FC<EditorialLayoutProps> = ({ children, acti
             </div>
           </div>
         </header>
+
+        {isMockMode() && (
+          <div className="mx-4 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs leading-relaxed text-amber-950 sm:mx-6 lg:mx-8">
+            Entorno de demostración: contenidos y métricas son ilustrativos; los cambios de prueba se guardan en este navegador.
+          </div>
+        )}
 
         <main className="flex-1 p-4 sm:p-6 lg:p-8 max-w-7xl w-full mx-auto">
           {children || <Outlet />}

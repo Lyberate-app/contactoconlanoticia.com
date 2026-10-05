@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Clock, ArrowUpRight } from 'lucide-react';
 import { OptimizedImage } from '../common/OptimizedImage';
 import { formatDate } from '../../utils/date';
+import { renderInlineContent } from '../../utils/markdownRenderer';
 import type { PublicArticleSummary } from '../../types/article';
 
 export interface LeadArticleProps {
@@ -39,14 +40,14 @@ export const LeadArticle: React.FC<LeadArticleProps> = ({
       {/* 2. MAIN HEADLINE */}
       <Link to={articleUrl} className="block group">
         <h2 className="text-2xl sm:text-3xl md:text-4xl font-serif font-black text-stone-950 leading-[1.15] tracking-tight group-hover:text-rose-900 transition-colors">
-          {article.title}
+          {renderInlineContent(article.title)}
         </h2>
       </Link>
 
       {/* 3. SUBTITLE / DECK */}
       {article.subtitle && (
         <p className="text-sm sm:text-base lg:text-lg font-serif italic text-stone-600 leading-snug">
-          {article.subtitle}
+          {renderInlineContent(article.subtitle)}
         </p>
       )}
 
@@ -72,7 +73,7 @@ export const LeadArticle: React.FC<LeadArticleProps> = ({
       {/* 5. EXCERPT */}
       {article.excerpt && (
         <p className="text-xs sm:text-sm text-stone-700 leading-relaxed font-serif pt-0.5 line-clamp-3">
-          {article.excerpt}
+          {renderInlineContent(article.excerpt)}
         </p>
       )}
 
