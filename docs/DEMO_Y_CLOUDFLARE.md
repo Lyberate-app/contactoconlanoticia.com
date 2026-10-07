@@ -50,7 +50,7 @@ Antes de confirmar, revisa `git status`. El `.gitignore` excluye `.env`, `node_m
    - `VITE_DATA_MODE` = `mock` para que tu socio pueda navegar por la demo sin el backend.
    - `VITE_SITE_URL` = la URL `https://...pages.dev` que Cloudflare asigne, para que los enlaces canónicos de la demo no apunten al dominio de producción.
 
-5. Guarda y despliega. Comparte con tu socio la URL de producción `https://<proyecto>.pages.dev`. Las rutas como `/admin/marketing` y `/admin/analytics` pueden abrirse directamente gracias a `public/_redirects`.
+5. Guarda y despliega. Comparte con tu socio la URL de producción `https://<proyecto>.pages.dev`. Como el sitio es una SPA y no publica un `404.html` en la raíz, Cloudflare Pages entrega automáticamente la aplicación para rutas como `/admin/marketing` y `/admin/analytics`.
 6. Para cada actualización, haz `git push` a `main`; Cloudflare reconstruirá el sitio automáticamente. Los pull requests generan previews si la integración de Pages está habilitada.
 
 ## Límites de esta demo
