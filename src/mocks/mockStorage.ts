@@ -165,7 +165,11 @@ export const mockStorage = {
   saveArticle(data: CreateArticlePayload): ArticleDetail {
     const articles = this.getArticles();
     const categories = this.getCategories();
-    const author = this.getAuthor();
+    const defaultAuthor = this.getAuthor();
+    const profile = this.getJournalistProfiles().find((item) => item.author_uuid === data.author_uuid);
+    const author = profile
+      ? { author_uuid: profile.author_uuid, name: profile.name, slug: profile.slug }
+      : defaultAuthor;
 
     const category = categories.find((c) => c.category_uuid === data.category_uuid) || categories[0];
     const uuid = 'art-' + Math.random().toString(36).substring(2, 9);
@@ -206,6 +210,14 @@ export const mockStorage = {
 
     const existing = articles[index];
     const categories = this.getCategories();
+    const authorProfile = data.author_uuid
+      ? this.getJournalistProfiles().find((profile) => profile.author_uuid === data.author_uuid)
+      : undefined;
+    const defaultAuthor = this.getAuthor();
+    const authorName = authorProfile?.name
+      || (data.author_uuid === defaultAuthor.author_uuid ? defaultAuthor.name : existing.author_name);
+    const authorSlug = authorProfile?.slug
+      || (data.author_uuid === defaultAuthor.author_uuid ? defaultAuthor.slug : existing.author_slug);
     const category = data.category_uuid
       ? categories.find((c) => c.category_uuid === data.category_uuid) || existing
       : existing;
@@ -218,6 +230,9 @@ export const mockStorage = {
       ...existing,
       ...data,
       tags: updatedTags,
+      author_uuid: data.author_uuid || existing.author_uuid,
+      author_name: authorName,
+      author_slug: authorSlug,
       subtitle: data.subtitle !== undefined ? data.subtitle : existing.subtitle,
       excerpt: data.excerpt !== undefined ? data.excerpt : existing.excerpt,
       category_uuid: 'category_uuid' in category ? category.category_uuid : existing.category_uuid,

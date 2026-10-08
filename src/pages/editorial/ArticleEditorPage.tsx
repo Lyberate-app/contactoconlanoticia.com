@@ -7,6 +7,9 @@ import { MediaItem } from '../../types/media';
 import { ArticleVersionSnapshot } from '../../types/version';
 import { MediaPickerModal } from '../../components/media/MediaPickerModal';
 import { EditorialToolbar } from '../../components/editorial/EditorialToolbar';
+import { VisualArticleEditor } from '../../components/editorial/VisualArticleEditor';
+import { StoryTemplatePicker, StoryTemplate } from '../../components/editorial/StoryTemplatePicker';
+import { EditorialWritingAssistant } from '../../components/editorial/EditorialWritingAssistant';
 import { ArticleLivePreviewModal } from '../../components/editorial/ArticleLivePreviewModal';
 import { AutosaveIndicator, AutosaveStatus } from '../../components/editorial/AutosaveIndicator';
 import { VersionHistoryModal } from '../../components/editorial/VersionHistoryModal';
@@ -40,6 +43,7 @@ export const ArticleEditorPage: React.FC = () => {
   const isEditing = Boolean(articleUuid);
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const visualInsertRef = useRef<((markdown: string) => void) | null>(null);
 
   // User and Taxonomy State
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(null);
@@ -85,7 +89,7 @@ export const ArticleEditorPage: React.FC = () => {
   // UI State
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
   const [isInlineMediaPickerOpen, setIsInlineMediaPickerOpen] = useState(false);
-  const [editorViewMode, setEditorViewMode] = useState<'write' | 'split' | 'preview'>('write');
+  const [editorViewMode, setEditorViewMode] = useState<'write' | 'split' | 'source' | 'preview'>('split');
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [compressingImage, setCompressingImage] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -249,6 +253,17 @@ export const ArticleEditorPage: React.FC = () => {
     }, 15000); // 15s debounce
   };
 
+  const handleApplyStoryTemplate = (template: StoryTemplate) => {
+    if (
+      content.trim() &&
+      !window.confirm(`¿Reemplazar el cuerpo actual por la plantilla "${template.name}"? Esta acción no se puede deshacer.`)
+    ) {
+      return;
+    }
+    handleContentChangeWithAutosave(template.content);
+    setEditorViewMode('write');
+  };
+
   // Restore recovered local draft
   const handleRecoverDraft = () => {
     const draftKey = `lyberate_draft_${articleUuid || 'new'}`;
@@ -304,7 +319,7 @@ export const ArticleEditorPage: React.FC = () => {
     return result.data.media;
   };
 
-  const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+  const handlePaste = async (e: React.ClipboardEvent<HTMLElement>) => {
     const items = e.clipboardData?.items;
     if (!items) return;
 
@@ -330,6 +345,8 @@ export const ArticleEditorPage: React.FC = () => {
               textarea.focus();
               textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
             }, 20);
+          } else if (visualInsertRef.current) {
+            visualInsertRef.current(imageMarkdown);
           } else {
             handleContentChangeWithAutosave(content + imageMarkdown);
           }
@@ -360,6 +377,8 @@ export const ArticleEditorPage: React.FC = () => {
           const start = textarea.selectionStart;
           const end = textarea.selectionEnd;
           handleContentChangeWithAutosave(content.slice(0, start) + imageMarkdown + content.slice(end));
+        } else if (visualInsertRef.current) {
+          visualInsertRef.current(imageMarkdown);
         } else {
           handleContentChangeWithAutosave(content + imageMarkdown);
         }
@@ -384,6 +403,8 @@ export const ArticleEditorPage: React.FC = () => {
         textarea.focus();
         textarea.setSelectionRange(start + imageMarkdown.length, start + imageMarkdown.length);
       }, 0);
+    } else if (visualInsertRef.current) {
+      visualInsertRef.current(imageMarkdown);
     } else {
       handleContentChangeWithAutosave(content + imageMarkdown);
     }
@@ -824,6 +845,8 @@ export const ArticleEditorPage: React.FC = () => {
           </div>
 
           {/* Body Content with Toolbar and Live Visual Preview */}
+          <StoryTemplatePicker onSelect={handleApplyStoryTemplate} />
+
           <div className="bg-white border border-stone-200 rounded-2xl shadow-xs overflow-hidden">
             <div className="px-6 py-3 border-b border-stone-200 bg-stone-50 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-3">
@@ -847,13 +870,24 @@ export const ArticleEditorPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setEditorViewMode('split')}
-                    className={`px-3 py-1 rounded-md font-semibold transition hidden sm:inline-flex ${
+                    className={`px-3 py-1 rounded-md font-semibold transition ${
                       editorViewMode === 'split'
                         ? 'bg-white text-stone-950 shadow-xs'
                         : 'text-stone-600 hover:text-stone-950'
                     }`}
                   >
-                    Dividida
+                    En vivo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setEditorViewMode('source')}
+                    className={`px-3 py-1 rounded-md font-semibold transition ${
+                      editorViewMode === 'source'
+                        ? 'bg-white text-stone-950 shadow-xs'
+                        : 'text-stone-600 hover:text-stone-950'
+                    }`}
+                  >
+                    Markdown
                   </button>
                   <button
                     type="button"
@@ -883,13 +917,14 @@ export const ArticleEditorPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Editorial Toolbar */}
-            <EditorialToolbar
-              textareaRef={textareaRef}
-              onContentChange={handleContentChangeWithAutosave}
-              onOpenMediaPicker={() => setIsInlineMediaPickerOpen(true)}
-              onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
-            />
+            {editorViewMode === 'source' && (
+              <EditorialToolbar
+                textareaRef={textareaRef}
+                onContentChange={handleContentChangeWithAutosave}
+                onOpenMediaPicker={() => setIsInlineMediaPickerOpen(true)}
+                onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
+              />
+            )}
 
             <div
               onDragOver={(e) => {
@@ -913,18 +948,16 @@ export const ArticleEditorPage: React.FC = () => {
               {/* WRITE MODE */}
               {editorViewMode === 'write' && (
                 <div>
-                  <textarea
-                    ref={textareaRef}
-                    rows={16}
-                    required
+                  <VisualArticleEditor
                     value={content}
-                    onChange={(e) => handleContentChangeWithAutosave(e.target.value)}
+                    onChange={handleContentChangeWithAutosave}
+                    onOpenMediaPicker={() => setIsInlineMediaPickerOpen(true)}
+                    onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
                     onPaste={handlePaste}
-                    placeholder="Desarrollo completo de la cobertura periodística... (Tip: Puede presionar Ctrl+V para pegar fotografías directamente o arrastrar imágenes aquí)."
-                    className="w-full text-base font-sans leading-relaxed text-stone-900 border border-stone-300 rounded-xl p-4 focus:outline-none focus:border-stone-800 bg-stone-50/40"
+                    insertContentRef={visualInsertRef}
                   />
                   <div className="mt-2 flex items-center justify-between text-[11px] text-stone-400">
-                    <span>💡 Puede pegar imágenes con Ctrl+V o arrastrarlas al editor</span>
+                    <span>Selecciona el texto y toca un botón para darle formato.</span>
                     <span>{content.length} caracteres</span>
                   </div>
                 </div>
@@ -934,27 +967,47 @@ export const ArticleEditorPage: React.FC = () => {
               {editorViewMode === 'split' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block mb-1">
-                      Editor Markdown
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block mb-1">
+                      Escribe tu noticia
                     </span>
-                    <textarea
-                      ref={textareaRef}
-                      rows={18}
-                      required
+                    <VisualArticleEditor
                       value={content}
-                      onChange={(e) => handleContentChangeWithAutosave(e.target.value)}
+                      onChange={handleContentChangeWithAutosave}
+                      onOpenMediaPicker={() => setIsInlineMediaPickerOpen(true)}
+                      onOpenGalleryModal={() => setIsGalleryModalOpen(true)}
                       onPaste={handlePaste}
-                      className="w-full h-full min-h-[400px] text-sm font-mono leading-relaxed text-stone-900 border border-stone-300 rounded-xl p-3 focus:outline-none focus:border-stone-800 bg-stone-50/40"
+                      insertContentRef={visualInsertRef}
                     />
                   </div>
                   <div className="border border-stone-200 rounded-xl p-4 bg-white overflow-y-auto max-h-[500px]">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block mb-2">
-                      Resultado en Maqueta
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block mb-2">
+                      Así se verá publicada · se actualiza al escribir
                     </span>
                     <div className="prose prose-stone max-w-none text-stone-900 font-sans leading-relaxed text-sm space-y-3">
-                      {renderArticleMarkdown(content, { enableDropCap: false })}
+                      {content
+                        ? renderArticleMarkdown(content, { enableDropCap: false })
+                        : <p className="text-stone-400 italic">La noticia formateada aparecerá aquí mientras escribes.</p>}
                     </div>
                   </div>
+                </div>
+              )}
+
+              {editorViewMode === 'source' && (
+                <div>
+                  <textarea
+                    ref={textareaRef}
+                    rows={18}
+                    required
+                    value={content}
+                    onChange={(e) => handleContentChangeWithAutosave(e.target.value)}
+                    onPaste={handlePaste}
+                    aria-label="Editar el texto fuente Markdown"
+                    placeholder="Escribe o pega aquí el texto de la noticia."
+                    className="w-full min-h-[400px] text-base font-sans leading-relaxed text-stone-900 border border-stone-300 rounded-xl p-4 focus:outline-none focus:border-stone-800 bg-stone-50/40"
+                  />
+                  <p className="mt-2 text-[11px] text-stone-500">
+                    Modo avanzado: aquí puedes editar directamente el formato guardado del artículo.
+                  </p>
                 </div>
               )}
 
@@ -994,6 +1047,20 @@ export const ArticleEditorPage: React.FC = () => {
               )}
             </div>
           </div>
+
+          <EditorialWritingAssistant
+            title={title}
+            excerpt={excerpt}
+            content={content}
+            onTitleChange={(value) => {
+              setTitle(value);
+              if (!isEditing || !slug) {
+                setSlug(value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, ''));
+              }
+              setAutosaveStatus('unsaved');
+            }}
+            onContentChange={handleContentChangeWithAutosave}
+          />
 
           {/* SEO Assistant and Social Preview Module */}
           <SeoAssistant

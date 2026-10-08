@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { editorialService, ArticleSummary, Category } from '../../services/editorial';
+import { authService } from '../../services/auth';
+import { Author } from '../../types/author';
 import {
   Plus,
   Search,
@@ -30,6 +32,10 @@ const STATUS_TABS = [
 export const ArticlesListPage: React.FC = () => {
   const [articles, setArticles] = useState<ArticleSummary[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [authors, setAuthors] = useState<Author[]>([]);
+  const [selectedAuthor, setSelectedAuthor] = useState('');
+  const [canAssignArticles, setCanAssignArticles] = useState(false);
+  const [updatingAssignment, setUpdatingAssignment] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +47,19 @@ export const ArticlesListPage: React.FC = () => {
 
   useEffect(() => {
     editorialService.getCategories().then(setCategories).catch(() => {});
+    editorialService.getAuthors().then(setAuthors).catch((error) => {
+      console.error('No se pudo cargar la lista de periodistas para asignaciones.', error);
+      notify('No se pudo cargar la lista de periodistas. Intente actualizar la página.', 'error', 'Asignaciones no disponibles');
+    });
+    authService.getMe().then((response) => {
+      const roles = response.data?.user?.roles || [];
+      setCanAssignArticles(
+        roles.some((role) => ['SUPER_ADMIN', 'SITE_ADMIN', 'TENANT_ADMIN', 'EDITOR'].includes(role))
+      );
+    }).catch((error) => {
+      console.error('No se pudo verificar el permiso de asignación editorial.', error);
+      notify('No se pudieron verificar los permisos de asignación.', 'error', 'Permisos no disponibles');
+    });
   }, []);
 
   const loadArticles = async () => {
@@ -52,6 +71,7 @@ export const ArticlesListPage: React.FC = () => {
       };
       if (selectedStatus) params.status = selectedStatus;
       if (selectedCategory) params.category_uuid = selectedCategory;
+      if (selectedAuthor) params.author_uuid = selectedAuthor;
       if (searchTerm) params.search = searchTerm;
       if (selectedStatus === 'TRASH') params.include_trash = 'true';
 
@@ -80,7 +100,28 @@ export const ArticlesListPage: React.FC = () => {
 
   useEffect(() => {
     loadArticles();
-  }, [selectedStatus, selectedCategory, page, sortBy]);
+  }, [selectedStatus, selectedCategory, selectedAuthor, page, sortBy]);
+
+  const handleAssignmentChange = async (article: ArticleSummary, authorUuid: string) => {
+    const assignedAuthor = authors.find((author) => author.author_uuid === authorUuid);
+    if (!assignedAuthor || authorUuid === article.author_uuid) return;
+
+    setUpdatingAssignment(article.article_uuid);
+    try {
+      const result = await editorialService.updateArticle(article.article_uuid, { author_uuid: authorUuid });
+      if (!result.success) {
+        throw new Error(result.error?.message || 'No se pudo guardar la asignación.');
+      }
+      setArticles((current) => current.map((item) => item.article_uuid === article.article_uuid
+        ? { ...item, author_uuid: authorUuid, author_name: assignedAuthor.name, author_slug: assignedAuthor.slug }
+        : item));
+      notify(`La noticia quedó asignada a ${assignedAuthor.name}.`, 'success', 'Asignación actualizada');
+    } catch (error) {
+      notify(error instanceof Error ? error.message : 'No se pudo guardar la asignación.', 'error', 'Error al asignar');
+    } finally {
+      setUpdatingAssignment(null);
+    }
+  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -237,6 +278,21 @@ export const ArticlesListPage: React.FC = () => {
               ))}
             </select>
 
+            <select
+              value={selectedAuthor}
+              onChange={(e) => {
+                setSelectedAuthor(e.target.value);
+                setPage(1);
+              }}
+              aria-label="Filtrar por periodista responsable"
+              className="text-xs border border-white/60 dark:border-white/10 bg-white/70 dark:bg-stone-800/70 backdrop-blur-md px-3.5 py-2.5 rounded-full text-stone-700 dark:text-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-800 shadow-xs cursor-pointer"
+            >
+              <option value="">Todos los responsables</option>
+              {authors.map((author) => (
+                <option key={author.author_uuid} value={author.author_uuid}>{author.name}</option>
+              ))}
+            </select>
+
             {/* Sort Select */}
             <select
               value={sortBy}
@@ -340,7 +396,26 @@ export const ArticlesListPage: React.FC = () => {
                 </div>
 
                 {/* Right Area: iOS Squircle Action Buttons */}
-                <div className="flex items-center gap-2 self-end sm:self-center flex-shrink-0">
+                <div className="flex flex-wrap items-center justify-end gap-2 self-end sm:self-center flex-shrink-0">
+                  {canAssignArticles && selectedStatus !== 'TRASH' && (
+                    <label className="flex items-center gap-1.5 text-[11px] text-stone-500">
+                      <span>Responsable</span>
+                      <select
+                        value={a.author_uuid}
+                        disabled={updatingAssignment === a.article_uuid}
+                        onChange={(event) => handleAssignmentChange(a, event.target.value)}
+                        aria-label={`Asignar "${a.title}" a un periodista`}
+                        className="max-w-40 rounded-lg border border-stone-300 bg-white px-2 py-1.5 text-xs text-stone-800 disabled:opacity-60"
+                      >
+                        {!authors.some((author) => author.author_uuid === a.author_uuid) && (
+                          <option value={a.author_uuid}>{a.author_name}</option>
+                        )}
+                        {authors.map((author) => (
+                          <option key={author.author_uuid} value={author.author_uuid}>{author.name}</option>
+                        ))}
+                      </select>
+                    </label>
+                  )}
                   {/* View Live Article Link */}
                   {a.status === 'PUBLISHED' && (
                     <a

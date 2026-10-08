@@ -23,7 +23,6 @@ import { AdSlot } from '../components/common/AdSlot';
 import { EconomicWeatherBar } from '../components/common/EconomicWeatherBar';
 import { BookmarksDrawer } from '../components/common/BookmarksDrawer';
 import { PrintEditionModal } from '../components/common/PrintEditionModal';
-import { LiveThemeCustomizer } from '../components/common/LiveThemeCustomizer';
 import { bookmarksService } from '../services/bookmarksService';
 import { formatMastheadDate } from '../utils/date';
 import { useSettings } from '../context/SettingsContext';
@@ -805,9 +804,6 @@ export const PublicLayout: React.FC = () => {
 
       {/* Digital Kiosk Print Edition Modal */}
       <PrintEditionModal isOpen={printModalOpen} onClose={() => setPrintModalOpen(false)} />
-
-      {/* Live Brand Customizer Drawer */}
-      <LiveThemeCustomizer />
 
       {/* PWA & Web Push Manager */}
       <PwaManager />

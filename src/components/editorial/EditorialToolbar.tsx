@@ -131,7 +131,7 @@ export const EditorialToolbar: React.FC<EditorialToolbarProps> = ({
       .replace(/\*(.*?)\*/g, '$1')
       .replace(/<u>(.*?)<\/u>/g, '$1')
       .replace(/~~(.*?)~~/g, '$1')
-      .replace(/==(.*? bureaucracy)==/g, '$1')
+      .replace(/==(.*?)==/g, '$1')
       .replace(/^#{1,6}\s+/gm, '')
       .replace(/^>\s+/gm, '');
 

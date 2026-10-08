@@ -2,6 +2,12 @@
 
 @variant dark (&:where(.dark, .dark *));
 
+.visual-article-editor:empty::before {
+  content: attr(data-placeholder);
+  color: #a8a29e;
+  pointer-events: none;
+}
+
 @theme {
   --font-serif: var(--font-serif-brand, "Lora", "Merriweather", Georgia, Cambria, "Times New Roman", serif);
   --font-sans: var(--font-sans-brand, "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif);

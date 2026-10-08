@@ -221,15 +221,13 @@ export const editorialService = {
 
   async getAuthors(): Promise<Author[]> {
     if (isMockMode()) {
-      const a = mockStorage.getAuthor();
-      return [
-        {
-          author_uuid: a.author_uuid,
-          name: a.name,
-          slug: a.slug,
-          bio: a.bio ?? null,
-        },
-      ];
+      const defaultAuthor = mockStorage.getAuthor();
+      return mockStorage.getJournalistProfiles().map((profile) => ({
+        author_uuid: profile.name === defaultAuthor.name ? defaultAuthor.author_uuid : profile.author_uuid,
+        name: profile.name,
+        slug: profile.slug,
+        bio: profile.bio ?? null,
+      }));
     }
 
     const res = await apiClient.get<{ authors: Author[] }>('/admin/authors');

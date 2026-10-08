@@ -39,10 +39,11 @@ export function renderInlineContent(text: string): React.ReactNode {
   // 1. Markdown Links: [anchor](url)
   // 2. Bold+Italic: ***text*** or ___text___
   // 3. Bold text: **text** or __text__ or <strong>text</strong> or <b>text</b>
-  // 4. Strikethrough: ~~text~~
-  // 5. Italic text: *text* or _text_ or <em>text</em> or <i>text</i>
-  // 6. Inline code: `code`
-  const tokenRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|\*\*\*[^*]+\*\*\*|___[^_]+___|\*\*[^*]+\*\*|__[^_]+__|<strong>[^<]+<\/strong>|<b>[^<]+<\/b>|~~[^~]+~~|\*[^*]+\*|_[^_]+_|<em>[^<]+<\/em>|<i>[^<]+<\/i>|`[^`]+`)/g;
+  // 4. Underline and highlighted text: <u>text</u> and ==text==
+  // 5. Strikethrough: ~~text~~
+  // 6. Italic text: *text* or _text_ or <em>text</em> or <i>text</i>
+  // 7. Inline code: `code`
+  const tokenRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|\*\*\*[^*]+\*\*\*|___[^_]+___|\*\*[^*]+\*\*|__[^_]+__|<strong>[^<]+<\/strong>|<b>[^<]+<\/b>|<u>[^<]+<\/u>|==[^=\n]+==|~~[^~]+~~|\*[^*]+\*|_[^_]+_|<em>[^<]+<\/em>|<i>[^<]+<\/i>|`[^`]+`)/g;
 
   const parts = text.split(tokenRegex);
 
@@ -97,7 +98,20 @@ export function renderInlineContent(text: string): React.ReactNode {
       );
     }
 
-    // 4. Strikethrough: ~~text~~
+    const underlineMatch = part.match(/^<u>([^<]+)<\/u>$/i);
+    if (underlineMatch) {
+      return <u key={index}>{underlineMatch[1]}</u>;
+    }
+
+    if (part.startsWith('==') && part.endsWith('==') && part.length >= 5) {
+      return (
+        <mark key={index} className="rounded-sm bg-amber-200 px-0.5 text-inherit dark:bg-amber-400/40">
+          {part.slice(2, -2)}
+        </mark>
+      );
+    }
+
+    // 5. Strikethrough: ~~text~~
     if (part.startsWith('~~') && part.endsWith('~~') && part.length >= 4) {
       return (
         <del key={index} className="line-through text-stone-400">
