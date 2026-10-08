@@ -8,6 +8,39 @@
   pointer-events: none;
 }
 
+.visual-article-editor,
+.article-preview-content,
+.article-final-preview {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.article-editor-page {
+  container: article-page / inline-size;
+}
+
+.article-form-layout {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@container article-page (min-width: 1000px) {
+  .article-form-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+    align-items: start;
+  }
+}
+
+.article-editor-workspace {
+  container: article-editor / inline-size;
+}
+
+@container article-editor (min-width: 820px) {
+  .article-editor-split {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 @theme {
   --font-serif: var(--font-serif-brand, "Lora", "Merriweather", Georgia, Cambria, "Times New Roman", serif);
   --font-sans: var(--font-sans-brand, "Plus Jakarta Sans", "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif);

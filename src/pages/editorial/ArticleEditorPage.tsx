@@ -547,7 +547,7 @@ export const ArticleEditorPage: React.FC = () => {
   const isJournalist = currentUser?.roles?.includes('JOURNALIST') && !currentUser?.roles?.includes('EDITOR') && !currentUser?.roles?.includes('SUPER_ADMIN');
 
   return (
-    <div className="space-y-6 pb-24 sm:pb-8 max-w-6xl mx-auto font-sans">
+    <div className="article-editor-page space-y-6 pb-24 sm:pb-8 max-w-7xl mx-auto font-sans">
       {/* Top Header Card */}
       <div className="bg-white border border-stone-200 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 shadow-xs">
         <div className="flex items-center gap-3">
@@ -682,9 +682,9 @@ export const ArticleEditorPage: React.FC = () => {
       )}
 
       {/* Main Form Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="article-form-layout grid grid-cols-1 gap-6">
         {/* Left 2 Columns: Editorial Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="min-w-0 space-y-6">
           {/* Headlines Card */}
           <div className="bg-white border border-stone-200 rounded-2xl p-6 space-y-4 shadow-xs">
             <div>
@@ -847,19 +847,26 @@ export const ArticleEditorPage: React.FC = () => {
           {/* Body Content with Toolbar and Live Visual Preview */}
           <StoryTemplatePicker onSelect={handleApplyStoryTemplate} />
 
-          <div className="bg-white border border-stone-200 rounded-2xl shadow-xs overflow-hidden">
-            <div className="px-6 py-3 border-b border-stone-200 bg-stone-50 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-3">
+          <div className="min-w-0 bg-white border border-stone-200 rounded-2xl shadow-xs overflow-hidden">
+            <div className="border-b border-stone-200 bg-stone-50 px-4 py-4 sm:px-6">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
                 <span className="text-xs font-bold uppercase tracking-wider text-stone-800">
                   Cuerpo del Artículo
                 </span>
+                <span className="flex items-center gap-1 text-[11px] text-stone-500 font-mono">
+                  <Clock className="h-3.5 w-3.5 text-stone-400" />
+                  {wordCount} palabras &bull; ~{readingTimeMinutes} min de lectura
+                </span>
+              </div>
 
-                {/* View Mode Selector Tabs */}
-                <div className="flex items-center bg-stone-200 p-0.5 rounded-lg text-xs">
+              {/* View Mode Selector Tabs */}
+              <div role="tablist" aria-label="Modo de edición" className="grid w-full grid-cols-4 gap-1 rounded-xl bg-stone-200 p-1 text-[11px] sm:text-xs">
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={editorViewMode === 'write'}
                     onClick={() => setEditorViewMode('write')}
-                    className={`px-3 py-1 rounded-md font-semibold transition ${
+                    className={`min-w-0 whitespace-nowrap px-1.5 py-2 rounded-lg font-semibold transition sm:px-3 ${
                       editorViewMode === 'write'
                         ? 'bg-white text-stone-950 shadow-xs'
                         : 'text-stone-600 hover:text-stone-950'
@@ -869,8 +876,10 @@ export const ArticleEditorPage: React.FC = () => {
                   </button>
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={editorViewMode === 'split'}
                     onClick={() => setEditorViewMode('split')}
-                    className={`px-3 py-1 rounded-md font-semibold transition ${
+                    className={`min-w-0 whitespace-nowrap px-1.5 py-2 rounded-lg font-semibold transition sm:px-3 ${
                       editorViewMode === 'split'
                         ? 'bg-white text-stone-950 shadow-xs'
                         : 'text-stone-600 hover:text-stone-950'
@@ -880,8 +889,10 @@ export const ArticleEditorPage: React.FC = () => {
                   </button>
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={editorViewMode === 'source'}
                     onClick={() => setEditorViewMode('source')}
-                    className={`px-3 py-1 rounded-md font-semibold transition ${
+                    className={`min-w-0 whitespace-nowrap px-1.5 py-2 rounded-lg font-semibold transition sm:px-3 ${
                       editorViewMode === 'source'
                         ? 'bg-white text-stone-950 shadow-xs'
                         : 'text-stone-600 hover:text-stone-950'
@@ -891,8 +902,10 @@ export const ArticleEditorPage: React.FC = () => {
                   </button>
                   <button
                     type="button"
+                    role="tab"
+                    aria-selected={editorViewMode === 'preview'}
                     onClick={() => setEditorViewMode('preview')}
-                    className={`px-3 py-1 rounded-md font-semibold transition ${
+                    className={`min-w-0 whitespace-nowrap px-1.5 py-2 rounded-lg font-semibold transition sm:px-3 ${
                       editorViewMode === 'preview'
                         ? 'bg-white text-stone-950 shadow-xs'
                         : 'text-stone-600 hover:text-stone-950'
@@ -900,21 +913,13 @@ export const ArticleEditorPage: React.FC = () => {
                   >
                     Vista Final
                   </button>
-                </div>
               </div>
-
-              <div className="flex items-center gap-2">
-                {compressingImage && (
-                  <span className="text-[11px] text-rose-800 font-bold flex items-center gap-1 animate-pulse">
-                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    Comprimiendo imagen pegada...
-                  </span>
-                )}
-                <span className="text-[11px] text-stone-500 font-mono flex items-center gap-1">
-                  <Clock className="w-3.5 h-3.5 text-stone-400" />
-                  {wordCount} palabras &bull; ~{readingTimeMinutes} min de lectura
+              {compressingImage && (
+                <span className="mt-2 flex items-center gap-1 text-[11px] font-bold text-rose-800 animate-pulse">
+                  <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                  Comprimiendo imagen pegada...
                 </span>
-              </div>
+              )}
             </div>
 
             {editorViewMode === 'source' && (
@@ -933,7 +938,7 @@ export const ArticleEditorPage: React.FC = () => {
               }}
               onDragLeave={() => setIsDraggingOver(false)}
               onDrop={handleDrop}
-              className={`p-4 sm:p-6 bg-white relative transition ${
+              className={`article-editor-workspace min-w-0 p-3 sm:p-5 bg-white relative transition ${
                 isDraggingOver ? 'ring-2 ring-rose-500 bg-rose-50/50' : ''
               }`}
             >
@@ -965,8 +970,8 @@ export const ArticleEditorPage: React.FC = () => {
 
               {/* SPLIT VIEW MODE */}
               {editorViewMode === 'split' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
+                <div className="article-editor-split grid grid-cols-1 gap-4">
+                  <div className="min-w-0">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block mb-1">
                       Escribe tu noticia
                     </span>
@@ -979,11 +984,11 @@ export const ArticleEditorPage: React.FC = () => {
                       insertContentRef={visualInsertRef}
                     />
                   </div>
-                  <div className="border border-stone-200 rounded-xl p-4 bg-white overflow-y-auto max-h-[500px]">
+                  <div className="min-w-0 border border-stone-200 rounded-xl p-4 bg-white overflow-y-auto overflow-x-hidden max-h-[500px]">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block mb-2">
                       Así se verá publicada · se actualiza al escribir
                     </span>
-                    <div className="prose prose-stone max-w-none text-stone-900 font-sans leading-relaxed text-sm space-y-3">
+                    <div className="article-preview-content prose prose-stone max-w-none text-stone-900 font-sans leading-relaxed text-sm space-y-3">
                       {content
                         ? renderArticleMarkdown(content, { enableDropCap: false })
                         : <p className="text-stone-400 italic">La noticia formateada aparecerá aquí mientras escribes.</p>}
@@ -1013,8 +1018,8 @@ export const ArticleEditorPage: React.FC = () => {
 
               {/* PREVIEW ONLY MODE */}
               {editorViewMode === 'preview' && (
-                <div className="border border-stone-200 rounded-xl p-6 bg-white">
-                  <div className="max-w-2xl mx-auto space-y-4">
+                <div className="min-w-0 border border-stone-200 rounded-xl p-4 sm:p-6 bg-white">
+                  <div className="article-final-preview max-w-2xl mx-auto space-y-4">
                     <h1 className="font-serif font-black text-2xl sm:text-3xl text-stone-950 leading-tight">
                       {renderInlineContent(title || 'Titular de la Noticia')}
                     </h1>
@@ -1039,7 +1044,7 @@ export const ArticleEditorPage: React.FC = () => {
                       </p>
                     )}
                     <hr className="border-stone-200 my-4" />
-                    <div className="space-y-4 font-sans text-sm sm:text-base leading-relaxed text-stone-800">
+                    <div className="article-final-preview space-y-4 font-sans text-sm sm:text-base leading-relaxed text-stone-800">
                       {renderArticleMarkdown(content, { enableDropCap: true })}
                     </div>
                   </div>
@@ -1082,7 +1087,7 @@ export const ArticleEditorPage: React.FC = () => {
         </div>
 
         {/* Right Column: Taxonomy, Credits & Publishing Details */}
-        <div className="space-y-6">
+        <div className="article-form-sidebar min-w-0 space-y-6">
           {/* Workflow Status Card */}
           <div className="bg-white border border-stone-200 rounded-2xl p-6 space-y-4 shadow-xs">
             <h3 className="text-xs font-bold uppercase tracking-wider text-stone-800 border-b border-stone-200 pb-2">
