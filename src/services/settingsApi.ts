@@ -81,6 +81,11 @@ export const settingsApi = {
       colors: preset.config.colors ? { ...current.colors, ...preset.config.colors } : current.colors,
       typography: preset.config.typography ? { ...current.typography, ...preset.config.typography } : current.typography,
       features: preset.config.features ? { ...current.features, ...preset.config.features } : current.features,
+      pwa: {
+        ...current.pwa,
+        themeColor: preset.config.colors?.primary || current.pwa.themeColor,
+        backgroundColor: preset.config.colors?.pageBg || current.pwa.backgroundColor,
+      },
     };
     return this.updateSettings(merged);
   },
@@ -132,4 +137,3 @@ export const settingsApi = {
     return WHITE_LABEL_PRESETS;
   },
 };
-

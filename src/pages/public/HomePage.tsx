@@ -130,15 +130,15 @@ export const HomePage: React.FC = () => {
         <NewsTicker articles={feed.breaking_news} label="Última hora" />
       )}
 
-      {/* 1. iOS 27 HORIZONTAL CATEGORY PILL SELECTOR (Mobile-First Touch Rail) */}
-      <section className="flex items-center gap-2 overflow-x-auto no-scrollbar py-1">
+      {/* 1. Editorial category navigation */}
+      <section className="portal-category-filters flex items-center gap-5 overflow-x-auto no-scrollbar">
         <button
           type="button"
           onClick={() => setSelectedPill('todos')}
-          className={`px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 shrink-0 ${
+          className={`px-1 py-2 border-b-2 text-xs font-semibold uppercase tracking-wider transition-colors shrink-0 ${
             selectedPill === 'todos'
-              ? 'bg-rose-900 text-white shadow-md'
-              : 'glass-pill text-stone-600 hover:text-stone-900'
+              ? 'border-rose-900 text-rose-900'
+              : 'border-transparent text-stone-600 hover:text-rose-800'
           }`}
         >
           Todo el Diario
@@ -148,10 +148,10 @@ export const HomePage: React.FC = () => {
             key={slug}
             type="button"
             onClick={() => setSelectedPill(slug)}
-            className={`px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider transition-all duration-200 shrink-0 ${
+            className={`px-1 py-2 border-b-2 text-xs font-semibold uppercase tracking-wider transition-colors shrink-0 ${
               selectedPill === slug
-                ? 'bg-rose-900 text-white shadow-md'
-                : 'glass-pill text-stone-600 hover:text-stone-900'
+                ? 'border-rose-900 text-rose-900'
+                : 'border-transparent text-stone-600 hover:text-rose-800'
             }`}
           >
             {sec.category.name}
@@ -159,7 +159,7 @@ export const HomePage: React.FC = () => {
         ))}
       </section>
 
-      {/* 2. LEAD STORY + SECONDARY COLUMN (iOS 27 Glass) */}
+      {/* 2. Lead story and secondary column */}
       {lead_article && (
         <section>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">

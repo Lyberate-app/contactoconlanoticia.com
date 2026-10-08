@@ -98,12 +98,27 @@ export const SettingsPage: React.FC = () => {
       colors: preset.config.colors ? { ...draft.colors, ...preset.config.colors } : draft.colors,
       typography: preset.config.typography ? { ...draft.typography, ...preset.config.typography } : draft.typography,
       features: preset.config.features ? { ...draft.features, ...preset.config.features } : draft.features,
+      pwa: {
+        ...draft.pwa,
+        themeColor: preset.config.colors?.primary || draft.pwa.themeColor,
+        backgroundColor: preset.config.colors?.pageBg || draft.pwa.backgroundColor,
+      },
     };
-    setDraft(newConfig);
-    // Instant preview & live apply
-    await updateSettings(newConfig);
-    setSavedSuccess(true);
-    setTimeout(() => setSavedSuccess(false), 3000);
+    try {
+      setSaving(true);
+      const updated = await updateSettings(newConfig);
+      setDraft(updated);
+      setSavedSuccess(true);
+      setTimeout(() => setSavedSuccess(false), 3000);
+    } catch (err) {
+      notify(
+        `No se pudo aplicar el tema: ${err instanceof Error ? err.message : 'Error desconocido'}`,
+        'error',
+        'Tema no aplicado'
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Handle File Upload to Data URL (for logos, favicons, PWA icons)
@@ -270,23 +285,26 @@ export const SettingsPage: React.FC = () => {
 
       {/* 2. LIVE PREVIEW DRAWER / MODAL */}
       {previewOpen && (
-        <div className="bg-stone-900 text-white rounded-2xl p-5 border border-stone-800 shadow-xl space-y-4 animate-fadeIn">
-          <div className="flex items-center justify-between pb-3 border-b border-stone-800">
+        <div className="bg-stone-100 text-stone-900 rounded-xl p-5 border border-stone-200 shadow-sm space-y-4 animate-fadeIn">
+          <div className="flex items-center justify-between pb-3 border-b border-stone-200">
             <div className="flex items-center gap-2">
-              <Eye className="w-4 h-4 text-rose-400" />
+              <Eye className="w-4 h-4 text-stone-600" />
               <h2 className="text-sm font-bold tracking-tight">
-                Previsualización en Vivo de Marca Blanca
+                Así se verá el periódico
               </h2>
             </div>
-            <div className="flex items-center gap-2 text-xs text-stone-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>Render interactivo en caliente</span>
+            <div className="flex items-center gap-2 text-xs text-stone-500">
+              <span className="w-2 h-2 rounded-full bg-emerald-600"></span>
+              <span>Vista de muestra</span>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
             {/* Masthead Preview */}
-            <div className="lg:col-span-2 bg-stone-50 rounded-xl p-4 text-stone-900 border border-stone-200 overflow-hidden">
+            <div
+              className="lg:col-span-2 rounded-xl p-4 text-stone-900 border overflow-hidden"
+              style={{ backgroundColor: draft.colors.pageBg, borderColor: draft.colors.navBg }}
+            >
               <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-2">
                 Cabecera del Periódico (Masthead)
               </span>
@@ -296,8 +314,9 @@ export const SettingsPage: React.FC = () => {
                 style={{
                   backgroundColor: draft.colors.topBarBg,
                   color: draft.colors.topBarText,
+                  borderColor: draft.colors.navBg,
                 }}
-                className="px-3 py-1 text-[11px] rounded-t-lg border-b border-stone-200 flex items-center justify-between font-sans"
+                className="px-3 py-1.5 text-[11px] border-b flex items-center justify-between font-sans"
               >
                 <span>{draft.identity.editionName}</span>
                 <div className="flex items-center gap-3">
@@ -317,10 +336,14 @@ export const SettingsPage: React.FC = () => {
                 style={{
                   backgroundColor: draft.colors.mastheadBg,
                   color: draft.colors.mastheadText,
+                  borderColor: draft.colors.primary,
                 }}
-                className="py-4 text-center border-b border-stone-200"
+                className={`py-4 text-center ${draft.features.mastheadLayout === 'classic_double_rule' ? 'border-y-4 my-1' : 'border-b'}`}
               >
-                <div className="text-[10px] uppercase tracking-widest text-stone-500 font-semibold mb-1">
+                <div
+                  className="text-[10px] uppercase tracking-widest font-semibold mb-1"
+                  style={{ color: draft.colors.topBarText }}
+                >
                   {draft.identity.historicSubtitle}
                 </div>
 
@@ -345,15 +368,15 @@ export const SettingsPage: React.FC = () => {
                 )}
 
                 <p
-                  style={{ fontFamily: `"${draft.typography.headingFont}", serif` }}
-                  className="text-xs italic text-stone-600 mt-1 max-w-lg mx-auto"
+                  style={{
+                    fontFamily: `"${draft.typography.bodyFont}", Arial, sans-serif`,
+                    color: draft.colors.mastheadText,
+                  }}
+                  className="text-xs italic mt-1 max-w-lg mx-auto"
                 >
                   {draft.identity.tagline}
                 </p>
 
-                {draft.features.mastheadLayout === 'classic_double_rule' && (
-                  <div className="mt-3 pt-0.5 border-t-2 border-b border-stone-900 max-w-xl mx-auto"></div>
-                )}
               </div>
 
               {/* Category Navbar Preview */}
@@ -362,7 +385,7 @@ export const SettingsPage: React.FC = () => {
                   backgroundColor: draft.colors.navBg,
                   color: draft.colors.navText,
                 }}
-                className="px-3 py-1.5 flex items-center gap-3 text-xs font-bold uppercase tracking-wider overflow-x-auto rounded-b-lg"
+                className="px-3 py-1.5 flex items-center gap-3 text-[11px] font-semibold uppercase tracking-wider overflow-x-auto"
               >
                 <span style={{ color: draft.colors.primary }} className="border-b-2 pb-0.5">
                   Portada
@@ -372,65 +395,104 @@ export const SettingsPage: React.FC = () => {
                 <span>Comunidades</span>
                 <span>Economía</span>
               </div>
+
+              <div className="mt-3 grid grid-cols-[1.4fr_1fr] gap-3">
+                <div
+                  className="border p-3"
+                  style={{ borderColor: draft.colors.navBg, backgroundColor: draft.colors.cardBg }}
+                >
+                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: draft.colors.accent }}>
+                    Regionales · Tema principal
+                  </span>
+                  <div
+                    className="mt-1 text-sm font-bold leading-snug"
+                    style={{ color: draft.colors.mastheadText, fontFamily: `"${draft.typography.headingFont}", Georgia, serif` }}
+                  >
+                    Una portada clara, hecha para leer
+                  </div>
+                  <div className="mt-2 h-1 w-12" style={{ backgroundColor: draft.colors.accent }} />
+                  <div className="mt-2 h-1.5 w-full" style={{ backgroundColor: draft.colors.pageBg }} />
+                  <div className="mt-1 h-1.5 w-4/5" style={{ backgroundColor: draft.colors.pageBg }} />
+                </div>
+                <div
+                  className="border p-3"
+                  style={{ borderColor: draft.colors.navBg, backgroundColor: draft.colors.mastheadBg }}
+                >
+                  <div className="h-1 w-8" style={{ backgroundColor: draft.colors.primary }} />
+                  <div className="mt-2 h-2 w-full" style={{ backgroundColor: draft.colors.navBg }} />
+                  <div className="mt-1 h-2 w-4/5" style={{ backgroundColor: draft.colors.navBg }} />
+                  <div className="mt-3 text-[9px] font-semibold" style={{ color: draft.colors.topBarText }}>
+                    Por Redacción · 4 min
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* PWA & Mobile Phone Simulator */}
-            <div className="bg-stone-800/80 rounded-xl p-4 border border-stone-700 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest block mb-3">
+            <div className="bg-stone-200/70 rounded-xl p-4 border border-stone-300 flex flex-col items-center justify-center text-center">
+              <span className="text-[10px] font-bold text-stone-600 uppercase tracking-widest block mb-3">
                 Simulador de Pantalla PWA (Móvil)
               </span>
 
               {/* Phone Frame Mockup */}
-              <div className="w-48 bg-stone-950 p-2.5 rounded-3xl border-4 border-stone-700 shadow-2xl space-y-3">
-                {/* Status Bar */}
+              <div className="w-48 bg-stone-800 p-2.5 rounded-3xl border-4 border-stone-600 shadow-xl">
                 <div
-                  style={{ backgroundColor: draft.pwa.themeColor }}
-                  className="rounded-t-xl px-3 py-1 text-[9px] flex items-center justify-between text-white font-mono"
+                  className="rounded-[1.15rem] overflow-hidden"
+                  style={{ backgroundColor: draft.pwa.backgroundColor, color: draft.colors.mastheadText }}
                 >
-                  <span>9:41</span>
-                  <div className="flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
-                    <span className="text-[8px]">5G</span>
-                  </div>
-                </div>
-
-                {/* Home Screen App Icon Preview */}
-                <div className="py-4 flex flex-col items-center justify-center space-y-1.5">
+                  {/* Status Bar */}
                   <div
-                    style={{ backgroundColor: draft.pwa.backgroundColor }}
-                    className="w-14 h-14 rounded-2xl shadow-lg border border-white/20 p-2 flex items-center justify-center overflow-hidden"
+                    style={{ backgroundColor: draft.pwa.themeColor }}
+                    className="px-3 py-1 text-[9px] flex items-center justify-between text-white font-mono"
                   >
-                    {draft.pwa.icon192Url ? (
-                      <img
-                        src={draft.pwa.icon192Url}
-                        alt="PWA Icon"
-                        className="w-full h-full object-contain rounded-xl"
-                      />
-                    ) : (
-                      <div
-                        style={{ backgroundColor: draft.colors.primary }}
-                        className="w-full h-full rounded-xl text-white font-black text-xl flex items-center justify-center"
-                      >
-                        {draft.identity.shortName.charAt(0) || 'C'}
-                      </div>
-                    )}
+                    <span>9:41</span>
+                    <div className="flex items-center gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-white"></span>
+                      <span className="text-[8px]">5G</span>
+                    </div>
                   </div>
-                  <span className="text-white font-semibold text-[11px] truncate max-w-[120px]">
-                    {draft.pwa.shortName || draft.identity.shortName}
-                  </span>
-                  <span className="text-[9px] text-stone-400">PWA Instalable</span>
-                </div>
 
-                {/* Simulated Push Notification */}
-                <div className="bg-stone-800/90 border border-stone-700/80 rounded-xl p-2 text-left space-y-1">
-                  <div className="flex items-center gap-1 text-[9px] text-stone-300 font-semibold">
-                    <Bell className="w-2.5 h-2.5 text-amber-400" />
-                    <span>{draft.pwa.shortName}</span>
-                    <span className="text-stone-500">· Ahora</span>
+                  {/* Home Screen App Icon Preview */}
+                  <div className="py-4 flex flex-col items-center justify-center space-y-1.5">
+                    <div
+                      style={{ backgroundColor: draft.pwa.backgroundColor }}
+                      className="w-14 h-14 rounded-2xl border border-black/10 p-2 flex items-center justify-center overflow-hidden"
+                    >
+                      {draft.pwa.icon192Url ? (
+                        <img
+                          src={draft.pwa.icon192Url}
+                          alt="PWA Icon"
+                          className="w-full h-full object-contain rounded-xl"
+                        />
+                      ) : (
+                        <div
+                          style={{ backgroundColor: draft.colors.primary }}
+                          className="w-full h-full rounded-xl text-white font-black text-xl flex items-center justify-center"
+                        >
+                          {draft.identity.shortName.charAt(0) || 'C'}
+                        </div>
+                      )}
+                    </div>
+                    <span className="font-semibold text-[11px] truncate max-w-[120px]">
+                      {draft.pwa.shortName || draft.identity.shortName}
+                    </span>
+                    <span className="text-[9px]" style={{ color: draft.colors.topBarText }}>PWA Instalable</span>
                   </div>
-                  <p className="text-[9px] text-white font-medium leading-tight">
-                    Alerta de noticia de última hora para el estado.
-                  </p>
+
+                  {/* Simulated Push Notification */}
+                  <div
+                    className="border rounded-xl p-2 text-left space-y-1 mx-2 mb-2"
+                    style={{ backgroundColor: draft.colors.cardBg, borderColor: draft.colors.navBg }}
+                  >
+                    <div className="flex items-center gap-1 text-[9px] font-semibold">
+                      <Bell className="w-2.5 h-2.5" style={{ color: draft.colors.accent }} />
+                      <span>{draft.pwa.shortName}</span>
+                      <span style={{ color: draft.colors.topBarText }}>· Ahora</span>
+                    </div>
+                    <p className="text-[9px] font-medium leading-tight">
+                      Alerta de noticia de última hora para el estado.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -964,54 +1026,63 @@ export const SettingsPage: React.FC = () => {
                 {WHITE_LABEL_PRESETS.map((preset) => {
                   const isCurrent =
                     draft.colors.primary.toLowerCase() ===
-                    preset.config.colors?.primary?.toLowerCase();
+                    preset.config.colors?.primary?.toLowerCase() &&
+                    draft.colors.accent.toLowerCase() === preset.config.colors?.accent?.toLowerCase() &&
+                    draft.colors.pageBg.toLowerCase() === preset.config.colors?.pageBg?.toLowerCase() &&
+                    draft.typography.headingFont === preset.config.typography?.headingFont;
+                  const palette = preset.config.colors;
 
                   return (
                     <button
                       key={preset.id}
                       type="button"
+                      disabled={saving}
                       onClick={() => handleSelectPreset(preset)}
-                      className={`text-left p-3.5 rounded-xl border transition-all cursor-pointer relative ${
-                        isCurrent
-                          ? 'border-rose-900 bg-rose-50/40 ring-2 ring-rose-900/20'
-                          : 'border-stone-200 bg-stone-50/60 hover:bg-stone-100 hover:border-stone-300'
+                      aria-pressed={isCurrent}
+                      className={`text-left p-3 rounded-lg border transition-colors cursor-pointer relative disabled:cursor-wait disabled:opacity-60 ${
+                        isCurrent ? 'shadow-sm' : 'border-stone-200 bg-white hover:border-stone-400'
                       }`}
+                      style={isCurrent ? {
+                        borderColor: palette?.primary,
+                        backgroundColor: `color-mix(in srgb, ${palette?.primary} 5%, white)`,
+                      } : undefined}
                     >
-                      <div className="flex items-center justify-between mb-2">
+                      <div
+                        className="mb-3 overflow-hidden border border-black/10"
+                        style={{ backgroundColor: palette?.pageBg }}
+                        aria-hidden="true"
+                      >
+                        <div className="h-1.5" style={{ backgroundColor: palette?.primary }} />
+                        <div className="px-2 py-1.5" style={{ backgroundColor: palette?.mastheadBg }}>
+                          <div className="mx-auto h-1.5 w-3/5" style={{ backgroundColor: palette?.mastheadText }} />
+                          <div className="mx-auto mt-1 h-0.5 w-2/5" style={{ backgroundColor: palette?.accent }} />
+                        </div>
+                        <div className="flex h-2 items-center gap-1 px-2" style={{ backgroundColor: palette?.navBg }}>
+                          <span className="h-0.5 w-1/4" style={{ backgroundColor: palette?.navText }} />
+                          <span className="h-0.5 w-1/5" style={{ backgroundColor: palette?.navText }} />
+                          <span className="h-0.5 w-1/5" style={{ backgroundColor: palette?.navText }} />
+                        </div>
+                        <div className="grid grid-cols-[1.3fr_1fr] gap-1 p-1.5">
+                          <div className="h-6 border" style={{ backgroundColor: palette?.cardBg, borderColor: palette?.navBg }} />
+                          <div className="h-6 border" style={{ backgroundColor: palette?.mastheadBg, borderColor: palette?.navBg }} />
+                        </div>
+                      </div>
+                      <div className="mb-1 flex items-center justify-between gap-2">
                         <span className="text-xs font-bold text-stone-900">
                           {preset.name}
                         </span>
                         {isCurrent && (
-                          <span className="w-2 h-2 rounded-full bg-rose-800"></span>
+                          <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ backgroundColor: palette?.primary }} />
                         )}
                       </div>
 
-                      <p className="text-[11px] text-stone-500 line-clamp-2 mb-3">
+                      <p className="text-[11px] text-stone-500 line-clamp-2 mb-2.5">
                         {preset.description}
                       </p>
 
-                      <div className="flex items-center gap-1.5">
-                        <span
-                          style={{ backgroundColor: preset.config.colors?.primary }}
-                          className="w-5 h-5 rounded-full border border-stone-300 shadow-2xs"
-                          title="Color Primario"
-                        />
-                        <span
-                          style={{ backgroundColor: preset.config.colors?.accent }}
-                          className="w-5 h-5 rounded-full border border-stone-300 shadow-2xs"
-                          title="Color de Acento"
-                        />
-                        <span
-                          style={{ backgroundColor: preset.config.colors?.navBg }}
-                          className="w-5 h-5 rounded-full border border-stone-300 shadow-2xs"
-                          title="Fondo Navegación"
-                        />
-                        <span
-                          style={{ backgroundColor: preset.config.colors?.topBarBg }}
-                          className="w-5 h-5 rounded-full border border-stone-300 shadow-2xs"
-                          title="Barra Superior"
-                        />
-                      </div>
+                      <span className="text-[10px] font-semibold" style={{ color: palette?.primary }}>
+                        {isCurrent ? 'Tema activo' : 'Aplicar tema'}
+                      </span>
                     </button>
                   );
                 })}

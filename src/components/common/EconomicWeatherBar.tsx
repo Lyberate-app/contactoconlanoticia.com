@@ -37,10 +37,10 @@ export const EconomicWeatherBar: React.FC = () => {
 
   return (
     <div
-      className="border-b border-stone-200/80 bg-stone-50/90 text-stone-700 py-1 px-4 sm:px-6 lg:px-8 text-[11px] font-sans transition-colors"
+      className="portal-topbar border-b border-stone-200/80 bg-stone-50/90 text-stone-700 py-1 px-4 sm:px-6 lg:px-8 text-[11px] font-sans transition-colors"
       style={{
-        backgroundColor: settings.colors.topBarBg !== '#ffffff' ? settings.colors.topBarBg : undefined,
-        color: settings.colors.topBarText !== '#57534e' ? settings.colors.topBarText : undefined,
+        backgroundColor: settings.colors.topBarBg,
+        color: settings.colors.topBarText,
       }}
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between gap-3 overflow-x-auto no-scrollbar">
@@ -136,4 +136,3 @@ export const EconomicWeatherBar: React.FC = () => {
     </div>
   );
 };
-

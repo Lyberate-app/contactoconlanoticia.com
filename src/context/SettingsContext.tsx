@@ -139,7 +139,7 @@ function applyBrandingToDOM(config: WhiteLabelConfig) {
 
   // 2. Typography tokens
   root.style.setProperty('--font-serif-brand', `"${config.typography.headingFont}", Georgia, serif`);
-  root.style.setProperty('--font-sans-brand', `"${config.typography.bodyFont}", system-ui, sans-serif`);
+  root.style.setProperty('--font-sans-brand', `"${config.typography.bodyFont}", Arial, sans-serif`);
   root.style.setProperty('--font-heading-weight', config.typography.headingWeight);
 
   // 3. Dynamic Google Fonts loader
@@ -266,4 +266,3 @@ export const useSettings = (): SettingsContextValue => {
   }
   return context;
 };
-

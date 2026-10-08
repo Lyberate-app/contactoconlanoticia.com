@@ -65,18 +65,52 @@
   will-change: transform;
 }
 .glass-card-interactive:hover {
-  transform: translateY(-3px);
-  box-shadow: var(--glass-shadow-lg), inset 0 1px 1px 0 rgba(255, 255, 255, 1);
-  border-color: rgba(255, 255, 255, 0.9);
+  transform: none;
+  box-shadow: var(--glass-shadow);
+  border-color: var(--glass-border);
 }
 .glass-card-interactive:active {
-  transform: scale(0.985);
-  transition-duration: 0.15s;
+  transform: none;
 }
 
 .portal-theme .glass-card,
 .portal-theme .glass-panel {
   background-color: var(--color-brand-card-bg, #ffffff);
+  border-color: color-mix(in srgb, var(--color-brand-primary, #881337) 12%, var(--color-brand-card-bg, #ffffff));
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.portal-theme .glass-card {
+  border-radius: 0.75rem;
+}
+
+.portal-theme .glass-panel {
+  border-radius: 0.5rem;
+}
+
+.portal-theme .glass-card-interactive:hover {
+  border-color: color-mix(in srgb, var(--color-brand-primary, #881337) 28%, var(--color-brand-card-bg, #ffffff));
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--color-brand-primary, #881337) 8%, transparent);
+}
+
+.portal-theme .bg-white:not(.text-white) {
+  background-color: var(--color-brand-card-bg, #ffffff);
+}
+
+.portal-theme .bg-rose-50,
+.portal-theme .bg-rose-50\/40,
+.portal-theme .bg-rose-50\/50,
+.portal-theme .bg-rose-50\/70,
+.portal-theme .bg-rose-100,
+.portal-theme .bg-rose-100\/50 {
+  background-color: color-mix(in srgb, var(--color-brand-primary, #881337) 7%, var(--color-brand-card-bg, #ffffff));
+}
+
+.portal-theme .border-rose-100,
+.portal-theme .border-rose-200 {
+  border-color: color-mix(in srgb, var(--color-brand-primary, #881337) 22%, var(--color-brand-card-bg, #ffffff));
 }
 
 .portal-theme .text-rose-700,
@@ -92,6 +126,59 @@
 .portal-theme .bg-rose-600,
 .portal-theme .bg-rose-700 {
   background-color: var(--color-brand-accent, #e11d48);
+}
+
+.portal-theme .bg-rose-900,
+.portal-theme .bg-rose-700,
+.portal-theme .bg-rose-600 {
+  color: #ffffff;
+}
+
+.portal-theme .portal-utility-bar {
+  margin-bottom: 0.25rem;
+}
+
+.portal-theme .portal-utility-bar .text-stone-700,
+.portal-theme .portal-utility-bar .text-stone-600,
+.portal-theme .portal-utility-bar .text-stone-500,
+.portal-theme .portal-utility-bar .text-stone-400,
+.portal-theme .portal-topbar .text-stone-900,
+.portal-theme .portal-topbar .text-stone-700,
+.portal-theme .portal-topbar .text-stone-600,
+.portal-theme .portal-topbar .text-stone-500,
+.portal-theme .portal-topbar .text-stone-400 {
+  color: var(--color-brand-topbar-text, #57534e);
+}
+
+.portal-theme .portal-masthead {
+  padding-block: 0.75rem;
+}
+
+.portal-theme .text-rose-500,
+.portal-theme .text-rose-600 {
+  color: var(--color-brand-accent, #a33a35);
+}
+
+.portal-theme .bg-rose-500 {
+  background-color: var(--color-brand-accent, #a33a35);
+}
+
+.portal-theme .border-rose-300,
+.portal-theme .border-rose-400 {
+  border-color: color-mix(in srgb, var(--color-brand-primary, #881337) 34%, var(--color-brand-card-bg, #ffffff));
+}
+
+.portal-theme .portal-category-nav {
+  border-top: 1px solid color-mix(in srgb, var(--color-brand-primary, #881337) 12%, transparent);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-brand-primary, #881337) 12%, transparent);
+}
+
+.portal-theme .portal-category-filters {
+  border-bottom: 1px solid color-mix(in srgb, var(--color-brand-primary, #881337) 16%, transparent);
+}
+
+.portal-theme .border-rose-900 {
+  border-color: var(--color-brand-primary, #881337);
 }
 
 .portal-category-nav a:not(.bg-rose-900) {

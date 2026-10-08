@@ -35,137 +35,110 @@ export function stripMarkdown(text: string): string {
 export function renderInlineContent(text: string): React.ReactNode {
   if (!text) return null;
 
-  // Regex matches:
-  // 1. Markdown Links: [anchor](url)
-  // 2. Bold+Italic: ***text*** or ___text___
-  // 3. Bold text: **text** or __text__ or <strong>text</strong> or <b>text</b>
-  // 4. Underline and highlighted text: <u>text</u> and ==text==
-  // 5. Strikethrough: ~~text~~
-  // 6. Italic text: *text* or _text_ or <em>text</em> or <i>text</i>
-  // 7. Inline code: `code`
-  const tokenRegex = /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|\*\*\*[^*]+\*\*\*|___[^_]+___|\*\*[^*]+\*\*|__[^_]+__|<strong>[^<]+<\/strong>|<b>[^<]+<\/b>|<u>[^<]+<\/u>|==[^=\n]+==|~~[^~]+~~|\*[^*]+\*|_[^_]+_|<em>[^<]+<\/em>|<i>[^<]+<\/i>|`[^`]+`)/g;
+  const tokenRegex =
+    /(\[[^\]]+\]\(https?:\/\/[^\s)]+\)|\*\*\*[\s\S]+?\*\*\*|___[\s\S]+?___|\*\*[\s\S]+?\*\*|__[\s\S]+?__|<strong>[\s\S]*?<\/strong>|<b>[\s\S]*?<\/b>|<u>[\s\S]*?<\/u>|==[\s\S]+?==|~~[\s\S]+?~~|\*[\s\S]+?\*|_[\s\S]+?_|<em>[\s\S]*?<\/em>|<i>[\s\S]*?<\/i>|`[^`]+`)/gi;
+  const rendered: React.ReactNode[] = [];
+  let lastIndex = 0;
 
-  const parts = text.split(tokenRegex);
+  for (const match of text.matchAll(tokenRegex)) {
+    const token = match[0];
+    const index = match.index ?? 0;
+    if (index > lastIndex) {
+      rendered.push(renderPlainInlineText(text.slice(lastIndex, index), rendered.length));
+    }
 
-  return parts.map((part, index) => {
-    if (!part) return null;
-
-    // 1. Links: [text](url)
-    const linkMatch = part.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/);
+    const linkMatch = token.match(/^\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)$/i);
     if (linkMatch) {
-      return (
+      rendered.push(
         <a
-          key={index}
+          key={rendered.length}
           href={linkMatch[2]}
           target="_blank"
           rel="noopener noreferrer"
           className="text-rose-700 dark:text-rose-400 font-semibold underline underline-offset-2 hover:text-rose-900 transition-colors"
         >
-          {linkMatch[1]}
+          {renderInlineContent(linkMatch[1])}
         </a>
       );
-    }
-
-    // 2. Bold + Italic: ***text*** or ___text___
-    if (
-      (part.startsWith('***') && part.endsWith('***') && part.length >= 6) ||
-      (part.startsWith('___') && part.endsWith('___') && part.length >= 6)
-    ) {
-      return (
-        <strong key={index} className="font-bold text-stone-950 dark:text-white">
-          <em className="italic">{part.slice(3, -3)}</em>
+    } else if (/^(?:\*\*\*|___)[\s\S]+(?:\*\*\*|___)$/.test(token)) {
+      rendered.push(
+        <strong key={rendered.length} className="font-bold text-stone-950 dark:text-white">
+          <em className="italic">{renderInlineContent(token.slice(3, -3))}</em>
         </strong>
       );
-    }
-
-    // 3. Bold: **text** or __text__ or <strong>...</strong> or <b>...</b>
-    if (
-      (part.startsWith('**') && part.endsWith('**') && part.length >= 4) ||
-      (part.startsWith('__') && part.endsWith('__') && part.length >= 4)
-    ) {
-      return (
-        <strong key={index} className="font-bold text-stone-950 dark:text-white">
-          {part.slice(2, -2)}
+    } else if (/^(?:\*\*|__)[\s\S]+(?:\*\*|__)$/.test(token)) {
+      rendered.push(
+        <strong key={rendered.length} className="font-bold text-stone-950 dark:text-white">
+          {renderInlineContent(token.slice(2, -2))}
         </strong>
       );
-    }
-    const strongMatch = part.match(/^<(?:strong|b)>([^<]+)<\/(?:strong|b)>$/i);
-    if (strongMatch) {
-      return (
-        <strong key={index} className="font-bold text-stone-950 dark:text-white">
-          {strongMatch[1]}
+    } else if (/^<(?:strong|b)>[\s\S]*<\/(?:strong|b)>$/i.test(token)) {
+      const inner = token.replace(/^<(?:strong|b)>/i, '').replace(/<\/(?:strong|b)>$/i, '');
+      rendered.push(
+        <strong key={rendered.length} className="font-bold text-stone-950 dark:text-white">
+          {renderInlineContent(inner)}
         </strong>
       );
-    }
-
-    const underlineMatch = part.match(/^<u>([^<]+)<\/u>$/i);
-    if (underlineMatch) {
-      return <u key={index}>{underlineMatch[1]}</u>;
-    }
-
-    if (part.startsWith('==') && part.endsWith('==') && part.length >= 5) {
-      return (
-        <mark key={index} className="rounded-sm bg-amber-200 px-0.5 text-inherit dark:bg-amber-400/40">
-          {part.slice(2, -2)}
+    } else if (/^<u>[\s\S]*<\/u>$/i.test(token)) {
+      rendered.push(<u key={rendered.length}>{renderInlineContent(token.slice(3, -4))}</u>);
+    } else if (token.startsWith('==') && token.endsWith('==')) {
+      rendered.push(
+        <mark key={rendered.length} className="rounded-sm bg-amber-200 px-0.5 text-inherit dark:bg-amber-400/40">
+          {renderInlineContent(token.slice(2, -2))}
         </mark>
       );
-    }
-
-    // 5. Strikethrough: ~~text~~
-    if (part.startsWith('~~') && part.endsWith('~~') && part.length >= 4) {
-      return (
-        <del key={index} className="line-through text-stone-400">
-          {part.slice(2, -2)}
+    } else if (token.startsWith('~~') && token.endsWith('~~')) {
+      rendered.push(
+        <del key={rendered.length} className="line-through text-stone-400">
+          {renderInlineContent(token.slice(2, -2))}
         </del>
       );
-    }
-
-    // 5. Italic: *text* or _text_ or <em>...</em> or <i>...</i>
-    if (
-      (part.startsWith('*') && part.endsWith('*') && part.length >= 2) ||
-      (part.startsWith('_') && part.endsWith('_') && part.length >= 2)
-    ) {
-      return (
-        <em key={index} className="italic text-stone-800 dark:text-stone-200">
-          {part.slice(1, -1)}
+    } else if (/^<(?:em|i)>[\s\S]*<\/(?:em|i)>$/i.test(token)) {
+      const inner = token.replace(/^<(?:em|i)>/i, '').replace(/<\/(?:em|i)>$/i, '');
+      rendered.push(
+        <em key={rendered.length} className="italic text-stone-800 dark:text-stone-200">
+          {renderInlineContent(inner)}
         </em>
       );
-    }
-    const emMatch = part.match(/^<(?:em|i)>([^<]+)<\/(?:em|i)>$/i);
-    if (emMatch) {
-      return (
-        <em key={index} className="italic text-stone-800 dark:text-stone-200">
-          {emMatch[1]}
+    } else if ((token.startsWith('*') && token.endsWith('*')) || (token.startsWith('_') && token.endsWith('_'))) {
+      rendered.push(
+        <em key={rendered.length} className="italic text-stone-800 dark:text-stone-200">
+          {renderInlineContent(token.slice(1, -1))}
         </em>
       );
-    }
-
-    // 6. Code: `code`
-    if (part.startsWith('`') && part.endsWith('`') && part.length >= 2) {
-      return (
-        <code key={index} className="px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 font-mono text-xs text-rose-800 dark:text-rose-300">
-          {part.slice(1, -1)}
+    } else if (token.startsWith('`') && token.endsWith('`')) {
+      rendered.push(
+        <code key={rendered.length} className="px-1.5 py-0.5 rounded bg-stone-100 dark:bg-stone-800 font-mono text-xs text-rose-800 dark:text-rose-300">
+          {token.slice(1, -1)}
         </code>
       );
     }
 
-    // 7. Regular text: support internal \n as <br />
-    if (part.includes('\n')) {
-      const subLines = part.split('\n');
-      return (
-        <React.Fragment key={index}>
-          {subLines.map((line, lIdx) => (
-            <React.Fragment key={lIdx}>
-              {lIdx > 0 && <br />}
-              {line}
-            </React.Fragment>
-          ))}
-        </React.Fragment>
-      );
-    }
+    lastIndex = index + token.length;
+  }
 
-    return part;
-  });
+  if (lastIndex < text.length) {
+    rendered.push(renderPlainInlineText(text.slice(lastIndex), rendered.length));
+  }
+
+  return rendered;
+}
+
+function renderPlainInlineText(text: string, key: number): React.ReactNode {
+  const visibleText = text
+    .replace(/<\/(?:u|strong|b|em|i)>/gi, '')
+    .replace(/(?:~~|==|__|\*\*)$/g, '');
+  if (!visibleText.includes('\n')) return visibleText;
+  return (
+    <React.Fragment key={`text-${key}`}>
+      {visibleText.split('\n').map((line, index) => (
+        <React.Fragment key={index}>
+          {index > 0 && <br />}
+          {line}
+        </React.Fragment>
+      ))}
+    </React.Fragment>
+  );
 }
 
 export interface MarkdownRenderOptions {
