@@ -34,6 +34,7 @@ import {
   UploadCloud,
   RefreshCw,
   ShieldAlert,
+  Maximize2,
 } from 'lucide-react';
 
 export const ArticleEditorPage: React.FC = () => {
@@ -984,14 +985,137 @@ export const ArticleEditorPage: React.FC = () => {
                       insertContentRef={visualInsertRef}
                     />
                   </div>
-                  <div className="min-w-0 border border-stone-200 rounded-xl p-4 bg-white overflow-y-auto overflow-x-hidden max-h-[500px]">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-stone-500 block mb-2">
-                      Así se verá publicada · se actualiza al escribir
-                    </span>
-                    <div className="article-preview-content prose prose-stone max-w-none text-stone-900 font-sans leading-relaxed text-sm space-y-3">
-                      {content
-                        ? renderArticleMarkdown(content, { enableDropCap: false })
-                        : <p className="text-stone-400 italic">La noticia formateada aparecerá aquí mientras escribes.</p>}
+                  <div className="min-w-0 flex flex-col rounded-xl border border-stone-200 bg-white shadow-xs overflow-hidden">
+                    <div className="flex items-center justify-between border-b border-stone-200 bg-stone-50/90 px-4 py-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                          <span>EN VIVO</span>
+                        </span>
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-stone-700">
+                          Así se verá publicada
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="hidden sm:inline-block text-[11px] text-stone-400">
+                          Se actualiza al escribir
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setIsPreviewOpen(true)}
+                          className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-semibold text-rose-800 hover:bg-rose-100/60 transition"
+                          title="Abrir vista previa a pantalla completa"
+                        >
+                          <Maximize2 className="h-3.5 w-3.5" />
+                          <span className="hidden md:inline">Pantalla completa</span>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex-1 overflow-y-auto p-4 sm:p-6 max-h-[700px] min-h-[500px] bg-stone-50/30">
+                      <article className="max-w-xl mx-auto space-y-4 bg-white p-4 sm:p-6 rounded-2xl border border-stone-200/70 shadow-xs">
+                        {/* 1. Category */}
+                        <div>
+                          <span className="inline-block bg-rose-700 text-white text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full shadow-xs">
+                            {currentCategory?.name || 'Categoría'}
+                          </span>
+                        </div>
+
+                        {/* 2. Headline */}
+                        <h1 className="font-serif font-black text-2xl sm:text-3xl text-stone-950 leading-tight tracking-tight">
+                          {renderInlineContent(title || 'Titular de la Noticia')}
+                        </h1>
+
+                        {/* 3. Subtitle / Bajada */}
+                        {subtitle && (
+                          <p className="font-serif italic text-sm sm:text-base text-stone-600 leading-snug border-l-2 border-rose-600 pl-3">
+                            {renderInlineContent(subtitle)}
+                          </p>
+                        )}
+
+                        {/* 4. Byline and Timestamps */}
+                        <div className="flex items-center justify-between border-y border-stone-200/80 py-2 text-[11px] text-stone-500 font-sans">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-stone-800">
+                              {currentAuthor?.name || currentUser?.name || 'Mesa de Redacción'}
+                            </span>
+                            <span>&bull;</span>
+                            <span>{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                          </div>
+                          <span className="flex items-center gap-1 text-stone-400 font-mono">
+                            <Clock className="h-3 w-3" />
+                            {readingTimeMinutes} min &bull; {wordCount} pal.
+                          </span>
+                        </div>
+
+                        {/* 5. Featured Image */}
+                        {featuredMedia?.url && (
+                          <figure className="my-3 rounded-2xl overflow-hidden border border-stone-200/90 shadow-xs bg-stone-50">
+                            <img
+                              src={featuredMedia.url}
+                              alt={featuredMedia.alt_text || title || 'Imagen principal'}
+                              className="w-full h-auto object-cover max-h-80"
+                            />
+                            {(featuredMedia.caption || featuredMedia.credit) && (
+                              <figcaption className="p-2.5 text-[11px] text-stone-500 font-sans italic bg-stone-50 border-t border-stone-100 flex items-center justify-between">
+                                <span>{featuredMedia.caption}</span>
+                                {featuredMedia.credit && (
+                                  <span className="font-mono text-stone-400 text-[10px]">Foto: {featuredMedia.credit}</span>
+                                )}
+                              </figcaption>
+                            )}
+                          </figure>
+                        )}
+
+                        {/* 6. Excerpt / Lead */}
+                        {excerpt && (
+                          <div className="my-3 p-3.5 bg-rose-50/40 border-l-4 border-rose-700 rounded-r-xl text-xs sm:text-sm font-serif italic text-stone-800 leading-relaxed shadow-xs">
+                            {renderInlineContent(excerpt)}
+                          </div>
+                        )}
+
+                        {/* 7. Article Body Content */}
+                        <div className="article-preview-content space-y-4 font-serif text-stone-900 text-sm sm:text-base leading-relaxed pt-1">
+                          {content ? (
+                            renderArticleMarkdown(content, {
+                              enableDropCap: true,
+                              paragraphClassName: 'font-serif leading-relaxed mb-4 text-stone-900',
+                            })
+                          ) : (
+                            <div className="py-10 text-center text-stone-400 font-sans">
+                              <p className="text-sm italic">
+                                El cuerpo formateado de la noticia aparecerá aquí en tiempo real mientras redactas.
+                              </p>
+                              <p className="mt-1 text-xs text-stone-400">
+                                Soporta subtítulos, negritas, cursivas, citas, fotos con pie de foto y galerías.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* 8. Tags Preview */}
+                        {tagsInput && (
+                          <div className="pt-4 border-t border-stone-200/80">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-stone-400 block mb-2">
+                              Temas relacionados:
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {tagsInput
+                                .split(',')
+                                .map((t) => t.trim())
+                                .filter(Boolean)
+                                .map((tag, idx) => (
+                                  <span
+                                    key={idx}
+                                    className="rounded-full bg-stone-100 px-2.5 py-0.5 text-[11px] font-medium text-stone-700"
+                                  >
+                                    #{tag}
+                                  </span>
+                                ))}
+                            </div>
+                          </div>
+                        )}
+                      </article>
                     </div>
                   </div>
                 </div>
@@ -1018,36 +1142,88 @@ export const ArticleEditorPage: React.FC = () => {
 
               {/* PREVIEW ONLY MODE */}
               {editorViewMode === 'preview' && (
-                <div className="min-w-0 border border-stone-200 rounded-xl p-4 sm:p-6 bg-white">
-                  <div className="article-final-preview max-w-2xl mx-auto space-y-4">
-                    <h1 className="font-serif font-black text-2xl sm:text-3xl text-stone-950 leading-tight">
+                <div className="min-w-0 border border-stone-200 rounded-xl p-4 sm:p-8 bg-stone-50/30">
+                  <article className="article-final-preview max-w-2xl mx-auto space-y-4 bg-white p-6 sm:p-8 rounded-2xl border border-stone-200/80 shadow-xs">
+                    {/* Category */}
+                    <div>
+                      <span className="inline-block bg-rose-700 text-white text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full shadow-xs">
+                        {currentCategory?.name || 'Categoría'}
+                      </span>
+                    </div>
+
+                    <h1 className="font-serif font-black text-2xl sm:text-4xl text-stone-950 leading-tight tracking-tight">
                       {renderInlineContent(title || 'Titular de la Noticia')}
                     </h1>
+
                     {subtitle && (
-                      <p className="text-sm sm:text-base font-medium text-stone-600">
+                      <p className="font-serif italic text-base sm:text-lg text-stone-600 border-l-2 border-rose-600 pl-3.5 leading-snug">
                         {renderInlineContent(subtitle)}
                       </p>
                     )}
+
+                    <div className="flex items-center justify-between border-y border-stone-200/80 py-2.5 text-xs text-stone-500 font-sans">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-stone-800">
+                          {currentAuthor?.name || currentUser?.name || 'Mesa de Redacción'}
+                        </span>
+                        <span>&bull;</span>
+                        <span>{new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+                      </div>
+                      <span className="flex items-center gap-1 text-stone-400 font-mono">
+                        <Clock className="h-3.5 w-3.5" />
+                        {readingTimeMinutes} min &bull; {wordCount} palabras
+                      </span>
+                    </div>
+
                     {featuredMedia?.url && (
-                      <figure className="rounded-xl overflow-hidden border border-stone-200">
-                        <img src={featuredMedia.url} alt={featuredMedia.alt_text || title} className="w-full h-auto object-cover" />
-                        {featuredMedia.caption && (
-                          <figcaption className="p-2.5 text-xs text-stone-500 font-sans italic text-center bg-stone-50">
-                            {featuredMedia.caption}
+                      <figure className="rounded-2xl overflow-hidden border border-stone-200 shadow-xs">
+                        <img src={featuredMedia.url} alt={featuredMedia.alt_text || title} className="w-full h-auto object-cover max-h-96" />
+                        {(featuredMedia.caption || featuredMedia.credit) && (
+                          <figcaption className="p-3 text-xs text-stone-500 font-sans italic bg-stone-50 border-t border-stone-100 flex items-center justify-between">
+                            <span>{featuredMedia.caption}</span>
+                            {featuredMedia.credit && (
+                              <span className="font-mono text-stone-400 text-[11px]">Foto: {featuredMedia.credit}</span>
+                            )}
                           </figcaption>
                         )}
                       </figure>
                     )}
+
                     {excerpt && (
-                      <p className="text-sm font-semibold text-stone-800 leading-relaxed border-l-2 border-stone-300 pl-3 italic">
+                      <div className="p-4 bg-rose-50/40 border-l-4 border-rose-700 rounded-r-xl text-sm sm:text-base font-serif italic text-stone-800 leading-relaxed shadow-xs">
                         {renderInlineContent(excerpt)}
-                      </p>
+                      </div>
                     )}
-                    <hr className="border-stone-200 my-4" />
-                    <div className="article-final-preview space-y-4 font-sans text-sm sm:text-base leading-relaxed text-stone-800">
-                      {renderArticleMarkdown(content, { enableDropCap: true })}
+
+                    <div className="article-final-preview space-y-4 font-serif text-sm sm:text-base leading-relaxed text-stone-800 pt-2">
+                      {renderArticleMarkdown(content, {
+                        enableDropCap: true,
+                        paragraphClassName: 'font-serif leading-relaxed mb-5 text-stone-900',
+                      })}
                     </div>
-                  </div>
+
+                    {tagsInput && (
+                      <div className="pt-6 border-t border-stone-200/80">
+                        <span className="text-[11px] font-bold uppercase tracking-wider text-stone-400 block mb-2.5">
+                          Temas relacionados:
+                        </span>
+                        <div className="flex flex-wrap gap-2">
+                          {tagsInput
+                            .split(',')
+                            .map((t) => t.trim())
+                            .filter(Boolean)
+                            .map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700"
+                              >
+                                #{tag}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
+                    )}
+                  </article>
                 </div>
               )}
             </div>

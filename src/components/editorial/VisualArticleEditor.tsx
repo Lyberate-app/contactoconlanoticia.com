@@ -56,26 +56,48 @@ function serializeInline(node: Node): string {
       return '\n';
     case 'B':
     case 'STRONG':
-      return `**${content}**`;
+      return content ? `**${content}**` : '';
     case 'I':
     case 'EM':
-      return `*${content}*`;
+      return content ? `*${content}*` : '';
     case 'U':
-      return `<u>${content}</u>`;
+      return content ? `<u>${content}</u>` : '';
     case 'S':
     case 'DEL':
     case 'STRIKE':
-      return `~~${content}~~`;
+      return content ? `~~${content}~~` : '';
     case 'CODE':
-      return `\`${content}\``;
+      return content ? `\`${content}\`` : '';
     case 'MARK':
-      return `==${content}==`;
+      return content ? `==${content}==` : '';
     case 'A': {
       const href = node.getAttribute('href') || '';
-      return /^https?:\/\//i.test(href) ? `[${content}](${href})` : content;
+      return /^(https?:\/\/|\/)/i.test(href) ? `[${content}](${href})` : content;
     }
-    case 'SPAN':
-      return node.style.backgroundColor ? `==${content}==` : content;
+    case 'IMG': {
+      const src = node.getAttribute('src') || '';
+      const alt = (node.getAttribute('alt') || '').replace(/\]/g, '\\]');
+      return /^(https?:\/\/|\/)/i.test(src) ? `![${alt}](${src})` : '';
+    }
+    case 'SPAN': {
+      let styled = content;
+      if (node.style.fontWeight === 'bold' || Number(node.style.fontWeight) >= 600) {
+        styled = `**${styled}**`;
+      }
+      if (node.style.fontStyle === 'italic') {
+        styled = `*${styled}*`;
+      }
+      if (node.style.textDecoration?.includes('underline')) {
+        styled = `<u>${styled}</u>`;
+      }
+      if (node.style.textDecoration?.includes('line-through')) {
+        styled = `~~${styled}~~`;
+      }
+      if (node.style.backgroundColor) {
+        styled = `==${styled}==`;
+      }
+      return styled;
+    }
     default:
       return content;
   }
@@ -91,7 +113,49 @@ function serializeImage(element: HTMLElement): string | null {
   return `![${alt}](${src})${caption ? `\n*${caption}*` : ''}`;
 }
 
+function serializeNodeToBlocks(node: Node): string[] {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const text = node.textContent?.trim();
+    return text ? [escapeMarkdown(text)] : [];
+  }
+  if (!(node instanceof HTMLElement)) return [];
+
+  // Check if it's an editorial gallery
+  if (node.classList.contains('editorial-gallery') || node.querySelector('.editorial-gallery')) {
+    const galleryEl = node.classList.contains('editorial-gallery') ? node : node.querySelector('.editorial-gallery');
+    return galleryEl ? [galleryEl.outerHTML.trim()] : [];
+  }
+
+  // Check for image block first
+  const image = serializeImage(node);
+  if (image) return [image];
+
+  // If it's a wrapper container (DIV, SECTION, ARTICLE, etc.) containing block children
+  const hasBlockChildren = Array.from(node.children).some((child) =>
+    ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'UL', 'OL', 'HR', 'FIGURE', 'DIV'].includes(
+      child.tagName
+    )
+  );
+
+  if (hasBlockChildren && ['DIV', 'SECTION', 'ARTICLE', 'BODY', 'MAIN'].includes(node.tagName)) {
+    const blocks: string[] = [];
+    for (const child of Array.from(node.childNodes)) {
+      blocks.push(...serializeNodeToBlocks(child));
+    }
+    return blocks;
+  }
+
+  // Otherwise serialize as a single block
+  const block = serializeBlock(node);
+  return block ? [block] : [];
+}
+
 function serializeBlock(element: HTMLElement): string {
+  if (element.classList.contains('editorial-gallery') || element.querySelector('.editorial-gallery')) {
+    const galleryEl = element.classList.contains('editorial-gallery') ? element : element.querySelector('.editorial-gallery');
+    return galleryEl ? galleryEl.outerHTML.trim() : '';
+  }
+
   const image = serializeImage(element);
   if (image) return image;
 
@@ -99,45 +163,58 @@ function serializeBlock(element: HTMLElement): string {
     case 'HR':
       return '---';
     case 'H1':
-    case 'H2':
-      return `## ${serializeInline(element).trim()}`;
+    case 'H2': {
+      const text = serializeInline(element).trim();
+      return text ? `## ${text}` : '';
+    }
     case 'H3':
     case 'H4':
     case 'H5':
-    case 'H6':
-      return `### ${serializeInline(element).trim()}`;
-    case 'BLOCKQUOTE':
-      return serializeInline(element)
+    case 'H6': {
+      const text = serializeInline(element).trim();
+      return text ? `### ${text}` : '';
+    }
+    case 'BLOCKQUOTE': {
+      const text = serializeInline(element).trim();
+      if (!text) return '';
+      return text
         .split('\n')
         .map((line) => `> ${line.trim()}`)
         .join('\n');
+    }
     case 'UL':
-    case 'OL':
-      return Array.from(element.children)
+    case 'OL': {
+      const items = Array.from(element.children)
         .filter((child) => child.tagName === 'LI')
-        .map((child, index) => `${element.tagName === 'OL' ? `${index + 1}.` : '-'} ${serializeInline(child).trim()}`)
-        .join('\n');
+        .map((child, index) => {
+          const itemText = serializeInline(child).trim();
+          return itemText ? `${element.tagName === 'OL' ? `${index + 1}.` : '-'} ${itemText}` : '';
+        })
+        .filter(Boolean);
+      return items.join('\n');
+    }
     case 'P':
     case 'DIV':
+    default: {
       return serializeInline(element).trim();
-    default:
-      return serializeInline(element).trim();
+    }
   }
 }
 
 function markdownToEditorHtml(markdown: string): string {
-  if (!markdown) return '';
+  if (!markdown || !markdown.trim()) return '';
   const rendered = renderArticleMarkdown(markdown, { enableDropCap: false });
-  return renderToStaticMarkup(<div>{rendered}</div>);
+  return renderToStaticMarkup(<>{rendered}</>);
 }
 
 function editorHtmlToMarkdown(html: string): string {
+  if (!html || !html.trim()) return '';
   const parsed = new DOMParser().parseFromString(html, 'text/html');
-  return Array.from(parsed.body.firstElementChild?.children || [])
-    .map((element) => serializeBlock(element as HTMLElement))
-    .filter(Boolean)
-    .join('\n\n')
-    .trim();
+  const blocks: string[] = [];
+  for (const child of Array.from(parsed.body.childNodes)) {
+    blocks.push(...serializeNodeToBlocks(child));
+  }
+  return blocks.filter((b) => b && b.trim()).join('\n\n').trim();
 }
 
 export const VisualArticleEditor: React.FC<VisualArticleEditorProps> = ({
@@ -155,9 +232,9 @@ export const VisualArticleEditor: React.FC<VisualArticleEditorProps> = ({
     const editor = editorRef.current;
     if (!editor) return;
     if (value === lastEmittedValue.current) {
-      lastEmittedValue.current = null;
       return;
     }
+    lastEmittedValue.current = value;
     editor.innerHTML = markdownToEditorHtml(value);
   }, [value]);
 
@@ -171,23 +248,30 @@ export const VisualArticleEditor: React.FC<VisualArticleEditorProps> = ({
     const editor = editorRef.current;
     if (!editor) return;
     editor.focus();
-    const parsed = new DOMParser().parseFromString(markdownToEditorHtml(markdown.trim()), 'text/html');
-    const renderedContent = parsed.body.firstElementChild;
+    const htmlToInsert = markdownToEditorHtml(markdown.trim());
+    if (!htmlToInsert) return;
+
+    const parsed = new DOMParser().parseFromString(htmlToInsert, 'text/html');
     const range = window.getSelection()?.getRangeAt(0);
-    if (!renderedContent || !range || !editor.contains(range.commonAncestorContainer)) {
-      onChange(`${value.trimEnd()}\n\n${markdown.trim()}`);
+    if (!range || !editor.contains(range.commonAncestorContainer)) {
+      const nextValue = value.trim() ? `${value.trimEnd()}\n\n${markdown.trim()}` : markdown.trim();
+      lastEmittedValue.current = nextValue;
+      onChange(nextValue);
       return;
     }
     range.deleteContents();
     const fragment = document.createDocumentFragment();
-    while (renderedContent.firstChild) fragment.appendChild(renderedContent.firstChild);
+    while (parsed.body.firstChild) {
+      fragment.appendChild(parsed.body.firstChild);
+    }
     const lastInsertedNode = fragment.lastChild;
     range.insertNode(fragment);
     if (lastInsertedNode) {
       range.setStartAfter(lastInsertedNode);
       range.collapse(true);
-      window.getSelection()?.removeAllRanges();
-      window.getSelection()?.addRange(range);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
     }
     const updatedMarkdown = editorHtmlToMarkdown(editor.innerHTML);
     lastEmittedValue.current = updatedMarkdown;

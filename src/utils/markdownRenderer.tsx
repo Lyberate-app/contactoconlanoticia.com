@@ -173,6 +173,18 @@ export function renderArticleMarkdown(
   for (let index = 0; index < blocks.length; index += 1) {
     const block = blocks[index];
 
+    // HTML Block (Editorial Galleries, custom figure cards, embeds, tables)
+    if (/^<(?:div|figure|iframe|table|section)\b/i.test(block)) {
+      rendered.push(
+        <div
+          key={`html-block-${index}`}
+          className="my-6 not-prose overflow-hidden"
+          dangerouslySetInnerHTML={{ __html: block }}
+        />
+      );
+      continue;
+    }
+
     // Image block: ![alt](url)
     const imageMatch = block.match(/^!\[([^\]]*)\]\((https?:\/\/[^\s)]+|\/[^\s)]*)\)$/);
     if (imageMatch) {
